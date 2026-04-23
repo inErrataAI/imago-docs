@@ -388,8 +388,68 @@ graph TB
 <h2><span class="badge">Graph</span> 2. Dependency Map: paths.ts Choke Point</h2>
 <p class="section-desc">Every file that imports from <code>paths.ts</code> and which constants they use. The STANDALONE flag in paths.ts is the single switch that controls plugin vs standalone behavior across the entire codebase.</p>
 
-<div class="diagram-container">
+<div class="tab-container">
+  <div class="tabs">
+    <button class="tab active" data-panel="depmap-current">Current</button>
+    <button class="tab" data-panel="depmap-proposed">Proposed</button>
+  </div>
+
+  <div id="depmap-current" class="tab-panel active">
+    <div class="diagram-container">
 <pre class="mermaid">
+graph LR
+    subgraph "paths.ts"
+        ROOT["OPENCLAW_ROOT"]
+        WORKSPACE["WORKSPACE_DIR"]
+        BINDING["BINDING_DIR"]
+        PORT["GATEWAY_PORT"]
+        AUTH["AUTH tokens"]
+    end
+
+    subgraph "Consumers"
+        session["session.ts"]
+        context["context.ts"]
+        harness["harness.ts"]
+        gwclient["gateway-client.ts"]
+        gwtools["gateway-tools.ts"]
+        deviceauth["device-auth.ts"]
+        preflight["preflight.ts"]
+        adapter["adapter.ts"]
+    end
+
+    ROOT --> BINDING
+    ROOT --> session
+    WORKSPACE --> context
+    WORKSPACE --> harness
+    BINDING --> session
+    BINDING --> deviceauth
+    PORT --> gwclient
+    AUTH --> gwclient
+    AUTH --> gwtools
+
+    style ROOT fill:#3a2510,stroke:#fab387,color:#fab387
+    style WORKSPACE fill:#3a2510,stroke:#fab387,color:#fab387
+    style BINDING fill:#3a2510,stroke:#fab387,color:#fab387
+    style PORT fill:#3a2510,stroke:#fab387,color:#fab387
+    style AUTH fill:#3a2510,stroke:#fab387,color:#fab387
+    style session fill:#3a2510,stroke:#fab387,color:#fab387
+    style context fill:#3a2510,stroke:#fab387,color:#fab387
+    style harness fill:#3a2510,stroke:#fab387,color:#fab387
+    style gwclient fill:#3a2510,stroke:#fab387,color:#fab387
+    style gwtools fill:#3a2510,stroke:#fab387,color:#fab387
+    style deviceauth fill:#3a2510,stroke:#fab387,color:#fab387
+    style preflight fill:#3a2510,stroke:#fab387,color:#fab387
+    style adapter fill:#3a2510,stroke:#fab387,color:#fab387
+</pre>
+    </div>
+    <div class="callout callout-warn">
+      <strong>Problem:</strong> All consumers hard-wired to ~/.openclaw/ paths. No STANDALONE flag, no dual-mode, no ability to run independently.
+    </div>
+  </div>
+
+  <div id="depmap-proposed" class="tab-panel">
+    <div class="diagram-container">
+<pre class="mermaid-deferred">
 graph LR
     subgraph "paths.ts (44 LOC)"
         STANDALONE["STANDALONE flag"]
@@ -449,19 +509,75 @@ graph LR
     style cron fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
     style discord fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
 </pre>
-</div>
-<div class="callout callout-info">
-  <strong>Key insight:</strong> paths.ts is the single choke point. By making it dual-mode (STANDALONE flag), every downstream file automatically resolves to the correct directories, ports, and auth tokens without any changes to their own code.
+    </div>
+    <div class="callout callout-info">
+      <strong>Key insight:</strong> paths.ts is the single choke point. By making it dual-mode (STANDALONE flag), every downstream file automatically resolves to the correct directories, ports, and auth tokens without any changes to their own code.
+    </div>
+  </div>
 </div>
 </section>
 
 <!-- ================================================================= -->
 <section id="connection-chain">
 <h2><span class="badge">Sequence</span> 3. Connection Chain: Message to Response</h2>
-<p class="section-desc">Full request lifecycle in standalone mode: user sends a message via webchat, it flows through the gateway, session router, harness, Claude SDK, and back through the event bus to the client.</p>
+<p class="section-desc">Full request lifecycle showing message flow from user to Claude and back. Current mode routes through OC gateway; proposed standalone mode uses its own gateway with event bus.</p>
 
-<div class="diagram-container">
+<div class="tab-container">
+  <div class="tabs">
+    <button class="tab active" data-panel="chain-current">Current</button>
+    <button class="tab" data-panel="chain-proposed">Proposed</button>
+  </div>
+
+  <div id="chain-current" class="tab-panel active">
+    <div class="diagram-container">
 <pre class="mermaid">
+sequenceDiagram
+    participant U as User Browser
+    participant OC as OC Gateway :18789
+    participant R as OC Session Router
+    participant H as Harness Plugin
+    participant SDK as Claude Code SDK
+    participant MCP as MCP Bridge
+
+    U->>OC: WebSocket message
+    OC->>R: route sessionId
+    R->>H: runAttempt(params)
+    H->>SDK: query(systemPrompt, input)
+
+    loop Streaming response
+        SDK-->>H: SDKMessage (text delta)
+        H->>MCP: emitAgentEvent(assistant, delta)
+        MCP->>MCP: gateway-client.ts
+        MCP->>OC: WS RPC frame
+        Note over OC: OC broadcasts to subscribers
+        OC-->>U: WS event frame
+    end
+
+    loop Tool calls
+        SDK-->>H: SDKMessage (tool_use)
+        H->>MCP: execute tool
+        MCP->>MCP: gateway-client.ts
+        MCP->>OC: WS RPC for tool dispatch
+        OC-->>MCP: tool response
+        MCP-->>H: tool result
+        H->>SDK: tool_result
+    end
+
+    SDK-->>H: stream complete
+    H-->>R: result
+    R-->>OC: complete
+
+    Note over OC: Tool calls routed through OC gateway WS — extra hop per tool
+</pre>
+    </div>
+    <div class="callout callout-warn">
+      <strong>Problem:</strong> Every streaming delta and tool call routes through the OC gateway WebSocket, adding latency and coupling Imago to OC's protocol.
+    </div>
+  </div>
+
+  <div id="chain-proposed" class="tab-panel">
+    <div class="diagram-container">
+<pre class="mermaid-deferred">
 sequenceDiagram
     participant U as User (Browser)
     participant WS as Gateway WS :18800
@@ -506,16 +622,129 @@ sequenceDiagram
     EB->>WS: broadcast
     WS-->>U: { type: "res", data: { text, usage } }
 </pre>
+    </div>
+    <div class="callout callout-success">
+      <strong>Result:</strong> Direct event bus broadcast with 150ms throttling. No OC gateway hop for streaming or tool calls.
+    </div>
+  </div>
 </div>
 </section>
 
 <!-- ================================================================= -->
 <section id="gateway-components">
 <h2><span class="badge">Graph</span> 4. Gateway Server Components</h2>
-<p class="section-desc">Internal structure of the standalone gateway. ~665 LOC total, deliberately minimal compared to OC's ~4,000 LOC gateway.</p>
+<p class="section-desc">Comparison of gateway structures. OC's ~4,000 LOC gateway vs the proposed ~665 LOC standalone gateway.</p>
 
-<div class="diagram-container">
+<div class="tab-container">
+  <div class="tabs">
+    <button class="tab active" data-panel="gw-current">Current</button>
+    <button class="tab" data-panel="gw-proposed">Proposed</button>
+  </div>
+
+  <div id="gw-current" class="tab-panel active">
+    <div class="diagram-container">
 <pre class="mermaid">
+graph TB
+    subgraph "HTTP Layer"
+        HTTP["Node HTTP Server"]
+        Health["/health"]
+        Webhooks["Webhooks"]
+        StaticF["Static files"]
+        Canvas["Canvas hosting"]
+        PluginR["Plugin routes"]
+    end
+
+    subgraph "WebSocket Layer"
+        WSS["WebSocket Server"]
+        AuthM["5 Auth Methods"]
+        HB["Heartbeat"]
+        Proto["Protocol Handler"]
+    end
+
+    subgraph "Auth Methods"
+        A1["Device auth Ed25519"]
+        A2["Bearer token"]
+        A3["Silent pairing"]
+        A4["OAuth"]
+        A5["mDNS discovery"]
+    end
+
+    subgraph "RPC Methods"
+        RPC["134+ RPC Methods"]
+        RPC1["session.*"]
+        RPC2["cron.*"]
+        RPC3["config.*"]
+        RPC4["canvas.*"]
+        RPC5["plugin.*"]
+        RPC6["discord.*"]
+        RPC7["system.*"]
+        RPC8["80+ others"]
+    end
+
+    subgraph "Infrastructure"
+        TS["Tailscale"]
+        MDNS["mDNS service"]
+        PM["Plugin manager"]
+        SM["Session manager"]
+    end
+
+    HTTP --> Health
+    HTTP --> Webhooks
+    HTTP --> StaticF
+    HTTP --> Canvas
+    HTTP --> PluginR
+    HTTP -->|"upgrade"| WSS
+    WSS --> AuthM
+    AuthM --> A1
+    AuthM --> A2
+    AuthM --> A3
+    AuthM --> A4
+    AuthM --> A5
+    WSS --> HB
+    WSS --> Proto
+    Proto --> RPC
+    RPC --> RPC1
+    RPC --> RPC2
+    RPC --> RPC3
+    RPC --> RPC4
+    RPC --> RPC5
+    RPC --> RPC6
+    RPC --> RPC7
+    RPC --> RPC8
+
+    style HTTP fill:#3a2510,stroke:#fab387,color:#fab387
+    style WSS fill:#3a2510,stroke:#fab387,color:#fab387
+    style AuthM fill:#3a2510,stroke:#fab387,color:#fab387
+    style A1 fill:#3a2510,stroke:#fab387,color:#fab387
+    style A2 fill:#3a2510,stroke:#fab387,color:#fab387
+    style A3 fill:#3a2510,stroke:#fab387,color:#fab387
+    style A4 fill:#3a2510,stroke:#fab387,color:#fab387
+    style A5 fill:#3a2510,stroke:#fab387,color:#fab387
+    style RPC fill:#3a2510,stroke:#fab387,color:#fab387
+    style RPC1 fill:#3a2510,stroke:#fab387,color:#fab387
+    style RPC2 fill:#3a2510,stroke:#fab387,color:#fab387
+    style RPC3 fill:#3a2510,stroke:#fab387,color:#fab387
+    style RPC4 fill:#3a2510,stroke:#fab387,color:#fab387
+    style RPC5 fill:#3a2510,stroke:#fab387,color:#fab387
+    style RPC6 fill:#3a2510,stroke:#fab387,color:#fab387
+    style RPC7 fill:#3a2510,stroke:#fab387,color:#fab387
+    style RPC8 fill:#3a2510,stroke:#fab387,color:#fab387
+    style TS fill:#3a2510,stroke:#fab387,color:#fab387
+    style MDNS fill:#3a2510,stroke:#fab387,color:#fab387
+    style PM fill:#3a2510,stroke:#fab387,color:#fab387
+    style SM fill:#3a2510,stroke:#fab387,color:#fab387
+    style Proto fill:#3a2510,stroke:#fab387,color:#fab387
+    style HB fill:#3a2510,stroke:#fab387,color:#fab387
+</pre>
+    </div>
+    <div class="callout callout-warn">
+      <strong>Problem:</strong> ~4,000 LOC gateway with 134+ RPC methods, 5 auth methods, canvas hosting, mDNS, Tailscale. Imago uses ~10 of these methods.
+    </div>
+  </div>
+
+  <div id="gw-proposed" class="tab-panel">
+    <div class="diagram-container">
+<pre class="mermaid-deferred">
 graph TB
     subgraph "HTTP Layer"
         HTTP["Node HTTP Server"]
@@ -575,16 +804,55 @@ graph TB
     style HB fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
     style Proto fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
 </pre>
+    </div>
+    <div class="callout callout-success">
+      <strong>Result:</strong> ~665 LOC gateway with ~10 RPC methods and token auth. Purpose-built for Imago's actual needs.
+    </div>
+  </div>
 </div>
 </section>
 
 <!-- ================================================================= -->
 <section id="session-routing">
 <h2><span class="badge">Flowchart</span> 5. Session Routing Flow</h2>
-<p class="section-desc">How incoming messages are resolved to session keys using the composite key scheme. Each channel type maps to a specific key pattern.</p>
+<p class="section-desc">How incoming messages are resolved to sessions. Current uses flat OC session IDs; proposed uses composite keys with channel discrimination.</p>
 
-<div class="diagram-container">
+<div class="tab-container">
+  <div class="tabs">
+    <button class="tab active" data-panel="sess-current">Current</button>
+    <button class="tab" data-panel="sess-proposed">Proposed</button>
+  </div>
+
+  <div id="sess-current" class="tab-panel active">
+    <div class="diagram-container">
 <pre class="mermaid">
+flowchart TD
+    MSG["Incoming Message"] --> GW["OC Gateway"]
+    GW --> AUTH["Authenticate connection"]
+    AUTH --> ROUTE["Route to plugin"]
+    ROUTE --> PLUGIN{"Plugin registered?"}
+    PLUGIN -->|"Yes"| SESS["Flat session ID: openclawSessionId"]
+    PLUGIN -->|"No"| REJECT["Reject"]
+    SESS --> LOOKUP{"Binding exists?"}
+    LOOKUP -->|"Yes"| RESUME["Resume existing session"]
+    LOOKUP -->|"No"| FRESH["Create fresh session"]
+    RESUME --> HARNESS["Harness runAttempt"]
+    FRESH --> HARNESS
+
+    style MSG fill:#3a2510,stroke:#fab387,color:#fab387
+    style GW fill:#3a2510,stroke:#fab387,color:#fab387
+    style HARNESS fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style REJECT fill:#2e1a1a,stroke:#f38ba8,color:#f38ba8
+</pre>
+    </div>
+    <div class="callout callout-warn">
+      <strong>Problem:</strong> Flat session IDs — no channel discrimination. Discord, webchat, cron all share the same session namespace. OC manages lifecycle.
+    </div>
+  </div>
+
+  <div id="sess-proposed" class="tab-panel">
+    <div class="diagram-container">
+<pre class="mermaid-deferred">
 flowchart TD
     MSG["Incoming Message"] --> SRC{"Source?"}
 
@@ -622,16 +890,66 @@ flowchart TD
     style RUN fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
     style REJECT fill:#2e1a1a,stroke:#f38ba8,color:#f38ba8
 </pre>
+    </div>
+    <div class="callout callout-success">
+      <strong>Result:</strong> Composite keys (agent:main:discord:channel:ID) — each channel gets its own session with independent lifecycle management.
+    </div>
+  </div>
 </div>
 </section>
 
 <!-- ================================================================= -->
 <section id="event-bus">
 <h2><span class="badge">Sequence</span> 6. Event Bus: Emit to Render</h2>
-<p class="section-desc">How agent events flow from the harness through the event bus to connected WebSocket clients. Shows the 150ms throttling for text deltas and the seq counter for ordered delivery.</p>
+<p class="section-desc">How agent events flow from the harness to connected clients. Current routes through OC gateway with no throttling; proposed uses a dedicated event bus with batching and sequence counters.</p>
 
-<div class="diagram-container">
+<div class="tab-container">
+  <div class="tabs">
+    <button class="tab active" data-panel="evbus-current">Current</button>
+    <button class="tab" data-panel="evbus-proposed">Proposed</button>
+  </div>
+
+  <div id="evbus-current" class="tab-panel active">
+    <div class="diagram-container">
 <pre class="mermaid">
+sequenceDiagram
+    participant H as Harness
+    participant GWC as Gateway WS Client
+    participant OC as OC Gateway :18789
+    participant C1 as WS Client 1
+    participant C2 as WS Client 2
+
+    H->>GWC: emitAgentEvent(assistant, delta)
+    GWC->>OC: WS frame { type: "evt", ... }
+    Note over OC: No throttling — every delta forwarded immediately
+    Note over OC: No sequence counter — ordering not guaranteed
+    OC->>C1: Forward event
+    OC->>C2: Forward event
+
+    H->>GWC: emitAgentEvent(assistant, delta)
+    GWC->>OC: WS frame { type: "evt", ... }
+    OC->>C1: Forward event
+    OC->>C2: Forward event
+
+    H->>GWC: emitAgentEvent(tool, { name, args })
+    GWC->>OC: WS frame { type: "evt", ... }
+    OC->>C1: Forward event
+    OC->>C2: Forward event
+
+    H->>GWC: emitAgentEvent(status, idle)
+    GWC->>OC: WS frame { type: "evt", ... }
+    OC->>C1: Forward event
+    OC->>C2: Forward event
+</pre>
+    </div>
+    <div class="callout callout-warn">
+      <strong>Problem:</strong> Every text delta forwarded immediately — no batching, no throttling, no sequence ordering. High-frequency updates flood the WebSocket connection.
+    </div>
+  </div>
+
+  <div id="evbus-proposed" class="tab-panel">
+    <div class="diagram-container">
+<pre class="mermaid-deferred">
 sequenceDiagram
     participant H as Harness
     participant EB as Event Bus
@@ -673,19 +991,76 @@ sequenceDiagram
     BC->>C1: { type: "evt", event: "session.status", seq: 5 }
     BC->>C2: { type: "evt", event: "session.status", seq: 5 }
 </pre>
-</div>
-<div class="callout callout-info">
-  <strong>Throttling strategy:</strong> Only text deltas are throttled (150ms buffer). Tool events and status changes are broadcast immediately. The seq counter ensures clients can detect and handle out-of-order delivery.
+    </div>
+    <div class="callout callout-info">
+      <strong>Throttling strategy:</strong> Only text deltas are throttled (150ms buffer). Tool events and status changes are broadcast immediately. The seq counter ensures clients can detect and handle out-of-order delivery.
+    </div>
+  </div>
 </div>
 </section>
 
 <!-- ================================================================= -->
 <section id="safety-layers">
 <h2><span class="badge">Graph</span> 7. Migration Safety Layers</h2>
-<p class="section-desc">Five layers of safety, from prevention through catastrophic recovery. Each layer is independent and progressively more aggressive.</p>
+<p class="section-desc">Current state has no automated recovery. Proposed adds five layers of safety from prevention through catastrophic recovery.</p>
 
-<div class="diagram-container">
+<div class="tab-container">
+  <div class="tabs">
+    <button class="tab active" data-panel="safety-current">Current</button>
+    <button class="tab" data-panel="safety-proposed">Proposed</button>
+  </div>
+
+  <div id="safety-current" class="tab-panel active">
+    <div class="diagram-container">
 <pre class="mermaid">
+graph TB
+    subgraph "Current: Single Point of Failure"
+        OC["OC Gateway"] --> CRASH["Gateway crashes"]
+        CRASH --> DOWN["Imago goes silent"]
+        DOWN --> MANUAL["Manual intervention required"]
+    end
+
+    subgraph "No Automated Recovery"
+        N1["No continuity checks"]
+        N2["No automated rollback"]
+        N3["No health endpoint"]
+        N4["No fallback paths"]
+    end
+
+    subgraph "Risk Surface"
+        R1["OC update breaks protocol"]
+        R2["OC config change breaks paths"]
+        R3["OC gateway restart kills sessions"]
+        R4["No way to verify Vesper is OK"]
+    end
+
+    R1 --> CRASH
+    R2 --> CRASH
+    R3 --> CRASH
+    R4 --> CRASH
+
+    style OC fill:#2e1a1a,stroke:#f38ba8,color:#f38ba8
+    style CRASH fill:#2e1a1a,stroke:#f38ba8,color:#f38ba8
+    style DOWN fill:#2e1a1a,stroke:#f38ba8,color:#f38ba8
+    style MANUAL fill:#2e1a1a,stroke:#f38ba8,color:#f38ba8
+    style R1 fill:#3a2510,stroke:#fab387,color:#fab387
+    style R2 fill:#3a2510,stroke:#fab387,color:#fab387
+    style R3 fill:#3a2510,stroke:#fab387,color:#fab387
+    style R4 fill:#3a2510,stroke:#fab387,color:#fab387
+    style N1 fill:#3a2510,stroke:#fab387,color:#fab387
+    style N2 fill:#3a2510,stroke:#fab387,color:#fab387
+    style N3 fill:#3a2510,stroke:#fab387,color:#fab387
+    style N4 fill:#3a2510,stroke:#fab387,color:#fab387
+</pre>
+    </div>
+    <div class="callout callout-warn">
+      <strong>Problem:</strong> No automated way to verify Vesper is OK. No rollback mechanism. OC crash = Imago goes silent with no recovery path.
+    </div>
+  </div>
+
+  <div id="safety-proposed" class="tab-panel">
+    <div class="diagram-container">
+<pre class="mermaid-deferred">
 graph TB
     subgraph "Layer 1: Prevention"
         P1["Pre-migration snapshot"]
@@ -775,19 +1150,59 @@ graph TB
     style C2 fill:#2e1a1a,stroke:#f38ba8,color:#f38ba8
     style C3 fill:#2e1a1a,stroke:#f38ba8,color:#f38ba8
 </pre>
-</div>
-<div class="callout callout-success">
-  <strong>Data safety guarantee:</strong> At no point does any script delete, modify, or overwrite any file in ~/.openclaw/workspace/. The migration is purely additive until the final cutover. Even the cutover is reversible.
+    </div>
+    <div class="callout callout-success">
+      <strong>Data safety guarantee:</strong> At no point does any script delete, modify, or overwrite any file in ~/.openclaw/workspace/. The migration is purely additive until the final cutover. Even the cutover is reversible.
+    </div>
+  </div>
 </div>
 </section>
 
 <!-- ================================================================= -->
 <section id="cutover-sequence">
 <h2><span class="badge">Sequence</span> 8. Cutover Sequence</h2>
-<p class="section-desc">The parallel validation and channel migration sequence. Both gateways run simultaneously, then channels are migrated one at a time with verification at each step.</p>
+<p class="section-desc">Current deployment is a single OC-managed process. Proposed cutover migrates channels one at a time with parallel validation and rollback at every step.</p>
 
-<div class="diagram-container">
+<div class="tab-container">
+  <div class="tabs">
+    <button class="tab active" data-panel="cutover-current">Current</button>
+    <button class="tab" data-panel="cutover-proposed">Proposed</button>
+  </div>
+
+  <div id="cutover-current" class="tab-panel active">
+    <div class="diagram-container">
 <pre class="mermaid">
+sequenceDiagram
+    participant OC as OC Gateway :18789
+    participant P as Plugin Manager
+    participant H as Imago Harness
+    participant DC as OC Discord Bot
+    participant WC as OC Webchat
+
+    Note over OC,WC: Current: Everything Through OC
+
+    OC->>P: Load plugin (openclaw.plugin.json)
+    P->>H: registerAgentHarness()
+    DC->>OC: Discord messages routed
+    WC->>OC: Webchat messages routed
+    OC->>H: runAttempt(params)
+    H-->>OC: result
+    OC->>DC: Broadcast to Discord
+    OC->>WC: Broadcast to webchat
+
+    Note over OC: Single process manages all
+    Note over H: Harness has no independent lifecycle
+    Note over OC: OC restart = Imago restart
+</pre>
+    </div>
+    <div class="callout callout-warn">
+      <strong>Problem:</strong> Imago has no independent lifecycle. It starts when OC loads the plugin, dies when OC restarts, and cannot run without OC.
+    </div>
+  </div>
+
+  <div id="cutover-proposed" class="tab-panel">
+    <div class="diagram-container">
+<pre class="mermaid-deferred">
 sequenceDiagram
     participant OC as OC Gateway :18789
     participant IM as Imago Gateway :18800
@@ -842,6 +1257,11 @@ sequenceDiagram
     Note over OC: OC gateway kept as fallback
     Note over IM: Imago is now primary
 </pre>
+    </div>
+    <div class="callout callout-success">
+      <strong>Result:</strong> Controlled migration with parallel validation. Both gateways coexist, channels migrate one at a time, rollback available at every step.
+    </div>
+  </div>
 </div>
 </section>
 
