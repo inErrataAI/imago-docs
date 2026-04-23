@@ -241,10 +241,10 @@
     position: relative;
   }
   .checklist li::before {
-    content: '\2610';
+    content: '\2611';
     position: absolute;
     left: 0;
-    color: var(--text4);
+    color: var(--green);
   }
   .tab-container {
     margin: 1rem 0;
@@ -301,7 +301,7 @@
 
 <div class="page-header">
   <h1>Imago &mdash; Phase 2 Refactor Specification</h1>
-  <p class="subtitle">Produced 2026-04-23 &mdash; Performance &amp; Reliability Optimization &middot; Prerequisite: Phase 1 complete (commit <code>9b4915d</code>, 400 tests, 24 modules)</p>
+  <p class="subtitle">Produced 2026-04-23 &mdash; <strong style="color: var(--green);">Completed 2026-04-23</strong> &mdash; Performance &amp; Reliability Optimization &middot; Prerequisite: Phase 1 complete (commit <code>9b4915d</code>, 400 tests, 24 modules)</p>
   <nav>
     <a href="#status" class="active">Status</a>
     <a href="#worker-pool">1. Worker Pool</a>
@@ -327,10 +327,10 @@
 <table>
   <thead><tr><th>Phase</th><th>Scope</th><th>Status</th><th>Tests</th></tr></thead>
   <tbody>
-    <tr><td><strong>2a</strong></td><td>Worker Pool</td><td><span class="status-pending">PENDING</span></td><td>+12 (6 exist, 2 failing)</td></tr>
-    <tr><td><strong>2b</strong></td><td>Caching Layer</td><td><span class="status-pending">PENDING</span></td><td>+10</td></tr>
-    <tr><td><strong>2c</strong></td><td>Streaming &amp; Pipeline</td><td><span class="status-pending">PENDING</span></td><td>+5</td></tr>
-    <tr><td><strong>2d</strong></td><td>Resilience &amp; Micro-opts</td><td><span class="status-pending">PENDING</span></td><td>+8</td></tr>
+    <tr><td><strong>2a</strong></td><td>Worker Pool</td><td><span class="status-done">DONE</span></td><td>+12 (6 exist, 2 failing)</td></tr>
+    <tr><td><strong>2b</strong></td><td>Caching Layer</td><td><span class="status-done">DONE</span></td><td>+10</td></tr>
+    <tr><td><strong>2c</strong></td><td>Streaming &amp; Pipeline</td><td><span class="status-done">DONE</span></td><td>+5</td></tr>
+    <tr><td><strong>2d</strong></td><td>Resilience &amp; Micro-opts</td><td><span class="status-done">DONE</span></td><td>+8</td></tr>
   </tbody>
 </table>
 
@@ -391,7 +391,7 @@
     <tr><td>String allocations per response</td><td>O(n) deltas</td><td>O(1) join</td></tr>
     <tr><td>Gateway reconnect behavior</td><td>Fail + cold reconnect</td><td>Queue + auto-reconnect</td></tr>
     <tr><td>Worker reuse across turns</td><td>None</td><td>Same-session reuse</td></tr>
-    <tr><td>Tests</td><td>400</td><td>~435</td></tr>
+    <tr><td>Tests</td><td>400</td><td>474</td></tr>
     <tr><td>Source modules</td><td>24</td><td>25</td></tr>
   </tbody>
 </table>
@@ -1080,7 +1080,7 @@ const stderrData = stderrParts.join("");</code></pre>
         Fix 2 pre-existing test failures<br>
         +6 new unit tests
       </td>
-      <td><span class="status-pending">PENDING</span></td>
+      <td><span class="status-done">DONE</span></td>
     </tr>
     <tr>
       <td><strong>2b</strong></td>
@@ -1093,7 +1093,7 @@ const stderrData = stderrParts.join("");</code></pre>
         Chronicle recall TTL<br>
         +10 tests
       </td>
-      <td><span class="status-pending">PENDING</span></td>
+      <td><span class="status-done">DONE</span></td>
     </tr>
     <tr>
       <td><strong>2c</strong></td>
@@ -1105,7 +1105,7 @@ const stderrData = stderrParts.join("");</code></pre>
         MCP server object caching<br>
         +5 tests
       </td>
-      <td><span class="status-pending">PENDING</span></td>
+      <td><span class="status-done">DONE</span></td>
     </tr>
     <tr>
       <td><strong>2d</strong></td>
@@ -1117,7 +1117,7 @@ const stderrData = stderrParts.join("");</code></pre>
         Dynamic import hoisting<br>
         +8 tests
       </td>
-      <td><span class="status-pending">PENDING</span></td>
+      <td><span class="status-done">DONE</span></td>
     </tr>
   </tbody>
 </table>
@@ -1126,8 +1126,8 @@ const stderrData = stderrParts.join("");</code></pre>
 <table>
   <thead><tr><th>Metric</th><th>Phase 1 End</th><th>Phase 2 Target</th></tr></thead>
   <tbody>
-    <tr><td>Tests</td><td>400</td><td>~435</td></tr>
-    <tr><td>Test files</td><td>18</td><td>~21</td></tr>
+    <tr><td>Tests</td><td>400</td><td>474</td></tr>
+    <tr><td>Test files</td><td>18</td><td>21</td></tr>
     <tr><td>Source modules</td><td>24</td><td>25 (<code>+worker-pool.ts</code>)</td></tr>
     <tr><td>Per-turn latency overhead</td><td>~440ms</td><td>~50ms</td></tr>
     <tr><td>Subprocess spawns per turn</td><td>3&ndash;4</td><td>0&ndash;1</td></tr>
