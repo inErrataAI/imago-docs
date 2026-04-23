@@ -361,29 +361,24 @@ sequenceDiagram
 <div class="diagram-container">
 <pre class="mermaid">
 stateDiagram-v2
+    direction LR
+
     [*] --> Empty: WorkerPool created
-
-    Empty --> HasWorker: acquire(sessionId, fingerprint, factory)
-    HasWorker --> HasWorker: acquire(same session, same fingerprint)\n reuse worker, reset idle timer
-    HasWorker --> Evicting: acquire(same session, DIFFERENT fingerprint)\n fingerprint mismatch
-    HasWorker --> Evicting: evict(sessionId)\n explicit eviction
-    HasWorker --> Evicting: idle timer fires\n no activity for workerPoolIdleMs
-    HasWorker --> Evicting: reset(sessionId)\n session reset
-
-    Evicting --> Empty: inputQueue.end()\n generator terminates\n subprocess exits\n worker removed
-
-    Evicting --> HasWorker: (immediate re-acquire\nafter eviction)
-
+    Empty --> HasWorker: acquire()
+    HasWorker --> HasWorker: same fingerprint — reuse
+    HasWorker --> Evicting: fingerprint mismatch
+    HasWorker --> Evicting: evict() / idle timer / reset()
+    Evicting --> Empty: inputQueue.end() → subprocess exits
+    Evicting --> HasWorker: immediate re-acquire
     HasWorker --> Disposing: dispose()
     Empty --> Disposing: dispose()
-
     Disposing --> [*]: All workers evicted
 
     state HasWorker {
         [*] --> Active: query() started
-        Active --> Idle: turn completes\nstartIdleTimer()
-        Idle --> Active: next acquire()\nclearTimeout()
-        Idle --> [*]: timer fires\n evict
+        Active --> Idle: turn completes
+        Idle --> Active: next acquire()
+        Idle --> [*]: idle timer fires
     }
 </pre>
 </div>
@@ -442,38 +437,41 @@ graph TB
 stateDiagram-v2
     [*] --> Disconnected: Module load
 
-    Disconnected --> Connecting: request() then ensureConnected()
+    Disconnected --> Connecting: request() → ensureConnected()
 
-    Connecting --> Handshaking: WebSocket open event
-    Connecting --> Failed: WebSocket error / timeout
+    Connecting --> Handshaking: WebSocket open
+    Connecting --> Failed: error / timeout
 
-    Handshaking --> Connected: Challenge-response + device auth OK
-    Handshaking --> Failed: Auth rejected / timeout
+    Handshaking --> Connected: auth OK
+    Handshaking --> Failed: auth rejected
 
-    Connected --> Connected: request() then send frame
-    Connected --> Reconnecting: WebSocket close event
-    Connected --> Reconnecting: WebSocket error event
+    Connected --> Connected: request() → send frame
+    Connected --> Reconnecting: close / error event
 
-    Failed --> Disconnected: No reconnect configured\n(Phase 1 behavior)
-    Failed --> Reconnecting: Phase 2: auto-reconnect
+    Failed --> Disconnected: no reconnect (Phase 1)
+    Failed --> Reconnecting: auto-reconnect (Phase 2)
 
-    Reconnecting --> Connecting: After backoff delay\n(1s then 2s then 4s then 8s then 16s)
-    Reconnecting --> Disconnected: Max retries (5) exceeded\n then drain queue with error
+    Reconnecting --> Connecting: after backoff (1s→2s→4s→8s→16s)
+    Reconnecting --> Disconnected: max retries (5) exceeded
 
     state Reconnecting {
         [*] --> Queuing
-        Queuing: Requests queued (max 50)\nPer-request timeouts still ticking
+        Queuing: Requests queued (max 50)
         Queuing --> [*]: Backoff timer fires
     }
 
     state Connected {
         [*] --> Active
-        Active: Requests sent immediately\nreconnectAttempts = 0
-        Active --> Active: Response received\n then resolve pending promise
+        Active: reconnectAttempts = 0
+        Active --> Active: response received
     }
 
     note right of Reconnecting
-        New in Phase 2:\n- Exponential backoff (1s base)\n- Request queue (bounded at 50)\n- Per-request timeout continues\n- Queue drained on max retries
+        New in Phase 2
+        - Exponential backoff (1s base)
+        - Request queue (bounded at 50)
+        - Per-request timeout continues
+        - Queue drained on max retries
     end note
 </pre>
 </div>
@@ -612,18 +610,18 @@ graph LR
     IDX --> H
     IDX --> P
 
-    style WP fill:#fff3e0,stroke:#ff9800,stroke-width:3px
-    style H fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
-    style A fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
-    style SP fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
-    style QB fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
-    style S fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
-    style PF fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
-    style CTX fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
-    style PR fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
-    style DA fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
-    style IN fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
-    style GC fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style WP fill:#3a2510,stroke:#fab387,stroke-width:3px,color:#fab387
+    style H fill:#1a2e1a,stroke:#a6e3a1,stroke-width:2px,color:#a6e3a1
+    style A fill:#1a2e1a,stroke:#a6e3a1,stroke-width:2px,color:#a6e3a1
+    style SP fill:#1a2e1a,stroke:#a6e3a1,stroke-width:2px,color:#a6e3a1
+    style QB fill:#1a2e1a,stroke:#a6e3a1,stroke-width:2px,color:#a6e3a1
+    style S fill:#1a2e1a,stroke:#a6e3a1,stroke-width:2px,color:#a6e3a1
+    style PF fill:#1a2e1a,stroke:#a6e3a1,stroke-width:2px,color:#a6e3a1
+    style CTX fill:#1a2e1a,stroke:#a6e3a1,stroke-width:2px,color:#a6e3a1
+    style PR fill:#1a2e1a,stroke:#a6e3a1,stroke-width:2px,color:#a6e3a1
+    style DA fill:#1a2e1a,stroke:#a6e3a1,stroke-width:2px,color:#a6e3a1
+    style IN fill:#1a2e1a,stroke:#a6e3a1,stroke-width:2px,color:#a6e3a1
+    style GC fill:#1a2e1a,stroke:#a6e3a1,stroke-width:2px,color:#a6e3a1
 </pre>
 </div>
 </section>
