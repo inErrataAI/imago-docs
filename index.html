@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Imago — Technical Documentation</title>
+<style>
+  :root {
+    --bg: #0b0b14;
+    --surface: #11111b;
+    --surface2: #181825;
+    --text: #cdd6f4;
+    --text2: #bac2de;
+    --text3: #a6adc8;
+    --accent: #b4befe;
+    --accent2: #89b4fa;
+    --border: #313244;
+    --green: #a6e3a1;
+    --mauve: #cba6f7;
+    --teal: #94e2d5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  .container {
+    max-width: 680px;
+    width: 100%;
+  }
+  h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #cba6f7, #89b4fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .tagline {
+    color: var(--text3);
+    font-size: 1rem;
+    margin-bottom: 2.5rem;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1rem;
+    text-decoration: none;
+    display: block;
+    transition: all 0.2s;
+  }
+  .card:hover {
+    border-color: var(--accent);
+    background: var(--surface2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .card h2 {
+    font-size: 1.2rem;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .card p {
+    color: var(--text3);
+    font-size: 0.9rem;
+    margin: 0;
+  }
+  .card .meta {
+    margin-top: 0.6rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .card .meta span {
+    font-size: 0.78rem;
+    color: var(--text3);
+    background: var(--surface2);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .badge-new {
+    font-size: 0.65rem;
+    background: #a6e3a122;
+    color: var(--green);
+    border: 1px solid #a6e3a144;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .footer {
+    margin-top: 3rem;
+    text-align: center;
+    color: var(--text3);
+    font-size: 0.8rem;
+  }
+  .footer a { color: var(--accent2); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Imago</h1>
+  <p class="tagline">Cognitive architecture harness for Claude Code &mdash; technical documentation</p>
+
+  <a class="card" href="imago-architecture.html">
+    <h2>Architecture Diagrams <span class="badge-new">Current + Proposed</span></h2>
+    <p>C4 model diagrams (system context, containers, components), sequence diagrams for all major flows, state machines, data residency maps, and module dependency graphs. Each diagram has <strong>Current</strong> and <strong>Proposed</strong> tabs showing the before/after of the Phase 1 refactor.</p>
+    <div class="meta">
+      <span>15 diagrams</span>
+      <span>Mermaid rendered</span>
+      <span>4,722 LOC analyzed</span>
+    </div>
+  </a>
+
+  <a class="card" href="imago-refactor.html">
+    <h2>Phase 1 Refactor Specification</h2>
+    <p>Dependency vendoring plan, global rename audit (343 occurrences), optimization &amp; modularization spec (P0&ndash;P4 priorities), and full-coverage testing spec with module-by-module test plans.</p>
+    <div class="meta">
+      <span>4 deliverables</span>
+      <span>Phase 1a complete</span>
+      <span>34 files audited</span>
+    </div>
+  </a>
+
+  <div class="footer">
+    <p><a href="https://github.com/inErrataAI/imago">inErrataAI/imago</a> &mdash; @inerrata/imago &mdash; Produced 2026-04-22</p>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Imago — Phase 1 Refactor Specification</title>
+<style>
+  :root {
+    --bg: #0b0b14;
+    --surface: #11111b;
+    --surface2: #181825;
+    --surface3: #1e1e2e;
+    --border: #313244;
+    --border2: #45475a;
+    --text: #cdd6f4;
+    --text2: #bac2de;
+    --text3: #a6adc8;
+    --text4: #6c7086;
+    --accent: #b4befe;
+    --accent2: #89b4fa;
+    --green: #a6e3a1;
+    --red: #f38ba8;
+    --yellow: #f9e2af;
+    --peach: #fab387;
+    --mauve: #cba6f7;
+    --teal: #94e2d5;
+    --pink: #f5c2e7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.7;
+    padding: 0;
+  }
+  .page-header {
+    background: linear-gradient(135deg, #1e1e2e 0%, #181825 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 3rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+  .page-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+  .page-header .subtitle {
+    color: var(--text3);
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+  .page-header nav {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .page-header nav a {
+    color: var(--text2);
+    text-decoration: none;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+  .page-header nav a:hover {
+    background: var(--surface2);
+    color: var(--accent);
+    border-color: var(--border2);
+  }
+  .page-header nav a.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 3rem 6rem;
+  }
+  section {
+    margin-bottom: 3rem;
+  }
+  h2 {
+    font-size: 1.3rem;
+    color: var(--accent);
+    margin: 2.5rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-size: 1.05rem;
+    color: var(--mauve);
+    margin: 1.5rem 0 0.5rem;
+  }
+  h4 {
+    font-size: 0.95rem;
+    color: var(--teal);
+    margin: 1.2rem 0 0.4rem;
+  }
+  p {
+    color: var(--text2);
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+  }
+  strong { color: var(--text); }
+  em { color: var(--text3); font-style: italic; }
+  a { color: var(--accent2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    background: var(--surface2);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    color: var(--peach);
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    margin: 0.75rem 0 1rem;
+    font-size: 0.82rem;
+    line-height: 1.6;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--text2);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0 1.25rem;
+    font-size: 0.82rem;
+  }
+  thead {
+    position: sticky;
+    top: 80px;
+  }
+  th {
+    background: var(--surface2);
+    color: var(--text);
+    font-weight: 600;
+    text-align: left;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  td {
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: var(--surface); }
+  tr:hover td { background: var(--surface2); }
+  .risk-critical { color: var(--red); font-weight: 700; }
+  .risk-high { color: var(--peach); font-weight: 600; }
+  .risk-medium { color: var(--yellow); }
+  .risk-low { color: var(--text3); }
+  .priority {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .p0 { background: #f38ba822; color: var(--red); border: 1px solid #f38ba844; }
+  .p1 { background: #fab38722; color: var(--peach); border: 1px solid #fab38744; }
+  .p2 { background: #f9e2af22; color: var(--yellow); border: 1px solid #f9e2af44; }
+  .p3 { background: #a6adc822; color: var(--text3); border: 1px solid #a6adc844; }
+  .p4 { background: #6c708622; color: var(--text4); border: 1px solid #6c708644; }
+  .status-done {
+    display: inline-block;
+    background: #a6e3a122;
+    color: var(--green);
+    border: 1px solid #a6e3a144;
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .status-pending {
+    display: inline-block;
+    background: #f9e2af22;
+    color: var(--yellow);
+    border: 1px solid #f9e2af44;
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .callout {
+    background: var(--surface);
+    border-left: 3px solid var(--accent);
+    padding: 0.8rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .callout.warning {
+    border-left-color: var(--yellow);
+  }
+  .callout.critical {
+    border-left-color: var(--red);
+  }
+  .callout.success {
+    border-left-color: var(--green);
+  }
+  .callout p { margin: 0; }
+  ul, ol {
+    margin: 0.5rem 0 1rem 1.5rem;
+    color: var(--text2);
+    font-size: 0.9rem;
+  }
+  li { margin-bottom: 0.3rem; }
+  li code { font-size: 0.8rem; }
+  .checklist {
+    list-style: none;
+    margin-left: 0;
+    padding-left: 0;
+  }
+  .checklist li {
+    padding: 0.3rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+  }
+  .checklist li::before {
+    content: '☐';
+    position: absolute;
+    left: 0;
+    color: var(--text4);
+  }
+  .tree {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--text3);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin: 0.75rem 0 1rem;
+  }
+  .tree .dir { color: var(--accent2); }
+  .tree .new { color: var(--green); }
+  .tree .note { color: var(--text4); }
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2rem 0;
+  }
+  .tab-container {
+    margin: 1rem 0;
+  }
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+  .tab {
+    padding: 0.5rem 1rem;
+    background: var(--surface);
+    color: var(--text3);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: inherit;
+    border-radius: 6px 6px 0 0;
+    margin-right: -1px;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); background: var(--surface2); }
+  .tab.active {
+    background: var(--surface3);
+    color: var(--accent);
+    border-bottom: 1px solid var(--surface3);
+    font-weight: 600;
+  }
+  .tab-panel {
+    display: none;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-top: none;
+    padding: 1rem 1.2rem;
+    border-radius: 0 0 8px 8px;
+  }
+  .tab-panel.active { display: block; }
+  .keep-tag {
+    display: inline-block;
+    background: #94e2d522;
+    color: var(--teal);
+    border: 1px solid #94e2d544;
+    padding: 0rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    vertical-align: middle;
+  }
+  .rename-arrow {
+    color: var(--text4);
+    margin: 0 0.3rem;
+  }
+  @media (max-width: 768px) {
+    .page-header { padding: 1rem 1.5rem; }
+    main { padding: 1rem 1.5rem 4rem; }
+    table { font-size: 0.75rem; }
+    th, td { padding: 0.4rem 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Imago — Phase 1 Refactor Specification</h1>
+  <p class="subtitle">Produced 2026-04-22 &mdash; 4,722 LOC &middot; 15 source files &middot; 11 test files &middot; 343 references audited</p>
+  <nav>
+    <a href="#vendoring" class="active">1. Dependency Vendoring</a>
+    <a href="#rename">2. Global Rename</a>
+    <a href="#optimization">3. Optimization</a>
+    <a href="#testing">4. Testing</a>
+    <a href="#execution">Execution Plan</a>
+    <a href="/imago-architecture.html">Architecture Diagrams &rarr;</a>
+  </nav>
+</div>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<section id="vendoring">
+<h2>1. Dependency Vendoring Plan</h2>
+
+<h3>Problem Statement</h3>
+<p>Imago re-implements several OpenClaw internal protocols and type shapes by reading OpenClaw's source code and mirroring them locally. The strategy is sound &mdash; it avoids tight coupling &mdash; but the mirrored knowledge is fragile: when OpenClaw updates its device-auth payload format, WebSocket frame structure, or plugin API shape, Imago breaks silently.</p>
+<p><strong>Goal:</strong> Make every dependency on OpenClaw explicit, documented, and version-pinned so breakage from upstream changes is caught at build time.</p>
+
+<h3>Dependency Classification</h3>
+
+<div class="tab-container">
+  <div class="tabs">
+    <button class="tab active" data-panel="cat-a">A: Type-Only</button>
+    <button class="tab" data-panel="cat-b">B: Runtime API</button>
+    <button class="tab" data-panel="cat-c">C: Protocol</button>
+    <button class="tab" data-panel="cat-d">D: Environment</button>
+    <button class="tab" data-panel="cat-e">E: Filesystem</button>
+  </div>
+
+  <div id="cat-a" class="tab-panel active">
+    <p><strong>Structural mirrors, zero runtime impact.</strong> TypeScript interfaces that mirror OpenClaw's shapes without importing them.</p>
+    <table>
+      <thead><tr><th>Location</th><th>Type</th><th>Mirrors</th></tr></thead>
+      <tbody>
+        <tr><td><code>adapter.ts:25-68</code></td><td><code>ImagoRunAttemptParams</code></td><td><code>EmbeddedRunAttemptParams</code></td></tr>
+        <tr><td><code>adapter.ts:76-120</code></td><td><code>ImagoRunAttemptResult</code></td><td><code>EmbeddedRunAttemptResult</code></td></tr>
+        <tr><td><code>compaction.ts:17-23</code></td><td><code>CompactParams</code></td><td><code>CompactEmbeddedPiSessionParams</code></td></tr>
+        <tr><td><code>compaction.ts:29-34</code></td><td><code>CompactResult</code></td><td><code>EmbeddedPiCompactResult</code></td></tr>
+        <tr><td><code>harness.ts:166-176</code></td><td><code>HarnessSupportContext</code></td><td><code>AgentHarnessSupportContext</code></td></tr>
+        <tr><td><code>types.ts:56-64</code></td><td><code>XlateOut</code></td><td>Internal only (vestigial)</td></tr>
+        <tr><td><code>types.ts:93-100</code></td><td><code>HarnessSystemPromptInputs</code></td><td>Partial <code>EmbeddedRunAttemptParams</code></td></tr>
+      </tbody>
+    </table>
+    <div class="callout success"><p><strong>Action:</strong> No vendoring needed. These stay as-is &mdash; correct pattern. Add <code>// Mirrors: OpenClaw@vX.Y.Z</code> comments with version they were last verified against.</p></div>
+  </div>
+
+  <div id="cat-b" class="tab-panel">
+    <p><strong>Plugin registration API calls.</strong></p>
+    <table>
+      <thead><tr><th>Location</th><th>API</th><th>Used For</th></tr></thead>
+      <tbody>
+        <tr><td><code>index.ts:46</code></td><td><code>api.registerAgentHarness()</code></td><td>Plugin registration</td></tr>
+        <tr><td><code>index.ts:56</code></td><td><code>api.registerProvider()</code></td><td>Provider registration</td></tr>
+      </tbody>
+    </table>
+    <div class="callout success"><p><strong>Action:</strong> No vendoring needed. Document expected <code>api</code> shape in <code>vendor/openclaw-plugin-api.d.ts</code> stub.</p></div>
+  </div>
+
+  <div id="cat-c" class="tab-panel">
+    <p><strong>The fragile surface.</strong> Protocol details Imago must match byte-for-byte.</p>
+    <table>
+      <thead><tr><th>#</th><th>Protocol</th><th>Location</th><th>Risk</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>WS frame format (<code>req</code>/<code>res</code>/<code>evt</code>)</td><td><code>mcp-bridge.ts:378-389</code></td><td><span class="risk-high">HIGH</span></td></tr>
+        <tr><td>2</td><td>Connect challenge-response flow</td><td><code>mcp-bridge.ts:494-620</code></td><td><span class="risk-high">HIGH</span></td></tr>
+        <tr><td>3</td><td>Device-auth v3 payload format</td><td><code>device-auth.ts:237-251</code></td><td><span class="risk-critical">CRITICAL</span></td></tr>
+        <tr><td>4</td><td><code>resolveSignatureToken</code> precedence</td><td><code>device-auth.ts:280-286</code></td><td><span class="risk-high">HIGH</span></td></tr>
+        <tr><td>5</td><td>Silent local pairing path</td><td><code>device-auth.ts:22-28</code></td><td><span class="risk-medium">Medium</span></td></tr>
+        <tr><td>6</td><td><code>bootstrapDeviceTokens</code> response</td><td><code>device-auth.ts:343-369</code></td><td><span class="risk-medium">Medium</span></td></tr>
+        <tr><td>7</td><td>Self-killing restart patterns</td><td><code>harness.ts:61-64</code></td><td><span class="risk-low">Low</span></td></tr>
+        <tr><td>8</td><td>SIGUSR1 graceful restart</td><td><code>harness.ts:629-644</code></td><td><span class="risk-low">Low</span></td></tr>
+      </tbody>
+    </table>
+    <div class="callout warning"><p><strong>Action:</strong> Create <code>vendor/</code> directory. Extract protocol constants, frame shapes, and payload format into vendored files with version comments. Source files import from <code>vendor/</code>.</p></div>
+    <pre><code>vendor/
+├── openclaw-protocol.ts       # WS frame types, connect flow types
+├── openclaw-device-auth.ts    # v3 payload spec, field order, normalize fn
+├── openclaw-plugin-api.d.ts   # register() API shape
+└── VERSION                    # "Vendored from OpenClaw 2026.4.x"</code></pre>
+  </div>
+
+  <div id="cat-d" class="tab-panel">
+    <p><strong>Environment variables.</strong></p>
+    <table>
+      <thead><tr><th>Env Var</th><th>Used In</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>OPENCLAW_PORT</code></td><td>mcp-bridge, harness</td><td>Gateway port</td></tr>
+        <tr><td><code>OPENCLAW_AUTH_TOKEN</code></td><td>mcp-bridge, harness</td><td>Bearer auth</td></tr>
+        <tr><td><code>OPENCLAW_CONTROL_TOKEN</code></td><td>harness</td><td>Fallback auth</td></tr>
+        <tr><td><code>OPENCLAW_WORKSPACE</code></td><td>mcp-bridge</td><td>Workspace root</td></tr>
+      </tbody>
+    </table>
+    <div class="callout success"><p><strong>Action:</strong> <span class="status-done">DONE</span> Renamed to <code>IMAGO_*</code> as primary with <code>OPENCLAW_*</code> as fallback for backward compatibility.</p></div>
+  </div>
+
+  <div id="cat-e" class="tab-panel">
+    <p><strong>Filesystem path conventions.</strong> Dictated by the host gateway &mdash; cannot be unilaterally changed.</p>
+    <table>
+      <thead><tr><th>Path Pattern</th><th>Used In</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>~/.openclaw/workspace/</code></td><td>context, mcp-bridge</td><td>Persona files</td></tr>
+        <tr><td><code>~/.openclaw/harness-bindings/claude-code/</code></td><td>session, device-auth, diagnostics</td><td>Session bindings, device keys</td></tr>
+        <tr><td><code>device-identity.json</code></td><td>device-auth</td><td>Ed25519 keypair (0600)</td></tr>
+        <tr><td><code>device-token.json</code></td><td>device-auth</td><td>Gateway device token (0600)</td></tr>
+        <tr><td><code>openclaw.plugin.json</code></td><td>package.json</td><td>Plugin manifest</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><p><strong>Action:</strong> Keep paths as-is. Abstract behind a <code>paths.ts</code> module to centralize all path knowledge into a single file.</p></div>
+  </div>
+</div>
+
+<h3>Vendoring Implementation Plan</h3>
+<ol>
+  <li>Create <code>vendor/</code> directory with extracted protocol specs</li>
+  <li>Create <code>paths.ts</code> centralizing all filesystem path constants</li>
+  <li>Update imports in <code>mcp-bridge.ts</code>, <code>device-auth.ts</code>, <code>session.ts</code>, <code>context.ts</code></li>
+  <li>Add <code>VERSION</code> file with upstream OpenClaw version reference</li>
+  <li>Add build-time check: vitest test that validates vendor types against a snapshot (catches drift)</li>
+</ol>
+
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<section id="rename">
+<h2>2. Global Rename: openclaw &rarr; imago <span class="status-done">DONE</span></h2>
+
+<div class="callout success">
+  <p><strong>Executed successfully.</strong> 343 occurrences across 34 files. TypeScript compiles clean. 85/87 tests pass (2 pre-existing failures unrelated to rename). Zero remaining old names in src/ or dist/.</p>
+</div>
+
+<h3>Type &amp; Interface Renames</h3>
+<table>
+  <thead><tr><th>Before</th><th></th><th>After</th><th>Files</th></tr></thead>
+  <tbody>
+    <tr><td><code><s>OpenClawRunAttemptParams</s></code></td><td class="rename-arrow">&rarr;</td><td><code>ImagoRunAttemptParams</code></td><td>adapter.ts (5)</td></tr>
+    <tr><td><code><s>OpenClawRunAttemptResult</s></code></td><td class="rename-arrow">&rarr;</td><td><code>ImagoRunAttemptResult</code></td><td>adapter.ts (5)</td></tr>
+    <tr><td><code><s>createOpenClawHarness</s></code></td><td class="rename-arrow">&rarr;</td><td><code>createImagoHarness</code></td><td>adapter.ts, index.ts (4)</td></tr>
+    <tr><td><code><s>OPENCLAW_TOOLS</s></code></td><td class="rename-arrow">&rarr;</td><td><code>IMAGO_TOOLS</code></td><td>mcp-tools.ts, mcp-bridge.ts</td></tr>
+  </tbody>
+</table>
+
+<h3>String Literals &amp; Log Prefixes</h3>
+<table>
+  <thead><tr><th>Before</th><th></th><th>After</th></tr></thead>
+  <tbody>
+    <tr><td><code>"openclaw-bridge"</code></td><td class="rename-arrow">&rarr;</td><td><code>"imago-bridge"</code></td></tr>
+    <tr><td><code>"OpenClaw MCP Bridge"</code></td><td class="rename-arrow">&rarr;</td><td><code>"Imago MCP Bridge"</code></td></tr>
+    <tr><td><code>"OpenClaw/1.0"</code> User-Agent</td><td class="rename-arrow">&rarr;</td><td><code>"Imago/1.0"</code></td></tr>
+    <tr><td><code>[claude-code-harness]</code></td><td class="rename-arrow">&rarr;</td><td><code>[imago]</code></td></tr>
+    <tr><td><code>[openclaw-bridge]</code> / <code>[mcp-bridge]</code></td><td class="rename-arrow">&rarr;</td><td><code>[imago-bridge]</code></td></tr>
+    <tr><td><code>mcpServers["openclaw"]</code></td><td class="rename-arrow">&rarr;</td><td><code>mcpServers["imago"]</code></td></tr>
+    <tr><td><code>@inerrata/openclaw-claude-harness</code></td><td class="rename-arrow">&rarr;</td><td><code>@inerrata/imago</code></td></tr>
+    <tr><td>All <code>"OpenClaw"</code> in tool descriptions</td><td class="rename-arrow">&rarr;</td><td><code>"Imago"</code></td></tr>
+    <tr><td>All <code>"OpenClaw"</code> in comments</td><td class="rename-arrow">&rarr;</td><td><code>"host gateway"</code> / <code>"Imago"</code></td></tr>
+  </tbody>
+</table>
+
+<h3>Preserved (Not Renamed)</h3>
+<table>
+  <thead><tr><th>Kept As-Is</th><th>Reason</th></tr></thead>
+  <tbody>
+    <tr><td><code>"claude-code"</code> plugin ID</td><td>Describes the integration target, not this project <span class="keep-tag">KEEP</span></td></tr>
+    <tr><td><code>"Claude Code"</code> labels</td><td>User-facing model names <span class="keep-tag">KEEP</span></td></tr>
+    <tr><td><code>~/.openclaw/</code> paths</td><td>Host gateway dictates these <span class="keep-tag">KEEP</span></td></tr>
+    <tr><td><code>openclaw.plugin.json</code> filename</td><td>Host expects this name <span class="keep-tag">KEEP</span></td></tr>
+    <tr><td><code>openclawSessionId</code> field</td><td>Matches host's <code>SessionBinding</code> shape <span class="keep-tag">KEEP</span></td></tr>
+    <tr><td><code>openclaw-gateway</code> in systemctl</td><td>That's the systemd service name <span class="keep-tag">KEEP</span></td></tr>
+    <tr><td><code>OPENCLAW_*</code> env vars</td><td>Kept as fallbacks for backward compat <span class="keep-tag">KEEP</span></td></tr>
+  </tbody>
+</table>
+
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<section id="optimization">
+<h2>3. Optimization, Deduplication &amp; Modularization</h2>
+
+<h3 id="opt-3-1">3.1 &mdash; Duplicated Stream Processing <span class="priority p0">P0</span></h3>
+<p>The retry path in <code>harness.ts</code> (lines 554&ndash;596) duplicates the entire SDKMessage processing loop from the primary path (lines 452&ndash;514). 60+ lines of nearly identical <code>for await...switch</code> logic.</p>
+<div class="callout critical"><p><strong>Impact:</strong> Any change to message handling must be applied in two places. The retry path is already subtly different (no <code>init</code> handling, no <code>error</code> handling).</p></div>
+<p><strong>Fix:</strong> Extract into <code>stream-processor.ts</code>. Both paths call one function.</p>
+
+<h3 id="opt-3-2">3.2 &mdash; Excessive Coupling in harness.ts <span class="priority p1">P1</span></h3>
+<p><code>harness.ts</code> (675 LOC) handles: restart interception, session resume, SDK query construction, message streaming, and post-turn cleanup.</p>
+<p><strong>Fix:</strong> Extract into focused modules:</p>
+<table>
+  <thead><tr><th>New Module</th><th>Extracted From</th><th>~LOC</th></tr></thead>
+  <tbody>
+    <tr><td><code>restart-intercept.ts</code></td><td>Patterns, splitChain, hook builder</td><td>110</td></tr>
+    <tr><td><code>query-builder.ts</code></td><td>Model normalization, MCP injection, hooks</td><td>80</td></tr>
+    <tr><td><code>stream-processor.ts</code></td><td>Message processing loop (from 3.1)</td><td>60</td></tr>
+  </tbody>
+</table>
+<p>Post-extraction: <code>harness.ts</code> drops to ~425 LOC. Clean orchestration: preflight &rarr; session &rarr; build &rarr; query &rarr; process &rarr; bind.</p>
+
+<h3 id="opt-3-3">3.3 &mdash; Visibility System Inlining <span class="priority p1">P1</span></h3>
+<p><code>adapter.ts</code> (683 LOC) has ~400 lines of visibility plumbing (heartbeat, spiral detection, subagent registry) inlined inside <code>runAttempt()</code>.</p>
+<p><strong>Fix:</strong> Extract into <code>visibility.ts</code> as a <code>VisibilityTracker</code> class. Adapter drops to ~280 LOC. Visibility becomes independently testable.</p>
+
+<h3 id="opt-3-4">3.4 &mdash; MCP Bridge God Object <span class="priority p2">P2</span></h3>
+<p><code>mcp-bridge.ts</code> (1032 LOC) contains native tools, gateway handlers, a full WebSocket client, HTML converters, and MCP server setup.</p>
+<p><strong>Fix:</strong> Decompose into <code>bridge/</code> directory:</p>
+<table>
+  <thead><tr><th>Module</th><th>Contains</th><th>~LOC</th></tr></thead>
+  <tbody>
+    <tr><td><code>bridge/server.ts</code></td><td>MCP setup, dispatch routing</td><td>80</td></tr>
+    <tr><td><code>bridge/native-tools.ts</code></td><td>web_search, web_fetch, memory_*</td><td>300</td></tr>
+    <tr><td><code>bridge/gateway-tools.ts</code></td><td>message, sessions_*, cron, gateway, tts</td><td>250</td></tr>
+    <tr><td><code>bridge/gateway-client.ts</code></td><td>GatewayWsClient class</td><td>285</td></tr>
+    <tr><td><code>bridge/html-convert.ts</code></td><td>htmlToText, htmlToMarkdown</td><td>70</td></tr>
+    <tr><td><code>bridge/index.ts</code></td><td>Entry point</td><td>15</td></tr>
+  </tbody>
+</table>
+
+<h3>3.5&ndash;3.9 &mdash; Smaller Items</h3>
+<table>
+  <thead><tr><th>#</th><th>Issue</th><th>Fix</th><th>Priority</th></tr></thead>
+  <tbody>
+    <tr><td>3.5</td><td>Vestigial types (<code>XlateOut</code>, <code>RunContext</code>) dead code</td><td>Remove from types.ts</td><td><span class="priority p3">P3</span></td></tr>
+    <tr><td>3.6</td><td>Duplicated path resolution (session.ts + diagnostics.ts)</td><td>Export <code>resolveBindingDir</code>, import in diagnostics</td><td><span class="priority p3">P3</span></td></tr>
+    <tr><td>3.7</td><td>Lazy import workaround (no actual circular dep)</td><td>Replace dynamic import with static</td><td><span class="priority p3">P3</span></td></tr>
+    <tr><td>3.8</td><td><code>console.log</code> debug noise in production</td><td>Gate behind <code>IMAGO_DEBUG</code> env var</td><td><span class="priority p3">P3</span></td></tr>
+    <tr><td>3.9</td><td><code>anySignal</code> polyfill (Node 22 has native)</td><td>Replace with <code>AbortSignal.any()</code></td><td><span class="priority p4">P4</span></td></tr>
+  </tbody>
+</table>
+
+<h3>Target Module Structure</h3>
+<div class="tree">
+<span class="dir">src/</span>
+├── index.ts              <span class="note">(entry point — unchanged)</span>
+├── adapter.ts            <span class="note">(~280 LOC after extraction)</span>
+├── harness.ts            <span class="note">(~425 LOC after extraction)</span>
+├── protocol.ts           <span class="note">(unchanged)</span>
+├── types.ts              <span class="note">(cleaned, vestigial types removed)</span>
+├── session.ts            <span class="note">(exports resolveBindingDir)</span>
+├── provider.ts           <span class="note">(unchanged)</span>
+├── preflight.ts          <span class="note">(static import fix)</span>
+├── context.ts            <span class="note">(unchanged)</span>
+├── compaction.ts         <span class="note">(unchanged)</span>
+├── diagnostics.ts        <span class="note">(imports from session)</span>
+├── inerrata.ts           <span class="note">(unchanged)</span>
+├── <span class="new">paths.ts</span>              <span class="note">(NEW — centralized path constants)</span>
+├── <span class="new">visibility.ts</span>         <span class="note">(NEW — extracted from adapter.ts)</span>
+├── <span class="new">restart-intercept.ts</span>  <span class="note">(NEW — extracted from harness.ts)</span>
+├── <span class="new">query-builder.ts</span>      <span class="note">(NEW — extracted from harness.ts)</span>
+├── <span class="new">stream-processor.ts</span>   <span class="note">(NEW — extracted from harness.ts)</span>
+├── <span class="dir">bridge/</span>
+│   ├── <span class="new">index.ts</span>          <span class="note">(replaces mcp-bridge.ts)</span>
+│   ├── <span class="new">server.ts</span>         <span class="note">(MCP server setup)</span>
+│   ├── <span class="new">native-tools.ts</span>   <span class="note">(web_search, web_fetch, memory_*)</span>
+│   ├── <span class="new">gateway-tools.ts</span>  <span class="note">(message, sessions, cron, gateway, tts)</span>
+│   ├── <span class="new">gateway-client.ts</span> <span class="note">(GatewayWsClient)</span>
+│   └── <span class="new">html-convert.ts</span>   <span class="note">(htmlToText, htmlToMarkdown)</span>
+├── mcp-tools.ts          <span class="note">(renamed constants)</span>
+├── device-auth.ts        <span class="note">(unchanged)</span>
+└── <span class="dir">vendor/</span>
+    ├── <span class="new">openclaw-protocol.ts</span>
+    ├── <span class="new">openclaw-device-auth.ts</span>
+    ├── <span class="new">openclaw-plugin-api.d.ts</span>
+    └── <span class="new">VERSION</span>
+</div>
+
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<section id="testing">
+<h2>4. Full-Coverage Testing Spec</h2>
+
+<h3>Current State</h3>
+<div class="callout critical">
+  <p><strong>Critical gaps:</strong> <code>device-auth.ts</code> (370 LOC of crypto, <strong>0% tested</strong>), <code>mcp-bridge.ts</code> (1032 LOC, <strong>0% tested</strong>), visibility system (~400 LOC, <strong>0% tested</strong>).</p>
+</div>
+
+<table>
+  <thead><tr><th>Test File</th><th>What It Tests</th><th>Quality</th></tr></thead>
+  <tbody>
+    <tr><td><code>adapter.test.ts</code></td><td>Export exists, harness ID/label, supports(), result shape</td><td>Smoke only</td></tr>
+    <tr><td><code>compaction.test.ts</code></td><td>No-binding returns false, deferred compaction</td><td><span class="status-done">BUG FIXED</span></td></tr>
+    <tr><td><code>context.test.ts</code></td><td>System prompt building</td><td>Partial</td></tr>
+    <tr><td><code>diagnostics.test.ts</code></td><td>Diagnostic report</td><td>Partial</td></tr>
+    <tr><td><code>harness-resume.test.ts</code></td><td>Session resume retry logic</td><td>Decent</td></tr>
+    <tr><td><code>harness-worker-pool.test.ts</code></td><td>Worker pool (aspirational)</td><td>2 failing</td></tr>
+    <tr><td><code>inerrata.test.ts</code></td><td>MCP config, chronicle events</td><td>Partial</td></tr>
+    <tr><td><code>preflight.test.ts</code></td><td>CLI detection</td><td>Partial</td></tr>
+    <tr><td><code>protocol.test.ts</code></td><td>SDKMessage translation</td><td>Decent</td></tr>
+    <tr><td><code>provider.test.ts</code></td><td>Model catalog, availability</td><td>Decent</td></tr>
+    <tr><td><code>session.test.ts</code></td><td>Binding CRUD, sanitization</td><td>Decent</td></tr>
+  </tbody>
+</table>
+
+<h3>Coverage Targets</h3>
+<table>
+  <thead><tr><th>Module</th><th>Current</th><th>Target</th><th>Priority</th></tr></thead>
+  <tbody>
+    <tr><td><code>device-auth.ts</code></td><td><strong>0%</strong></td><td>95%+</td><td><span class="priority p0">P0</span> crypto must be verified</td></tr>
+    <tr><td><code>mcp-bridge.ts</code></td><td><strong>0%</strong></td><td>80%+</td><td><span class="priority p0">P0</span> largest file, all dispatch</td></tr>
+    <tr><td><code>visibility.ts</code> (new)</td><td>0%</td><td>90%+</td><td><span class="priority p1">P1</span> most complex behavior</td></tr>
+    <tr><td><code>restart-intercept.ts</code> (new)</td><td>0%</td><td>95%+</td><td><span class="priority p1">P1</span> safety-critical</td></tr>
+    <tr><td><code>protocol.ts</code></td><td>~60%</td><td>95%+</td><td><span class="priority p1">P1</span> central translator</td></tr>
+    <tr><td><code>harness.ts</code></td><td>~30%</td><td>80%+</td><td><span class="priority p1">P1</span> core loop</td></tr>
+    <tr><td><code>adapter.ts</code></td><td>~10%</td><td>70%+</td><td><span class="priority p2">P2</span></td></tr>
+    <tr><td><code>context.ts</code></td><td>~50%</td><td>80%+</td><td><span class="priority p2">P2</span></td></tr>
+    <tr><td><code>session.ts</code></td><td>~60%</td><td>90%+</td><td><span class="priority p2">P2</span></td></tr>
+    <tr><td><code>compaction.ts</code></td><td>100%</td><td>100%</td><td><span class="priority p3">P3</span></td></tr>
+    <tr><td><code>mcp-tools.ts</code></td><td>0%</td><td>100%</td><td><span class="priority p3">P3</span> schema validation</td></tr>
+    <tr><td><code>provider.ts</code></td><td>~70%</td><td>90%+</td><td><span class="priority p3">P3</span></td></tr>
+    <tr><td><code>preflight.ts</code></td><td>~40%</td><td>80%+</td><td><span class="priority p3">P3</span></td></tr>
+    <tr><td><code>diagnostics.ts</code></td><td>~30%</td><td>70%+</td><td><span class="priority p3">P3</span></td></tr>
+    <tr><td><code>inerrata.ts</code></td><td>~50%</td><td>80%+</td><td><span class="priority p3">P3</span></td></tr>
+    <tr><td><code>index.ts</code></td><td>~30%</td><td>70%+</td><td><span class="priority p4">P4</span></td></tr>
+  </tbody>
+</table>
+
+<h3>Test Plans by Module</h3>
+
+<div class="tab-container">
+  <div class="tabs">
+    <button class="tab active" data-panel="test-device">device-auth</button>
+    <button class="tab" data-panel="test-bridge">mcp-bridge</button>
+    <button class="tab" data-panel="test-visibility">visibility</button>
+    <button class="tab" data-panel="test-harness">harness</button>
+    <button class="tab" data-panel="test-protocol">protocol</button>
+    <button class="tab" data-panel="test-other">others</button>
+  </div>
+
+  <div id="test-device" class="tab-panel active">
+    <h4>device-auth.ts &mdash; Ed25519 Device Auth <span class="priority p0">P0</span></h4>
+    <p>Zero tests for cryptographic code. <strong>Highest-risk gap.</strong></p>
+    <ul class="checklist">
+      <li>Key generation: <code>loadOrCreateBridgeIdentity</code> generates valid Ed25519 keypair, persists with mode 0600</li>
+      <li>Key loading: existing identity loaded without regeneration</li>
+      <li>Tamper detection: modified publicKey &rarr; deviceId re-derived</li>
+      <li>Payload construction: <code>buildDeviceAuthPayloadV3</code> exact pipe-delimited format</li>
+      <li>Field ordering: fields in exact order (v3, deviceId, clientId, clientMode, role, scopes, signedAtMs, token, nonce, platform, deviceFamily)</li>
+      <li>Metadata normalization: null/undefined/empty/uppercase handling</li>
+      <li>Signature verification: sign &rarr; verify with public key</li>
+      <li>Token resolution: <code>resolveSignatureTokenForAuth</code> precedence (token &gt; deviceToken &gt; bootstrapToken &gt; "")</li>
+      <li>Connect device block: valid block with correct signature</li>
+      <li>Token extraction: <code>extractDeviceTokenFromConnectResponse</code> present/absent/multiple/role-matching</li>
+      <li>Token persistence: save/load round-trip with mode 0600</li>
+      <li>Cross-verification: payload matches OpenClaw's <code>buildDeviceAuthPayloadV3</code></li>
+    </ul>
+  </div>
+
+  <div id="test-bridge" class="tab-panel">
+    <h4>mcp-bridge.ts &mdash; MCP Bridge <span class="priority p0">P0</span></h4>
+    <p>Largest untested file (1032 LOC). Requires mocking: WebSocket, fetch, MCP SDK.</p>
+    <ul class="checklist">
+      <li><strong>web_search:</strong> Brave API call, result formatting, error handling, missing API key</li>
+      <li><strong>web_fetch:</strong> extraction modes (text, markdown, raw, html), maxChars truncation, timeout</li>
+      <li><strong>htmlToText:</strong> script/style stripping, entity decoding, whitespace collapse</li>
+      <li><strong>htmlToMarkdown:</strong> headings, links, bold/italic, lists, entities</li>
+      <li><strong>memory_search:</strong> file collection, substring matching, result limiting</li>
+      <li><strong>memory_get:</strong> path traversal prevention, line range, missing file</li>
+      <li><strong>GatewayWsClient:</strong> challenge &rarr; connect &rarr; response, request correlation, timeout, reconnect</li>
+      <li><strong>message handler:</strong> outbound vs internal routing, session key detection</li>
+      <li><strong>sessions_*:</strong> correct gateway method mapping</li>
+      <li><strong>cron handler:</strong> all 4 actions</li>
+      <li><strong>Tool dispatch:</strong> known &rarr; handler, unknown &rarr; error, skipped &rarr; not-implemented</li>
+    </ul>
+  </div>
+
+  <div id="test-visibility" class="tab-panel">
+    <h4>visibility.ts &mdash; Visibility System <span class="priority p1">P1</span></h4>
+    <p>Most complex behavioral component. Currently 0% coverage, ~400 LOC.</p>
+    <ul class="checklist">
+      <li>Parent text routing: no parentToolUseId &rarr; onPartialReply</li>
+      <li>Subagent text routing: with parentToolUseId &rarr; onReasoningStream (italic muted)</li>
+      <li>Subagent registration: Agent tool_use &rarr; tag A, B, C&hellip;Z, AA</li>
+      <li>Depth calculation: depth 1, depth 2, depth 3+ (truncated chain)</li>
+      <li>Subagent lifecycle: spawn &rarr; progress timer &rarr; return with elapsed/tools</li>
+      <li>Heartbeat: fires after 60s parent silence, suppressed during active subagent</li>
+      <li>Spiral detection: 3+ subagents without synthesis, 20+ parent tools in 5min</li>
+      <li>Tool markers: inline rendering with detail extraction (80-char truncation)</li>
+      <li>Timeout handling: combined abort, timer cleanup</li>
+      <li>NDJSON transcript append: correct format, error resilience</li>
+    </ul>
+  </div>
+
+  <div id="test-harness" class="tab-panel">
+    <h4>harness.ts &mdash; Core Query Loop <span class="priority p1">P1</span></h4>
+    <ul class="checklist">
+      <li>Preflight failure: throws with clear error message</li>
+      <li>Session resume: existing binding &rarr; <code>resume</code> option set</li>
+      <li>Resume retry: "already in use" &rarr; retry without resume</li>
+      <li>Resume retry: "not found" &rarr; retry without resume</li>
+      <li>No retry on non-resume errors: generic errors propagate</li>
+      <li>Model normalization: <code>claude-code/opus-4-6</code> &rarr; <code>claude-opus-4-6</code></li>
+      <li>MCP server injection: bridge added with correct env, inErrata auto-injected</li>
+      <li>Restart interception: <code>splitChain</code> correctness, segment rewriting</li>
+      <li>Restart flag scoping: prior flag doesn't trigger in current run</li>
+      <li>Post-turn binding: session bound after success</li>
+      <li>Chronicle event: fire-and-forget, correct shape</li>
+      <li>Abort handling: external signal &rarr; aborted result</li>
+    </ul>
+  </div>
+
+  <div id="test-protocol" class="tab-panel">
+    <h4>protocol.ts &mdash; SDKMessage Translation <span class="priority p1">P1</span></h4>
+    <p>Enhance existing tests (currently ~60%).</p>
+    <ul class="checklist">
+      <li>Subagent message flow: <code>parentToolUseId</code> propagation through all types</li>
+      <li>tool_result from User messages: structured content blocks with <code>tool_use_id</code></li>
+      <li>Edge cases: empty arrays, missing fields, unknown types</li>
+      <li>Streaming: <code>text_delta</code>, <code>thinking_delta</code>, <code>input_json_delta</code></li>
+      <li>Result: success vs error subtypes, usage extraction, <code>compact_boundary</code></li>
+    </ul>
+  </div>
+
+  <div id="test-other" class="tab-panel">
+    <h4>Remaining Modules</h4>
+    <table>
+      <thead><tr><th>Module</th><th>Key Tests Needed</th><th>Priority</th></tr></thead>
+      <tbody>
+        <tr><td><code>context.ts</code></td><td>7 workspace files, MEMORY cap, chronicle recall/timeout, section order, total cap</td><td><span class="priority p2">P2</span></td></tr>
+        <tr><td><code>session.ts</code></td><td>Path traversal, round-trip, createdAt preservation, probe error handling</td><td><span class="priority p2">P2</span></td></tr>
+        <tr><td><code>mcp-tools.ts</code></td><td>JSON Schema validation, required fields, name uniqueness</td><td><span class="priority p3">P3</span></td></tr>
+        <tr><td><code>provider.ts</code></td><td>Catalog shape, dynamic resolution, cache TTL</td><td><span class="priority p3">P3</span></td></tr>
+        <tr><td><code>index.ts</code></td><td>Register calls, missing API graceful, default export shape</td><td><span class="priority p4">P4</span></td></tr>
+      </tbody>
+    </table>
+
+    <h4>Integration Tests (NEW)</h4>
+    <ul class="checklist">
+      <li>Full turn flow: register &rarr; runAttempt with mock query() &rarr; verify callbacks &rarr; result shape</li>
+      <li>Subagent turn: Agent tool_use &rarr; subagent messages &rarr; tool_result &rarr; visibility markers</li>
+      <li>Resume flow: first turn creates binding, second resumes, failure retries fresh</li>
+      <li>MCP bridge dispatch: mock server, all tool types, correct handler/args</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Implementation Order</h3>
+<ol>
+  <li><s>Fix compaction.test.ts bug</s> <span class="status-done">DONE</span></li>
+  <li><code>device-auth.test.ts</code> &mdash; crypto verification <span class="priority p0">P0</span></li>
+  <li><code>bridge/*.test.ts</code> &mdash; tool dispatch + gateway client <span class="priority p0">P0</span></li>
+  <li><code>visibility.test.ts</code> &mdash; after extraction <span class="priority p1">P1</span></li>
+  <li><code>restart-intercept.test.ts</code> &mdash; after extraction <span class="priority p1">P1</span></li>
+  <li><code>protocol.test.ts</code> &mdash; enhance existing <span class="priority p1">P1</span></li>
+  <li><code>harness.test.ts</code> &mdash; core loop with mock SDK <span class="priority p1">P1</span></li>
+  <li><code>adapter.test.ts</code> &mdash; enhance after extraction <span class="priority p2">P2</span></li>
+  <li>All remaining modules <span class="priority p3">P2&ndash;P4</span></li>
+  <li>Integration test suite <span class="priority p2">P2</span></li>
+</ol>
+
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<section id="execution">
+<h2>Execution Plan</h2>
+
+<table>
+  <thead><tr><th>Phase</th><th>When</th><th>Deliverables</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>1a</strong></td>
+      <td>This session</td>
+      <td>
+        Global rename (Section 2)<br>
+        Fix compaction.test.ts bug<br>
+        Rebuild and run tests
+      </td>
+      <td><span class="status-done">DONE</span></td>
+    </tr>
+    <tr>
+      <td><strong>1b</strong></td>
+      <td>Next session</td>
+      <td>
+        Create <code>vendor/</code> and <code>paths.ts</code><br>
+        Extract <code>visibility.ts</code>, <code>restart-intercept.ts</code>, <code>query-builder.ts</code>, <code>stream-processor.ts</code><br>
+        Write <code>device-auth.test.ts</code>
+      </td>
+      <td><span class="status-pending">NEXT</span></td>
+    </tr>
+    <tr>
+      <td><strong>1c</strong></td>
+      <td>Following session</td>
+      <td>
+        Decompose <code>mcp-bridge.ts</code> into <code>bridge/</code><br>
+        Write bridge test suite<br>
+        Enhance all existing tests
+      </td>
+      <td><span class="status-pending">PLANNED</span></td>
+    </tr>
+    <tr>
+      <td><strong>1d</strong></td>
+      <td>Completion</td>
+      <td>
+        Integration test suite<br>
+        Clean up vestigial types, debug logging<br>
+        Final coverage audit
+      </td>
+      <td><span class="status-pending">PLANNED</span></td>
+    </tr>
+  </tbody>
+</table>
+
+</section>
+
+</main>
+
+<script src="imago-refactor.js"></script>
+
+</body>
+</html>

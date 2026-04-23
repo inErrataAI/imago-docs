@@ -1,0 +1,2293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Imago Architecture Diagrams</title>
+<script src="mermaid.min.js"></script>
+<script src="imago-config.js"></script>
+<script src="imago-architecture-tabs.js"></script>
+<style>
+  :root {
+    --bg: #0b0b14;
+    --surface: #11111b;
+    --surface2: #181825;
+    --surface3: #1e1e2e;
+    --text: #cdd6f4;
+    --text-muted: #a6adc8;
+    --text4: #6c7086;
+    --accent: #b4befe;
+    --accent2: #89b4fa;
+    --border: #313244;
+    --border2: #45475a;
+    --green: #a6e3a1;
+    --peach: #fab387;
+    --mauve: #cba6f7;
+    --teal: #94e2d5;
+    --yellow: #f9e2af;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #cba6f7, #89b4fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+  }
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 3rem;
+  }
+  .toc h2 { font-size: 1.1rem; color: var(--accent); margin-bottom: 1rem; }
+  .toc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 0.4rem 2rem;
+  }
+  .toc a {
+    color: var(--accent2);
+    text-decoration: none;
+    font-size: 0.9rem;
+    display: block;
+    padding: 0.2rem 0;
+  }
+  .toc a:hover { color: var(--accent); }
+  .toc .num { color: var(--text-muted); margin-right: 0.5rem; font-variant-numeric: tabular-nums; }
+
+  section {
+    margin-bottom: 4rem;
+    scroll-margin-top: 2rem;
+  }
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  h2 .badge {
+    font-size: 0.7rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .section-desc {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    margin-bottom: 1.5rem;
+    max-width: 800px;
+  }
+  .diagram-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+  }
+  .diagram-container pre.mermaid,
+  .diagram-container pre.mermaid-deferred {
+    display: flex;
+    justify-content: center;
+  }
+  .diagram-container svg {
+    max-width: 100%;
+    height: auto;
+  }
+  .callout {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 1rem 1.2rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+  }
+  .callout strong { color: var(--accent); }
+  .callout-info { border-left-color: var(--accent2); }
+  .callout-info strong { color: var(--accent2); }
+  .callout-warn { border-left-color: #fab387; }
+  .callout-warn strong { color: #fab387; }
+  .callout-success { border-left-color: var(--green); }
+  .callout-success strong { color: var(--green); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    margin-top: 1rem;
+  }
+  th {
+    text-align: left;
+    padding: 0.6rem 1rem;
+    background: var(--surface2);
+    border-bottom: 2px solid var(--border);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  td {
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.85em;
+    background: var(--surface2);
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+  }
+  .stats {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.8rem 1.2rem;
+    min-width: 120px;
+  }
+  .stat-value { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+  .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* Architecture tabs */
+  .arch-tab-container {
+    margin: 1rem 0 0;
+  }
+  .arch-tab-bar {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+  }
+  .arch-tab {
+    padding: 0.45rem 1rem;
+    background: var(--surface);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: inherit;
+    border-radius: 6px 6px 0 0;
+    margin-right: -1px;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .arch-tab:hover { color: var(--text); background: var(--surface2); }
+  .arch-tab.active {
+    background: var(--surface3);
+    color: var(--accent);
+    border-bottom: 1px solid var(--surface3);
+    font-weight: 600;
+  }
+  .arch-tab.proposed {
+    color: var(--text4);
+  }
+  .arch-tab.proposed.active {
+    color: var(--green);
+  }
+  .arch-panel {
+    display: none;
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+  }
+  .arch-panel.active {
+    display: block;
+  }
+  .no-changes {
+    color: var(--text4);
+    font-style: italic;
+    font-size: 0.9rem;
+    padding: 1rem 0;
+  }
+  .change-note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.8rem 1.2rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.88rem;
+  }
+  .change-note strong { color: var(--green); }
+  .change-note ul { margin: 0.5rem 0 0 1.2rem; }
+  .change-note li { color: var(--text-muted); margin-bottom: 0.2rem; }
+  .delta { color: var(--green); font-weight: 600; font-size: 0.8rem; }
+  .delta-neg { color: var(--peach); }
+</style>
+</head>
+<body>
+
+<h1>Imago Architecture</h1>
+<p class="subtitle">Comprehensive architectural documentation for the cognitive architecture harness &mdash; 15 source modules, 4,722 lines of TypeScript. Produced 2026-04-22 as preparation for full refactor. Each diagram has <strong>Current</strong> and <strong style="color: var(--green);">Proposed</strong> tabs.</p>
+
+<div class="stats">
+  <div class="stat"><div class="stat-value">15</div><div class="stat-label">Source Files</div></div>
+  <div class="stat"><div class="stat-value">4,722</div><div class="stat-label">Lines of Code</div></div>
+  <div class="stat"><div class="stat-value">11</div><div class="stat-label">Test Files</div></div>
+  <div class="stat"><div class="stat-value">3</div><div class="stat-label">Processes / Turn</div></div>
+  <div class="stat"><div class="stat-value">16</div><div class="stat-label">MCP Tools</div></div>
+  <div class="stat"><div class="stat-value">4</div><div class="stat-label">Models Registered</div></div>
+</div>
+
+<nav class="toc">
+  <h2>Diagrams</h2>
+  <div class="toc-grid">
+    <a href="#ctx"><span class="num">1.</span> System Context (C4 L1)</a>
+    <a href="#containers"><span class="num">2.</span> Container View (C4 L2)</a>
+    <a href="#components"><span class="num">3.</span> Component View &mdash; Plugin (C4 L3)</a>
+    <a href="#mcp-bridge"><span class="num">4.</span> Component View &mdash; MCP Bridge</a>
+    <a href="#visibility"><span class="num">5.</span> Component View &mdash; Visibility System</a>
+    <a href="#seq-normal"><span class="num">6.</span> Sequence: Normal Turn</a>
+    <a href="#seq-subagent"><span class="num">7.</span> Sequence: Subagent Spawning</a>
+    <a href="#seq-resume"><span class="num">8.</span> Sequence: Resume + Retry</a>
+    <a href="#seq-restart"><span class="num">9.</span> Sequence: Restart Interception</a>
+    <a href="#seq-devauth"><span class="num">10.</span> Sequence: Device Authentication</a>
+    <a href="#seq-dispatch"><span class="num">11.</span> Sequence: Tool Dispatch</a>
+    <a href="#seq-compact"><span class="num">12.</span> Sequence: Compaction</a>
+    <a href="#state-session"><span class="num">13.</span> State: Session Lifecycle</a>
+    <a href="#data"><span class="num">14.</span> Data Residency</a>
+    <a href="#deps"><span class="num">15.</span> Module Dependency Graph</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 1. SYSTEM CONTEXT -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="ctx">
+<h2><span class="badge">C4 Level 1</span> System Context</h2>
+<p class="section-desc">Imago as a black box within its environment. Shows all external actors, services, and data stores that the system interacts with.</p>
+
+<div class="arch-tab-container">
+<div class="arch-tab-bar">
+  <button class="arch-tab active" data-panel="ctx-current">Current</button>
+  <button class="arch-tab proposed" data-panel="ctx-proposed">Proposed</button>
+</div>
+
+<div id="ctx-current" class="arch-panel active">
+<div class="diagram-container">
+<pre class="mermaid">
+graph TB
+    subgraph Users["External Actors"]
+        Human["Human User\n(Bosh, Kendra, etc.)"]
+        Discord["Discord"]
+        Signal["Signal"]
+        WebChat["WebChat UI"]
+    end
+
+    subgraph Imago_System["Imago System"]
+        OC["OpenClaw Gateway\n(Runtime platform)"]
+        Imago["Imago Plugin\n(Claude Code Harness)\n@inerrata/openclaw-claude-harness"]
+    end
+
+    subgraph External["External Services"]
+        CC_CLI["Claude Code CLI\n(Anthropic SDK)\n(Max plan billing)"]
+        Anthropic_API["Anthropic API\n(claude-opus-4-6)"]
+        Brave["Brave Search API"]
+        Chronicle["Chronicle\n(PostgreSQL graph memory)"]
+        inErrata["inErrata Platform\n(Knowledge base)"]
+    end
+
+    subgraph FS["Local Filesystem"]
+        Workspace["Workspace\n~/.openclaw/workspace"]
+        Bindings["Session Bindings\n~/.openclaw/harness-bindings"]
+        DeviceKeys["Device Identity\n(Ed25519 keypair)"]
+    end
+
+    Human -->|messages| WebChat
+    Human -->|messages| Discord
+    Human -->|messages| Signal
+    WebChat -->|WebSocket| OC
+    Discord -->|Bot API| OC
+    Signal -->|HTTP bridge| OC
+
+    OC -->|"routes turns\n(model: claude-code/*)"| Imago
+    Imago -->|"spawns subprocess\nquery() async iterator"| CC_CLI
+    CC_CLI -->|OAuth streaming| Anthropic_API
+    Imago -->|"spawns MCP bridge\n(child process)"| Brave
+    Imago -->|"chronicle-recall\nchronicle-save"| Chronicle
+    Imago -->|MCP auto-inject| inErrata
+
+    Imago -->|read/write bindings| Bindings
+    Imago -->|read persona files| Workspace
+    Imago -->|device auth keys| DeviceKeys
+</pre>
+</div>
+</div>
+
+<div id="ctx-proposed" class="arch-panel">
+<div class="change-note">
+  <strong>Changes:</strong>
+  <ul>
+    <li>Package renamed to <code>@inerrata/imago</code></li>
+    <li>Vendor directory added for explicit protocol dependency tracking</li>
+    <li>Otherwise structurally identical &mdash; same external actors and services</li>
+  </ul>
+</div>
+<div class="diagram-container">
+<pre class="mermaid-deferred">
+graph TB
+    subgraph Users["External Actors"]
+        Human["Human User\n(Bosh, Kendra, etc.)"]
+        Discord["Discord"]
+        Signal["Signal"]
+        WebChat["WebChat UI"]
+    end
+
+    subgraph Imago_System["Imago System"]
+        OC["OpenClaw Gateway\n(Runtime platform)"]
+        Imago["Imago Plugin\n@inerrata/imago\n(Cognitive Architecture Harness)"]
+    end
+
+    subgraph External["External Services"]
+        CC_CLI["Claude Code CLI\n(Anthropic SDK)\n(Max plan billing)"]
+        Anthropic_API["Anthropic API\n(claude-opus-4-6)"]
+        Brave["Brave Search API"]
+        Chronicle["Chronicle\n(PostgreSQL graph memory)"]
+        inErrata["inErrata Platform\n(Knowledge base)"]
+    end
+
+    subgraph FS["Local Filesystem"]
+        Workspace["Workspace\n~/.openclaw/workspace"]
+        Bindings["Session Bindings\n~/.openclaw/harness-bindings"]
+        DeviceKeys["Device Identity\n(Ed25519 keypair)"]
+        Vendor["Vendor Specs\nvendor/ (protocol snapshots)"]
+    end
+
+    Human -->|messages| WebChat
+    Human -->|messages| Discord
+    Human -->|messages| Signal
+    WebChat -->|WebSocket| OC
+    Discord -->|Bot API| OC
+    Signal -->|HTTP bridge| OC
+
+    OC -->|"routes turns\n(model: claude-code/*)"| Imago
+    Imago -->|"spawns subprocess\nquery() async iterator"| CC_CLI
+    CC_CLI -->|OAuth streaming| Anthropic_API
+    Imago -->|"spawns MCP bridge\n(child process)"| Brave
+    Imago -->|"chronicle-recall\nchronicle-save"| Chronicle
+    Imago -->|MCP auto-inject| inErrata
+
+    Imago -->|read/write bindings| Bindings
+    Imago -->|read persona files| Workspace
+    Imago -->|device auth keys| DeviceKeys
+    Imago -.->|build-time verify| Vendor
+</pre>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 2. CONTAINER VIEW -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="containers">
+<h2><span class="badge">C4 Level 2</span> Container View</h2>
+<p class="section-desc">Zooms into the system boundary to show the three OS processes involved in a single turn and their communication channels.</p>
+
+<div class="arch-tab-container">
+<div class="arch-tab-bar">
+  <button class="arch-tab active" data-panel="containers-current">Current</button>
+  <button class="arch-tab proposed" data-panel="containers-proposed">Proposed</button>
+</div>
+
+<div id="containers-current" class="arch-panel active">
+<div class="diagram-container">
+<pre class="mermaid">
+graph TB
+    subgraph OC_Proc["OpenClaw Gateway Process (Node.js, port 18789)"]
+        PluginLoader["Plugin Loader"]
+        HarnessRouter["Harness Router\n(routes by model prefix)"]
+        AgentBus["Agent Event Bus\nemitAgentEvent()"]
+        GW_WS["WebSocket Server\n/ws endpoint"]
+        Chat["Chat Pipeline\nchat.send / chat.history"]
+
+        subgraph Imago_Plugin["Imago Plugin (in-process)"]
+            Prov["Provider\nprovider.ts"]
+            Adap["Adapter\nadapter.ts"]
+            Harn["Harness\nharness.ts"]
+            Ctx["Context Builder\ncontext.ts"]
+            Proto["Protocol\nprotocol.ts"]
+            Sess["Session Manager\nsession.ts"]
+            Pre["Preflight\npreflight.ts"]
+        end
+    end
+
+    subgraph CC_Proc["Claude Code CLI Process (per-turn)"]
+        SDK["Claude Agent SDK\nquery() async iterator"]
+        ToolR["Tool Runner\nBash, Read, Edit, etc."]
+    end
+
+    subgraph MCP_Proc["MCP Bridge Process (per-turn)"]
+        MCPSrv["MCP Server\nstdio transport"]
+        NatT["Native Handlers\nweb_search, web_fetch\nmemory_search, memory_get"]
+        GWCli["Gateway WS Client\nWebSocket to OC"]
+        DAuth["Device Auth\nEd25519 v3 protocol"]
+    end
+
+    PluginLoader -->|"register(api)"| Prov
+    PluginLoader -->|"register(api)"| Adap
+    HarnessRouter -->|runAttempt| Adap
+    Adap -->|runAttempt| Harn
+    Harn -->|buildContextSystemPrompt| Ctx
+    Harn -->|translate| Proto
+    Harn -->|load/bind| Sess
+    Harn -->|runPreflight| Pre
+    Adap -->|"onPartialReply\nonReasoningStream"| AgentBus
+
+    Harn -->|"spawns\nclaude -p --print"| SDK
+    SDK -->|SDKMessage stream| Harn
+    SDK -->|"spawns via\nmcpServers config"| MCPSrv
+
+    MCPSrv --> NatT
+    MCPSrv --> GWCli
+    GWCli -->|"WebSocket\nv3 device auth"| GW_WS
+    GWCli --> DAuth
+    AgentBus -->|emitChatDelta| Chat
+</pre>
+</div>
+<div class="callout">
+  <strong>Process boundaries matter.</strong> A single Imago turn involves up to 3 OS processes: (1) OpenClaw Gateway (long-lived, hosts plugin in-process), (2) Claude Code CLI (per-turn, spawned by <code>query()</code>), (3) MCP Bridge (per-turn, spawned by CC as an MCP server, connects back to Gateway via WebSocket).
+</div>
+</div>
+
+<div id="containers-proposed" class="arch-panel">
+<div class="change-note">
+  <strong>Changes:</strong>
+  <ul>
+    <li>Plugin internals decomposed: <code>visibility.ts</code>, <code>stream-processor.ts</code>, <code>restart-intercept.ts</code>, <code>query-builder.ts</code>, <code>paths.ts</code> extracted</li>
+    <li>MCP Bridge decomposed into <code>bridge/</code> submodules (server, native-tools, gateway-tools, gateway-client, html-convert)</li>
+    <li>Same 3-process architecture &mdash; extraction is internal only</li>
+  </ul>
+</div>
+<div class="diagram-container">
+<pre class="mermaid-deferred">
+graph TB
+    subgraph OC_Proc["OpenClaw Gateway Process (Node.js, port 18789)"]
+        PluginLoader["Plugin Loader"]
+        HarnessRouter["Harness Router\n(routes by model prefix)"]
+        AgentBus["Agent Event Bus\nemitAgentEvent()"]
+        GW_WS["WebSocket Server\n/ws endpoint"]
+        Chat["Chat Pipeline\nchat.send / chat.history"]
+
+        subgraph Imago_Plugin["Imago Plugin (in-process)"]
+            Prov["Provider\nprovider.ts"]
+            Adap["Adapter\nadapter.ts\n~280 LOC"]
+            Vis["Visibility\nvisibility.ts\n~400 LOC"]
+            Harn["Harness\nharness.ts\n~425 LOC"]
+            SP["Stream Processor\nstream-processor.ts"]
+            RI["Restart Intercept\nrestart-intercept.ts"]
+            QB["Query Builder\nquery-builder.ts"]
+            Ctx["Context Builder\ncontext.ts"]
+            Proto["Protocol\nprotocol.ts"]
+            Sess["Session Manager\nsession.ts"]
+            Paths["Paths\npaths.ts"]
+            Pre["Preflight\npreflight.ts"]
+        end
+    end
+
+    subgraph CC_Proc["Claude Code CLI Process (per-turn)"]
+        SDK["Claude Agent SDK\nquery() async iterator"]
+        ToolR["Tool Runner\nBash, Read, Edit, etc."]
+    end
+
+    subgraph MCP_Proc["MCP Bridge Process (per-turn)"]
+        BridgeSrv["bridge/server.ts\nMCP dispatch"]
+        BridgeNat["bridge/native-tools.ts\nweb_search, web_fetch\nmemory_search, memory_get"]
+        BridgeGW["bridge/gateway-tools.ts\nmessage, sessions, cron\ngateway, tts"]
+        BridgeCli["bridge/gateway-client.ts\nGatewayWsClient"]
+        BridgeHTML["bridge/html-convert.ts"]
+        DAuth["Device Auth\ndevice-auth.ts"]
+    end
+
+    PluginLoader -->|"register(api)"| Prov
+    PluginLoader -->|"register(api)"| Adap
+    HarnessRouter -->|runAttempt| Adap
+    Adap -->|runAttempt| Harn
+    Adap -->|tracking| Vis
+    Harn -->|buildContextSystemPrompt| Ctx
+    Harn -->|translate| Proto
+    Harn -->|processStream| SP
+    Harn -->|buildQuery| QB
+    Harn -->|hookBuilder| RI
+    Harn -->|load/bind| Sess
+    Harn -->|runPreflight| Pre
+    Sess -->|resolve| Paths
+    Vis -->|"onPartialReply\nonReasoningStream"| AgentBus
+
+    Harn -->|"spawns\nclaude -p --print"| SDK
+    SDK -->|SDKMessage stream| SP
+    SDK -->|"spawns via\nmcpServers config"| BridgeSrv
+
+    BridgeSrv --> BridgeNat
+    BridgeSrv --> BridgeGW
+    BridgeGW --> BridgeCli
+    BridgeNat --> BridgeHTML
+    BridgeCli -->|"WebSocket\nv3 device auth"| GW_WS
+    BridgeCli --> DAuth
+    AgentBus -->|emitChatDelta| Chat
+</pre>
+</div>
+<div class="callout callout-success">
+  <strong>Same 3-process boundary, cleaner internals.</strong> Harness drops from 675 to ~425 LOC. Adapter drops from 683 to ~280 LOC. Bridge goes from one 1032-LOC file to 6 focused modules. Each extracted module is independently testable.
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 3. COMPONENT VIEW — PLUGIN -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="components">
+<h2><span class="badge">C4 Level 3</span> Component View &mdash; Imago Plugin</h2>
+<p class="section-desc">All source modules, grouped by responsibility, with inter-module dependencies and LOC counts.</p>
+
+<div class="arch-tab-container">
+<div class="arch-tab-bar">
+  <button class="arch-tab active" data-panel="comp-current">Current</button>
+  <button class="arch-tab proposed" data-panel="comp-proposed">Proposed</button>
+</div>
+
+<div id="comp-current" class="arch-panel active">
+<div class="diagram-container">
+<pre class="mermaid">
+graph TB
+    subgraph Entry["Entry and Registration"]
+        index["index.ts\nPlugin entry point\nregister(api)\n83 LOC"]
+    end
+
+    subgraph Core["Core Turn Execution"]
+        harness["harness.ts\nQuery loop + Retry logic\nRestart interception\n675 LOC"]
+        protocol["protocol.ts\nSDKMessage to TranslatedMessage\n11 message kinds\n268 LOC"]
+        adapter["adapter.ts\nOpenClaw-Harness bridge\nVisibility system\nSubagent tracking\n683 LOC"]
+    end
+
+    subgraph Infra["Infrastructure"]
+        session["session.ts\nBinding CRUD\nCapability probe\n143 LOC"]
+        provider["provider.ts\nModel registration\nCatalog + synthetic auth\n178 LOC"]
+        preflight["preflight.ts\nCLI validation\nVersion check\n152 LOC"]
+        context["context.ts\nSystem prompt builder\nWorkspace files + Chronicle\n205 LOC"]
+        compaction["compaction.ts\nDefers to CC native\n73 LOC"]
+        diagnostics["diagnostics.ts\nSlash command status\n154 LOC"]
+    end
+
+    subgraph Integ["External Integration"]
+        inerrata["inerrata.ts\nMCP auto-inject\nChronicle events\n119 LOC"]
+    end
+
+    subgraph Bridge["MCP Bridge (standalone process)"]
+        mcpBridge["mcp-bridge.ts\nMCP server stdio\n16 tool handlers\nGateway WS client\n1032 LOC"]
+        mcpTools["mcp-tools.ts\nTool JSON schemas\n486 LOC"]
+        deviceAuth["device-auth.ts\nEd25519 device identity\nv3 signature protocol\n370 LOC"]
+    end
+
+    subgraph Shared["Shared Types"]
+        types["types.ts\nConfig, Binding\nCapabilities, etc.\n101 LOC"]
+    end
+
+    index --> provider
+    index --> adapter
+    index --> harness
+    index --> diagnostics
+    index --> session
+
+    adapter --> harness
+    adapter --> compaction
+    adapter --> types
+
+    harness --> protocol
+    harness --> session
+    harness --> preflight
+    harness --> provider
+    harness --> inerrata
+    harness --> context
+
+    provider --> session
+    preflight -.->|lazy import| session
+    compaction --> session
+    diagnostics --> session
+    diagnostics --> provider
+    diagnostics --> preflight
+
+    session --> types
+    provider --> types
+    preflight --> types
+    inerrata --> types
+    compaction --> types
+    context --> types
+
+    mcpBridge --> mcpTools
+    mcpBridge --> deviceAuth
+</pre>
+</div>
+<div class="callout callout-info">
+  <strong>Two execution contexts, zero shared runtime state.</strong> In-process modules (everything except mcp-bridge, mcp-tools, device-auth) run inside the Gateway. MCP Bridge modules run as a separate Node.js process. They communicate only through MCP stdio (CC to Bridge) and WebSocket (Bridge to Gateway).
+</div>
+</div>
+
+<div id="comp-proposed" class="arch-panel">
+<div class="change-note">
+  <strong>Changes:</strong>
+  <ul>
+    <li><code>adapter.ts</code> 683 &rarr; <span class="delta">~280 LOC</span> (visibility extracted)</li>
+    <li><code>harness.ts</code> 675 &rarr; <span class="delta">~425 LOC</span> (stream, restart, query extracted)</li>
+    <li><strong>NEW:</strong> <code>visibility.ts</code> (~400 LOC), <code>stream-processor.ts</code> (~60 LOC), <code>restart-intercept.ts</code> (~110 LOC), <code>query-builder.ts</code> (~80 LOC), <code>paths.ts</code></li>
+    <li><code>mcp-bridge.ts</code> 1032 LOC &rarr; <span class="delta">bridge/</span> (6 focused modules)</li>
+    <li><strong>NEW:</strong> <code>vendor/</code> directory for protocol snapshots</li>
+    <li>Vestigial types removed from <code>types.ts</code></li>
+  </ul>
+</div>
+<div class="diagram-container">
+<pre class="mermaid-deferred">
+graph TB
+    subgraph Entry["Entry and Registration"]
+        index["index.ts\nPlugin entry point\nregister(api)\n83 LOC"]
+    end
+
+    subgraph Core["Core Turn Execution"]
+        harness["harness.ts\nOrchestration only\npreflight-session-build-query-process-bind\n~425 LOC"]
+        streamProc["stream-processor.ts\nSDKMessage processing loop\nUsed by primary + retry path\n~60 LOC"]
+        restartInt["restart-intercept.ts\nSelf-killing patterns\nsplitChain + hook builder\n~110 LOC"]
+        queryBuild["query-builder.ts\nModel normalization\nMCP injection + hooks\n~80 LOC"]
+        protocol["protocol.ts\nSDKMessage to TranslatedMessage\n11 message kinds\n268 LOC"]
+        adapter["adapter.ts\nHost-Harness bridge\nResult mapping\n~280 LOC"]
+        visibility["visibility.ts\nVisibilityTracker class\nSubagent registry\nHeartbeat + spiral detection\n~400 LOC"]
+    end
+
+    subgraph Infra["Infrastructure"]
+        session["session.ts\nBinding CRUD\nCapability probe\nexports resolveBindingDir\n143 LOC"]
+        paths["paths.ts\nCentralized path constants\nAll filesystem knowledge\nNEW"]
+        provider["provider.ts\nModel registration\nCatalog + synthetic auth\n178 LOC"]
+        preflight["preflight.ts\nCLI validation\nVersion check\n152 LOC"]
+        context["context.ts\nSystem prompt builder\nWorkspace files + Chronicle\n205 LOC"]
+        compaction["compaction.ts\nDefers to CC native\n73 LOC"]
+        diagnostics["diagnostics.ts\nSlash command status\n154 LOC"]
+    end
+
+    subgraph Integ["External Integration"]
+        inerrata["inerrata.ts\nMCP auto-inject\nChronicle events\n119 LOC"]
+    end
+
+    subgraph Bridge["bridge/ (standalone process)"]
+        bridgeIdx["bridge/index.ts\nEntry point\n~15 LOC"]
+        bridgeSrv["bridge/server.ts\nMCP setup + dispatch\n~80 LOC"]
+        bridgeNat["bridge/native-tools.ts\nweb_search, web_fetch\nmemory_search, memory_get\n~300 LOC"]
+        bridgeGW["bridge/gateway-tools.ts\nmessage, sessions, cron\ngateway, tts\n~250 LOC"]
+        bridgeCli["bridge/gateway-client.ts\nGatewayWsClient class\nReconnect + correlation\n~285 LOC"]
+        bridgeHTML["bridge/html-convert.ts\nhtmlToText, htmlToMarkdown\n~70 LOC"]
+    end
+
+    subgraph Tools["Tool Schemas"]
+        mcpTools["mcp-tools.ts\nTool JSON schemas\n486 LOC"]
+    end
+
+    subgraph Auth["Device Authentication"]
+        deviceAuth["device-auth.ts\nEd25519 device identity\nv3 signature protocol\n370 LOC"]
+    end
+
+    subgraph Vendor["vendor/ (version-pinned)"]
+        vProto["openclaw-protocol.ts\nWS frame types + connect flow"]
+        vAuth["openclaw-device-auth.ts\nv3 payload spec"]
+        vAPI["openclaw-plugin-api.d.ts\nregister API shape"]
+        vVer["VERSION\nupstream version ref"]
+    end
+
+    subgraph Shared["Shared Types"]
+        types["types.ts\nConfig, Binding\nCapabilities\n~85 LOC (cleaned)"]
+    end
+
+    index --> provider
+    index --> adapter
+    index --> harness
+    index --> diagnostics
+    index --> session
+
+    adapter --> harness
+    adapter --> visibility
+    adapter --> compaction
+    adapter --> types
+
+    harness --> streamProc
+    harness --> restartInt
+    harness --> queryBuild
+    harness --> protocol
+    harness --> session
+    harness --> preflight
+    harness --> provider
+    harness --> inerrata
+    harness --> context
+
+    provider --> session
+    preflight --> session
+    compaction --> session
+    diagnostics --> session
+    diagnostics --> provider
+    diagnostics --> preflight
+
+    session --> paths
+    context --> paths
+    diagnostics --> paths
+
+    session --> types
+    provider --> types
+    preflight --> types
+    inerrata --> types
+    compaction --> types
+    context --> types
+
+    bridgeIdx --> bridgeSrv
+    bridgeSrv --> bridgeNat
+    bridgeSrv --> bridgeGW
+    bridgeSrv --> mcpTools
+    bridgeNat --> bridgeHTML
+    bridgeGW --> bridgeCli
+    bridgeCli --> deviceAuth
+
+    deviceAuth --> vAuth
+    bridgeCli --> vProto
+</pre>
+</div>
+<div class="callout callout-success">
+  <strong>Module count increases, but coupling and complexity decrease.</strong> No module exceeds ~425 LOC. Every extracted module has a single responsibility and is independently testable. The lazy import workaround in preflight is replaced with a static import. Vendor types provide build-time drift detection.
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 4. MCP BRIDGE INTERNALS -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="mcp-bridge">
+<h2><span class="badge">Component</span> MCP Bridge Internals</h2>
+<p class="section-desc">The bridge implements some tools natively and delegates others to the OpenClaw gateway via WebSocket RPC.</p>
+
+<div class="arch-tab-container">
+<div class="arch-tab-bar">
+  <button class="arch-tab active" data-panel="bridge-current">Current</button>
+  <button class="arch-tab proposed" data-panel="bridge-proposed">Proposed</button>
+</div>
+
+<div id="bridge-current" class="arch-panel active">
+<div class="diagram-container">
+<pre class="mermaid">
+graph TB
+    subgraph Inputs["Inputs"]
+        CC["Claude Code CLI\nMCP client via stdio"]
+        ENV["Environment Variables\nOPENCLAW_PORT\nOPENCLAW_AUTH_TOKEN\nBRAVE_API_KEY\nOPENCLAW_WORKSPACE"]
+    end
+
+    subgraph Server["MCP Server Layer"]
+        Transport["StdioServerTransport\nstdin/stdout"]
+        Router["Tool Router\nCallToolRequestSchema"]
+        ListT["ListToolsRequestSchema\nReturns 16 tool defs"]
+    end
+
+    subgraph Native["Native Implementations"]
+        WS["web_search\nBrave Search API"]
+        WF["web_fetch\nHTTP fetch\nHTML to text/md"]
+        MS["memory_search\nSubstring match\nMEMORY.md + memory/*.md"]
+        MG["memory_get\nFile read\nPath traversal protection"]
+    end
+
+    subgraph Delegated["Gateway-Delegated"]
+        Msg["message\nOutbound send OR\ninternal chat.send"]
+        Ses["sessions_list\nsessions_send\nsessions_spawn\nsession_status"]
+        Crn["cron\nlist/add/remove/run"]
+        GW["gateway\nconfig.get/patch"]
+        TTS["tts\ntts.convert"]
+    end
+
+    subgraph Stub["Not Implemented"]
+        Br["browser\ncanvas\nnodes\nimage\npdf"]
+    end
+
+    subgraph Client["GatewayWsClient"]
+        WSC["WebSocket Connection\nws://localhost:PORT/ws"]
+        Corr["Request/Response\nCorrelation\npendingRequests Map"]
+        DA["Device Authentication\ndevice-auth.ts"]
+        Recon["Reconnection Logic\nLazy connect on first call"]
+    end
+
+    CC <-->|stdio| Transport
+    Transport --> Router
+    Router --> ListT
+
+    Router --> WS
+    Router --> WF
+    Router --> MS
+    Router --> MG
+    Router --> Msg
+    Router --> Ses
+    Router --> Crn
+    Router --> GW
+    Router --> TTS
+    Router --> Br
+
+    Msg --> Client
+    Ses --> Client
+    Crn --> Client
+    GW --> Client
+    TTS --> Client
+
+    WSC --> Corr
+    WSC --> DA
+    WSC --> Recon
+</pre>
+</div>
+<div class="callout callout-warn">
+  <strong>1,032 lines in one file.</strong> Server setup, tool dispatch, 16 handlers (4 native + 7 gateway-delegated + 5 stubs), WebSocket client with auth, HTML converters &mdash; all in <code>mcp-bridge.ts</code>.
+</div>
+</div>
+
+<div id="bridge-proposed" class="arch-panel">
+<div class="change-note">
+  <strong>Changes:</strong>
+  <ul>
+    <li><code>mcp-bridge.ts</code> (1,032 LOC) decomposed into 6 modules under <code>bridge/</code></li>
+    <li>Each module has a single responsibility and clear boundary</li>
+    <li>HTML converters extracted &mdash; independently testable string transforms</li>
+    <li>GatewayWsClient becomes its own module with focused tests</li>
+  </ul>
+</div>
+<div class="diagram-container">
+<pre class="mermaid-deferred">
+graph TB
+    subgraph Inputs["Inputs"]
+        CC["Claude Code CLI\nMCP client via stdio"]
+        ENV["Environment Variables\nIMAGO_PORT / OPENCLAW_PORT\nIMAGO_AUTH_TOKEN / OPENCLAW_AUTH_TOKEN\nBRAVE_API_KEY\nIMAGO_WORKSPACE / OPENCLAW_WORKSPACE"]
+    end
+
+    subgraph Server["bridge/server.ts (~80 LOC)"]
+        Transport["StdioServerTransport\nstdin/stdout"]
+        Router["Tool Router\nCallToolRequestSchema"]
+        ListT["ListToolsRequestSchema\n16 tool defs from mcp-tools.ts"]
+    end
+
+    subgraph NativeMod["bridge/native-tools.ts (~300 LOC)"]
+        WS["web_search\nBrave Search API"]
+        WF["web_fetch\nHTTP fetch + convert"]
+        MS["memory_search\nSubstring match"]
+        MG["memory_get\nFile read + path guard"]
+    end
+
+    subgraph HTMLMod["bridge/html-convert.ts (~70 LOC)"]
+        HtoT["htmlToText\nScript/style strip\nEntity decode"]
+        HtoM["htmlToMarkdown\nHeadings, links\nBold, italic, lists"]
+    end
+
+    subgraph GWMod["bridge/gateway-tools.ts (~250 LOC)"]
+        Msg["message\nOutbound + internal routing"]
+        Ses["sessions_list\nsessions_send\nsessions_spawn\nsession_status"]
+        Crn["cron\nlist/add/remove/run"]
+        GWt["gateway\nconfig.get/patch"]
+        TTS["tts\ntts.convert"]
+    end
+
+    subgraph Stub["Stubs (in server.ts)"]
+        Br["browser, canvas\nnodes, image, pdf"]
+    end
+
+    subgraph ClientMod["bridge/gateway-client.ts (~285 LOC)"]
+        WSC["WebSocket Connection\nws://localhost:PORT/ws"]
+        Corr["Request/Response\nCorrelation Map"]
+        Recon["Reconnection\nLazy connect"]
+    end
+
+    subgraph AuthMod["device-auth.ts (370 LOC)"]
+        DA["Ed25519 v3 protocol\nImport from vendor/"]
+    end
+
+    CC <-->|stdio| Transport
+    Transport --> Router
+    Router --> ListT
+
+    Router --> NativeMod
+    Router --> GWMod
+    Router --> Stub
+
+    WF --> HTMLMod
+
+    Msg --> ClientMod
+    Ses --> ClientMod
+    Crn --> ClientMod
+    GWt --> ClientMod
+    TTS --> ClientMod
+
+    ClientMod --> AuthMod
+</pre>
+</div>
+<div class="callout callout-success">
+  <strong>Every module under 300 LOC.</strong> Clear import graph: server dispatches to native-tools and gateway-tools. Gateway-tools uses gateway-client. Native-tools uses html-convert. No circular dependencies. Each module can be tested with focused mocks.
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 5. VISIBILITY SYSTEM -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="visibility">
+<h2><span class="badge">Component</span> Visibility System</h2>
+<p class="section-desc">Subagent tracking, spiral detection, and heartbeat system &mdash; the behavioral logic that makes nested agent activity visible to humans.</p>
+
+<div class="arch-tab-container">
+<div class="arch-tab-bar">
+  <button class="arch-tab active" data-panel="vis-current">Current</button>
+  <button class="arch-tab proposed" data-panel="vis-proposed">Proposed</button>
+</div>
+
+<div id="vis-current" class="arch-panel active">
+<div class="diagram-container">
+<pre class="mermaid">
+graph TB
+    subgraph Triggers["Incoming Events from Harness"]
+        OT["onText\n(content, parentToolUseId?)"]
+        OTU["onToolUse\n(id, name, input, parentId?)"]
+        OTR["onToolResult\n(id, content, isError?)"]
+        OR["onReasoning\n(content, parentId?)"]
+    end
+
+    subgraph Tracking["Tracking State"]
+        SR["Subagent Registry\nMap toolUseId to SubagentEntry\ntag: A, B, C...\ndepth, toolCount, startMs"]
+        SD["Spiral Detector\nsubagentsSinceParentSynth\nparentToolTimestamps\nThreshold: 3 subagents or\n20 tools in 5min"]
+        HT["Heartbeat Timer\n30s interval\nFires when parent silent 60s+\nAND no active subagent"]
+        TM["Tool Metadata\nMap toolUseId to name"]
+        NT["Last Narration Timestamp"]
+    end
+
+    subgraph Output["Visibility Output"]
+        PR["onPartialReply(text)\nParent text to user stream"]
+        RS["onReasoningStream\nSubagent text: italic muted"]
+        IM["Inline Markers\nRead src/foo.ts\n[A] Delegated: explore...\n[A] Done (12s, 5 tools)"]
+        SW["Spiral Warning\nExcessive nesting detected"]
+        HB["Heartbeat Pulse\nStill working...\n3 tools used (45s)"]
+    end
+
+    OT -->|no parentId| PR
+    OT -->|has parentId| SR
+    SR -->|"depth lte MAX"| RS
+
+    OTU -->|"name = Agent"| SR
+    OTU -->|any tool| TM
+    OTU -->|render| IM
+
+    OTR -->|matching subagent| SR
+    SR -->|close| IM
+
+    OR --> NT
+    NT --> HT
+    HT -->|"silence gt 60s"| HB
+
+    OTU -->|check| SD
+    SD -->|threshold exceeded| SW
+</pre>
+</div>
+<div class="callout callout-warn">
+  <strong>Currently inlined in adapter.ts.</strong> ~400 lines of visibility logic mixed with the host-harness bridge code. Cannot be tested independently.
+</div>
+<table>
+  <thead><tr><th>Constant</th><th>Value</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>HEARTBEAT_INTERVAL_MS</code></td><td>30,000</td><td>Check interval for heartbeat timer</td></tr>
+    <tr><td><code>HEARTBEAT_NARRATION_SILENCE_MS</code></td><td>60,000</td><td>Parent must be silent this long before heartbeat fires</td></tr>
+    <tr><td><code>SPIRAL_SUBAGENT_THRESHOLD</code></td><td>3</td><td>Max subagent spawns before warning</td></tr>
+    <tr><td><code>SPIRAL_PARENT_TOOL_THRESHOLD</code></td><td>20</td><td>Max parent tools in time window</td></tr>
+    <tr><td><code>SPIRAL_PARENT_TOOL_WINDOW_MS</code></td><td>300,000</td><td>5-minute sliding window for tool count</td></tr>
+    <tr><td><code>SUBAGENT_PROGRESS_INTERVAL_MS</code></td><td>30,000</td><td>Progress update interval for active subagent</td></tr>
+    <tr><td><code>MAX_RENDERED_DEPTH</code></td><td>2</td><td>Max subagent nesting depth to render</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div id="vis-proposed" class="arch-panel">
+<div class="change-note">
+  <strong>Changes:</strong>
+  <ul>
+    <li>Extracted to <code>visibility.ts</code> as a <code>VisibilityTracker</code> class</li>
+    <li>All tracking state encapsulated in class instance (one per turn)</li>
+    <li>Adapter instantiates tracker, passes event callbacks &mdash; no state management</li>
+    <li>Independently testable: construct tracker, fire events, assert outputs</li>
+  </ul>
+</div>
+<div class="diagram-container">
+<pre class="mermaid-deferred">
+graph TB
+    subgraph Adapter["adapter.ts (~280 LOC)"]
+        RA["runAttempt()"]
+        CB["Callbacks\nonPartialReply\nonReasoningStream"]
+    end
+
+    subgraph VT["VisibilityTracker (visibility.ts ~400 LOC)"]
+        subgraph API["Public API"]
+            handleText["handleText(content, parentId?)"]
+            handleToolUse["handleToolUse(id, name, input, parentId?)"]
+            handleToolResult["handleToolResult(id, content, isError?)"]
+            handleReasoning["handleReasoning(content, parentId?)"]
+            dispose["dispose()"]
+        end
+
+        subgraph State["Encapsulated State"]
+            SR["subagentRegistry\nMap of SubagentEntry"]
+            SD["SpiralDetector\nthresholds + counters"]
+            HT["HeartbeatTimer\nauto-managed lifecycle"]
+            TM["toolMetadata Map"]
+        end
+
+        subgraph Emit["Event Emitters"]
+            ePR["emit partialReply"]
+            eRS["emit reasoningStream"]
+            eIM["emit marker"]
+            eSW["emit spiralWarning"]
+            eHB["emit heartbeat"]
+        end
+    end
+
+    RA -->|"new VisibilityTracker(callbacks)"| VT
+    handleText --> SR
+    handleText -->|no parentId| ePR
+    SR -->|"depth lte MAX"| eRS
+
+    handleToolUse -->|Agent| SR
+    handleToolUse --> TM
+    handleToolUse --> eIM
+
+    handleToolResult --> SR
+    SR --> eIM
+
+    handleReasoning --> HT
+    HT -->|"silence gt 60s"| eHB
+
+    handleToolUse --> SD
+    SD -->|threshold| eSW
+
+    ePR --> CB
+    eRS --> CB
+    eIM --> CB
+    eSW --> CB
+    eHB --> CB
+</pre>
+</div>
+<div class="callout callout-success">
+  <strong>Clean boundary: adapter delegates, tracker owns.</strong> Adapter constructs a <code>VisibilityTracker</code> with callback functions. Tracker encapsulates all state and emits events. No tracking logic remains in adapter. Test: create tracker with mock callbacks, fire <code>handleToolUse("Agent")</code>, assert subagent registration + marker emission.
+</div>
+<table>
+  <thead><tr><th>Constant</th><th>Value</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>HEARTBEAT_INTERVAL_MS</code></td><td>30,000</td><td>Check interval for heartbeat timer</td></tr>
+    <tr><td><code>HEARTBEAT_NARRATION_SILENCE_MS</code></td><td>60,000</td><td>Parent must be silent this long before heartbeat fires</td></tr>
+    <tr><td><code>SPIRAL_SUBAGENT_THRESHOLD</code></td><td>3</td><td>Max subagent spawns before warning</td></tr>
+    <tr><td><code>SPIRAL_PARENT_TOOL_THRESHOLD</code></td><td>20</td><td>Max parent tools in time window</td></tr>
+    <tr><td><code>SPIRAL_PARENT_TOOL_WINDOW_MS</code></td><td>300,000</td><td>5-minute sliding window for tool count</td></tr>
+    <tr><td><code>SUBAGENT_PROGRESS_INTERVAL_MS</code></td><td>30,000</td><td>Progress update interval for active subagent</td></tr>
+    <tr><td><code>MAX_RENDERED_DEPTH</code></td><td>2</td><td>Max subagent nesting depth to render</td></tr>
+  </tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 6. SEQUENCE: NORMAL TURN -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="seq-normal">
+<h2><span class="badge">Sequence</span> Normal Turn Execution</h2>
+<p class="section-desc">The primary use case &mdash; a single turn with tool use, no subagents, no errors. Shows the full lifecycle from user message to final response.</p>
+
+<div class="arch-tab-container">
+<div class="arch-tab-bar">
+  <button class="arch-tab active" data-panel="seqnorm-current">Current</button>
+  <button class="arch-tab proposed" data-panel="seqnorm-proposed">Proposed</button>
+</div>
+
+<div id="seqnorm-current" class="arch-panel active">
+<div class="diagram-container">
+<pre class="mermaid">
+sequenceDiagram
+    actor User
+    participant OC as OpenClaw Gateway
+    participant Adapter as adapter.ts
+    participant Harness as harness.ts
+    participant Context as context.ts
+    participant Session as session.ts
+    participant Protocol as protocol.ts
+    participant CC as Claude Code CLI
+    participant API as Anthropic API
+
+    User->>OC: Send message
+    OC->>OC: Route by model prefix (claude-code/*)
+    OC->>Adapter: runAttempt(params)
+
+    Note over Adapter: Extract plugin config<br/>Set up abort signal<br/>Init visibility tracking
+
+    Adapter->>Harness: runAttempt(cleanParams)
+
+    Harness->>Harness: runPreflight(config)
+    Harness->>Session: loadSession(sessionId)
+    Session-->>Harness: SessionBinding or null
+
+    Harness->>Context: buildContextSystemPrompt(params)
+    Note over Context: Read SOUL.md, IDENTITY.md<br/>USER.md, AGENTS.md, TOOLS.md<br/>MEMORY.md, HEARTBEAT.md<br/>+ chronicle-recall (5s timeout)
+    Context-->>Harness: systemPrompt (max 12K chars)
+
+    Note over Harness: Build queryOptions<br/>Normalize model ID<br/>Inject MCP servers<br/>Attach restart hook
+
+    Harness->>CC: query({ prompt, options })
+    activate CC
+    CC->>API: API request (OAuth)
+    activate API
+
+    loop SDKMessage stream
+        API-->>CC: Streaming response
+        CC-->>Harness: SDKMessage (async iterator)
+        Harness->>Protocol: translate(msg)
+        Protocol-->>Harness: TranslatedMessage[]
+
+        alt kind = text
+            Harness-->>Adapter: onText(content)
+            Adapter-->>OC: onPartialReply({text})
+            OC-->>User: Streaming text delta
+        else kind = tool_use
+            Harness-->>Adapter: onToolUse(id, name, input)
+        else kind = reasoning
+            Harness-->>Adapter: onReasoning(content)
+        end
+    end
+
+    deactivate API
+    CC-->>Harness: result message (final)
+    deactivate CC
+
+    Harness->>Session: bindSession(ids)
+    Harness->>Harness: emitChronicleEvent
+    Harness-->>Adapter: HarnessRunResult
+
+    Note over Adapter: Write session NDJSON<br/>Build full result shape
+
+    Adapter-->>OC: OpenClawRunAttemptResult
+    OC-->>User: Final message
+</pre>
+</div>
+</div>
+
+<div id="seqnorm-proposed" class="arch-panel">
+<div class="change-note">
+  <strong>Changes:</strong>
+  <ul>
+    <li>Query construction delegated to <code>query-builder.ts</code></li>
+    <li>SDKMessage processing loop delegated to <code>stream-processor.ts</code> (eliminates retry-path duplication)</li>
+    <li>Restart hook built by <code>restart-intercept.ts</code></li>
+    <li>Visibility tracking handled by <code>VisibilityTracker</code> instance</li>
+  </ul>
+</div>
+<div class="diagram-container">
+<pre class="mermaid-deferred">
+sequenceDiagram
+    actor User
+    participant OC as OpenClaw Gateway
+    participant Adapter as adapter.ts
+    participant Vis as VisibilityTracker
+    participant Harness as harness.ts
+    participant QB as query-builder.ts
+    participant RI as restart-intercept.ts
+    participant SP as stream-processor.ts
+    participant Context as context.ts
+    participant Session as session.ts
+    participant Protocol as protocol.ts
+    participant CC as Claude Code CLI
+    participant API as Anthropic API
+
+    User->>OC: Send message
+    OC->>OC: Route by model prefix (claude-code/*)
+    OC->>Adapter: runAttempt(params)
+
+    Note over Adapter: Extract plugin config<br/>Set up abort signal
+    Adapter->>Vis: new VisibilityTracker(callbacks)
+
+    Adapter->>Harness: runAttempt(cleanParams)
+
+    Harness->>Harness: runPreflight(config)
+    Harness->>Session: loadSession(sessionId)
+    Session-->>Harness: SessionBinding or null
+
+    Harness->>Context: buildContextSystemPrompt(params)
+    Context-->>Harness: systemPrompt (max 12K chars)
+
+    Harness->>QB: buildQueryOptions(params, binding)
+    Note over QB: Normalize model ID<br/>Inject MCP servers<br/>Build options
+    QB-->>Harness: queryOptions
+
+    Harness->>RI: buildRestartHook()
+    RI-->>Harness: preToolUseHook
+
+    Harness->>CC: query({ prompt, options })
+    activate CC
+    CC->>API: API request (OAuth)
+    activate API
+
+    Harness->>SP: processStream(iterator, callbacks)
+    loop SDKMessage stream
+        API-->>CC: Streaming response
+        CC-->>SP: SDKMessage (async iterator)
+        SP->>Protocol: translate(msg)
+        Protocol-->>SP: TranslatedMessage[]
+
+        alt kind = text
+            SP-->>Adapter: onText(content)
+            Adapter->>Vis: handleText(content)
+            Vis-->>OC: onPartialReply({text})
+            OC-->>User: Streaming text delta
+        else kind = tool_use
+            SP-->>Adapter: onToolUse(id, name, input)
+            Adapter->>Vis: handleToolUse(id, name, input)
+        end
+    end
+
+    deactivate API
+    CC-->>SP: result message
+    deactivate CC
+    SP-->>Harness: ProcessedResult
+
+    Harness->>Session: bindSession(ids)
+    Harness->>Harness: emitChronicleEvent
+    Harness->>RI: checkPendingRestart()
+    Harness-->>Adapter: HarnessRunResult
+
+    Adapter->>Vis: dispose()
+    Adapter-->>OC: ImagoRunAttemptResult
+    OC-->>User: Final message
+</pre>
+</div>
+<div class="callout callout-success">
+  <strong>Harness is now pure orchestration.</strong> It calls query-builder, then stream-processor, then restart-intercept &mdash; no inline processing logic. The same <code>processStream()</code> function serves both the primary path and the retry path, eliminating the 60-line duplication.
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 7. SEQUENCE: SUBAGENT -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="seq-subagent">
+<h2><span class="badge">Sequence</span> Turn with Subagent Spawning</h2>
+<p class="section-desc">When Claude Code uses the Agent tool to spawn a sub-agent. Shows subagent registration, depth-aware text routing, progress timers, and completion announcement.</p>
+
+<div class="arch-tab-container">
+<div class="arch-tab-bar">
+  <button class="arch-tab active" data-panel="seqsub-current">Current</button>
+  <button class="arch-tab proposed" data-panel="seqsub-proposed">Proposed</button>
+</div>
+
+<div id="seqsub-current" class="arch-panel active">
+<div class="diagram-container">
+<pre class="mermaid">
+sequenceDiagram
+    participant Harness as harness.ts
+    participant Protocol as protocol.ts
+    participant Adapter as adapter.ts
+    participant OC as OpenClaw
+
+    Note over Harness: Normal turn in progress...
+
+    Harness->>Protocol: translate(SDKMessage tool_use: Agent)
+    Protocol-->>Harness: TranslatedMessage kind: tool_use
+    Harness-->>Adapter: onToolUse(id=tu_abc, name=Agent, input)
+
+    Note over Adapter: Register subagent:<br/>tag = A (next letter)<br/>depth = 1<br/>start progress timer
+
+    Adapter-->>OC: [A] Delegated: explore codebase
+
+    loop Subagent messages (parentToolUseId = tu_abc)
+        Harness->>Protocol: translate(SDKMessage text + parentId)
+        Protocol-->>Harness: TranslatedMessage with parentToolUseId
+        Harness-->>Adapter: onText(content, parentToolUseId=tu_abc)
+
+        Note over Adapter: parentToolUseId present:<br/>route to reasoning not partialReply<br/>check depth lte MAX_RENDERED_DEPTH
+
+        Adapter-->>OC: onReasoningStream [A] subagent text...
+    end
+
+    Note over Adapter: Every 30s: progress timer fires<br/>[A] Still working... (30s, 4 tools)
+
+    Harness-->>Adapter: onToolResult(id=tu_abc, content, false)
+
+    Note over Adapter: Close subagent entry<br/>Clear progress timer
+
+    Adapter-->>OC: [A] Done (45s, 8 tools)
+
+    Harness-->>Adapter: onText(Based on my exploration...)
+    Adapter-->>OC: onPartialReply({text})
+</pre>
+</div>
+</div>
+
+<div id="seqsub-proposed" class="arch-panel">
+<div class="change-note">
+  <strong>Changes:</strong>
+  <ul>
+    <li>Adapter delegates all tracking to <code>VisibilityTracker</code></li>
+    <li>Stream processing loop in <code>stream-processor.ts</code> instead of harness</li>
+    <li>Same behavioral semantics &mdash; cleaner ownership boundaries</li>
+  </ul>
+</div>
+<div class="diagram-container">
+<pre class="mermaid-deferred">
+sequenceDiagram
+    participant SP as stream-processor.ts
+    participant Protocol as protocol.ts
+    participant Adapter as adapter.ts
+    participant Vis as VisibilityTracker
+    participant OC as OpenClaw
+
+    Note over SP: Normal turn in progress...
+
+    SP->>Protocol: translate(SDKMessage tool_use: Agent)
+    Protocol-->>SP: TranslatedMessage kind: tool_use
+    SP-->>Adapter: onToolUse(id=tu_abc, name=Agent, input)
+    Adapter->>Vis: handleToolUse(tu_abc, Agent, input)
+
+    Note over Vis: Register subagent:<br/>tag = A (next letter)<br/>depth = 1<br/>start progress timer
+
+    Vis-->>OC: [A] Delegated: explore codebase
+
+    loop Subagent messages (parentToolUseId = tu_abc)
+        SP->>Protocol: translate(SDKMessage text + parentId)
+        Protocol-->>SP: TranslatedMessage with parentToolUseId
+        SP-->>Adapter: onText(content, parentToolUseId=tu_abc)
+        Adapter->>Vis: handleText(content, tu_abc)
+
+        Note over Vis: parentId present:<br/>route to reasoning not partialReply
+
+        Vis-->>OC: onReasoningStream [A] subagent text...
+    end
+
+    Note over Vis: Every 30s: progress timer fires<br/>[A] Still working... (30s, 4 tools)
+
+    SP-->>Adapter: onToolResult(id=tu_abc, content, false)
+    Adapter->>Vis: handleToolResult(tu_abc, content, false)
+
+    Note over Vis: Close subagent entry<br/>Clear progress timer
+
+    Vis-->>OC: [A] Done (45s, 8 tools)
+
+    SP-->>Adapter: onText(Based on my exploration...)
+    Adapter->>Vis: handleText(content, null)
+    Vis-->>OC: onPartialReply({text})
+</pre>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 8. SEQUENCE: RESUME + RETRY -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="seq-resume">
+<h2><span class="badge">Sequence</span> Session Resume + Retry</h2>
+<p class="section-desc">Resume attempt fails ("session already in use") and retries without the resume token, creating a fresh CC session while preserving the binding.</p>
+
+<div class="arch-tab-container">
+<div class="arch-tab-bar">
+  <button class="arch-tab active" data-panel="seqres-current">Current</button>
+  <button class="arch-tab proposed" data-panel="seqres-proposed">Proposed</button>
+</div>
+
+<div id="seqres-current" class="arch-panel active">
+<div class="diagram-container">
+<pre class="mermaid">
+sequenceDiagram
+    participant Harness as harness.ts
+    participant Session as session.ts
+    participant CC as Claude Code CLI
+
+    Harness->>Session: loadSession(oc_sess_123)
+    Session-->>Harness: binding: claudeSessionId = cc_sess_456
+
+    Note over Harness: Binding found:<br/>set options.resume = cc_sess_456
+
+    Harness->>CC: query with resume = cc_sess_456
+    CC-->>Harness: Error: Session already in use
+
+    Note over Harness: Matches resume failure pattern<br/>Retry WITHOUT resume
+
+    Harness->>CC: query without resume
+    activate CC
+
+    loop Normal SDKMessage stream
+        CC-->>Harness: SDKMessage
+        Harness->>Harness: translate and dispatch
+    end
+
+    CC-->>Harness: result (new session: cc_sess_789)
+    deactivate CC
+
+    Harness->>Session: bindSession(oc_sess_123, cc_sess_789)
+    Note over Session: Overwrites old binding<br/>Preserves original createdAt
+</pre>
+</div>
+</div>
+
+<div id="seqres-proposed" class="arch-panel">
+<div class="change-note">
+  <strong>Changes:</strong>
+  <ul>
+    <li>Retry path now uses the same <code>stream-processor.ts</code> as primary &mdash; no duplicated processing loop</li>
+    <li>Query options built by <code>query-builder.ts</code> (with and without resume)</li>
+    <li>Same behavioral semantics</li>
+  </ul>
+</div>
+<div class="diagram-container">
+<pre class="mermaid-deferred">
+sequenceDiagram
+    participant Harness as harness.ts
+    participant QB as query-builder.ts
+    participant SP as stream-processor.ts
+    participant Session as session.ts
+    participant CC as Claude Code CLI
+
+    Harness->>Session: loadSession(oc_sess_123)
+    Session-->>Harness: binding: claudeSessionId = cc_sess_456
+
+    Harness->>QB: buildQueryOptions(params, binding)
+    Note over QB: Adds resume = cc_sess_456
+
+    Harness->>CC: query with resume = cc_sess_456
+    CC-->>Harness: Error: Session already in use
+
+    Note over Harness: Matches resume failure pattern
+
+    Harness->>QB: buildQueryOptions(params, null)
+    Note over QB: No resume option
+
+    Harness->>CC: query without resume
+    activate CC
+
+    Harness->>SP: processStream(iterator, callbacks)
+    loop SDKMessage stream
+        CC-->>SP: SDKMessage
+        SP->>SP: translate and dispatch
+    end
+
+    CC-->>SP: result (new session: cc_sess_789)
+    deactivate CC
+    SP-->>Harness: ProcessedResult
+
+    Harness->>Session: bindSession(oc_sess_123, cc_sess_789)
+    Note over Session: Overwrites old binding<br/>Preserves original createdAt
+</pre>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 9. SEQUENCE: RESTART INTERCEPTION -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="seq-restart">
+<h2><span class="badge">Sequence</span> Self-Killing Restart Interception</h2>
+<p class="section-desc">When the agent issues <code>systemctl restart openclaw-gateway</code> during a turn, the harness rewrites the command to prevent self-termination and defers the actual restart via SIGUSR1.</p>
+
+<div class="arch-tab-container">
+<div class="arch-tab-bar">
+  <button class="arch-tab active" data-panel="seqrst-current">Current</button>
+  <button class="arch-tab proposed" data-panel="seqrst-proposed">Proposed</button>
+</div>
+
+<div id="seqrst-current" class="arch-panel active">
+<div class="diagram-container">
+<pre class="mermaid">
+sequenceDiagram
+    participant CC as Claude Code CLI
+    participant Hook as PreToolUse Hook
+    participant Harness as harness.ts
+    participant Gateway as OpenClaw Gateway
+
+    CC->>CC: Agent decides to run:<br/>npm run build && systemctl restart openclaw-gateway
+
+    CC->>Hook: PreToolUse(Bash, command)
+
+    Note over Hook: splitChain the command<br/>Segment 2 matches<br/>SELF_KILLING_RESTART_PATTERNS
+
+    Hook->>Hook: Set pendingRestartReason
+
+    Note over Hook: Rewrite ONLY matching segment<br/>to a printf message
+
+    Hook-->>CC: Modified command (restart removed)
+
+    CC->>CC: Execute modified command
+    CC-->>Harness: SDKMessage stream continues
+
+    Note over Harness: Turn completes normally
+
+    Harness->>Harness: Check pendingRestartReason
+
+    Note over Harness: Wait 2 seconds (flush response)
+    Harness->>Gateway: process.kill(pid, SIGUSR1)
+    Note over Gateway: Graceful restart
+</pre>
+</div>
+</div>
+
+<div id="seqrst-proposed" class="arch-panel">
+<div class="change-note">
+  <strong>Changes:</strong>
+  <ul>
+    <li>Pattern matching, <code>splitChain()</code>, and hook builder extracted to <code>restart-intercept.ts</code> (~110 LOC)</li>
+    <li>Harness calls <code>buildRestartHook()</code> and <code>checkPendingRestart()</code></li>
+    <li>Same behavioral semantics &mdash; independently testable pattern matching</li>
+  </ul>
+</div>
+<div class="diagram-container">
+<pre class="mermaid-deferred">
+sequenceDiagram
+    participant CC as Claude Code CLI
+    participant RI as restart-intercept.ts
+    participant Harness as harness.ts
+    participant Gateway as OpenClaw Gateway
+
+    Note over Harness: Harness calls RI.buildRestartHook()
+    RI-->>Harness: preToolUseHook function
+
+    CC->>CC: Agent decides to run:<br/>npm run build && systemctl restart openclaw-gateway
+
+    CC->>RI: PreToolUse(Bash, command)
+
+    Note over RI: splitChain(command)<br/>Segment 2 matches<br/>SELF_KILLING_RESTART_PATTERNS
+
+    RI->>RI: Set pendingRestartReason
+
+    Note over RI: Rewrite ONLY matching segment<br/>to a printf message
+
+    RI-->>CC: Modified command (restart removed)
+
+    CC->>CC: Execute modified command
+    CC-->>Harness: SDKMessage stream continues
+
+    Note over Harness: Turn completes normally
+
+    Harness->>RI: checkPendingRestart()
+    RI-->>Harness: reason string or null
+
+    Note over Harness: Wait 2 seconds (flush response)
+    Harness->>Gateway: process.kill(pid, SIGUSR1)
+    Note over Gateway: Graceful restart
+</pre>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 10. SEQUENCE: DEVICE AUTH -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="seq-devauth">
+<h2><span class="badge">Sequence</span> MCP Bridge Device Authentication</h2>
+<p class="section-desc">Ed25519 device identity creation, v3 challenge-response signing, and automatic loopback pairing on first connection.</p>
+
+<div class="arch-tab-container">
+<div class="arch-tab-bar">
+  <button class="arch-tab active" data-panel="seqda-current">Current</button>
+  <button class="arch-tab proposed" data-panel="seqda-proposed">Proposed</button>
+</div>
+
+<div id="seqda-current" class="arch-panel active">
+<div class="diagram-container">
+<pre class="mermaid">
+sequenceDiagram
+    participant Bridge as MCP Bridge
+    participant DevAuth as device-auth.ts
+    participant GW as OpenClaw Gateway
+
+    Note over Bridge: First tool call needing gateway
+
+    Bridge->>DevAuth: loadOrCreateBridgeIdentity()
+
+    alt First time
+        DevAuth->>DevAuth: Generate Ed25519 keypair
+        DevAuth->>DevAuth: Write device-identity.json (0600)
+        DevAuth-->>Bridge: deviceId + keypair
+    else Identity exists
+        DevAuth->>DevAuth: Read device-identity.json
+        DevAuth-->>Bridge: Cached identity
+    end
+
+    Bridge->>DevAuth: loadDeviceToken()
+    DevAuth-->>Bridge: token or null
+
+    Bridge->>GW: WebSocket connect
+
+    GW-->>Bridge: challenge nonce
+
+    Bridge->>DevAuth: buildConnectDeviceBlock(nonce)
+    Note over DevAuth: Build v3 payload<br/>Sign with Ed25519 private key
+    DevAuth-->>Bridge: ConnectDeviceBlock
+
+    Bridge->>GW: connect frame + auth + device block
+
+    alt First time (no deviceToken)
+        GW->>GW: Loopback detection<br/>Auto-pair device
+        GW-->>Bridge: connected + deviceToken
+
+        Bridge->>DevAuth: saveDeviceToken (0600)
+    else Has deviceToken
+        GW->>GW: Validate token + signature
+        GW-->>Bridge: connected with scopes
+    end
+
+    Note over Bridge: Connection established<br/>RPC calls now possible
+</pre>
+</div>
+</div>
+
+<div id="seqda-proposed" class="arch-panel">
+<div class="change-note">
+  <strong>Changes:</strong>
+  <ul>
+    <li>Bridge now goes through <code>bridge/gateway-client.ts</code> which owns the WS connection</li>
+    <li>Payload format imported from <code>vendor/openclaw-device-auth.ts</code> &mdash; drift-detectable</li>
+    <li>File paths resolved through <code>paths.ts</code></li>
+    <li>Same cryptographic flow and security guarantees</li>
+  </ul>
+</div>
+<div class="diagram-container">
+<pre class="mermaid-deferred">
+sequenceDiagram
+    participant GWTools as bridge/gateway-tools.ts
+    participant GWCli as bridge/gateway-client.ts
+    participant DevAuth as device-auth.ts
+    participant Vendor as vendor/openclaw-device-auth.ts
+    participant GW as OpenClaw Gateway
+
+    Note over GWTools: First tool call needing gateway
+
+    GWTools->>GWCli: ensureConnected()
+    GWCli->>DevAuth: loadOrCreateBridgeIdentity()
+
+    alt First time
+        DevAuth->>DevAuth: Generate Ed25519 keypair
+        DevAuth->>DevAuth: Write device-identity.json (0600)
+        DevAuth-->>GWCli: deviceId + keypair
+    else Identity exists
+        DevAuth->>DevAuth: Read device-identity.json
+        DevAuth-->>GWCli: Cached identity
+    end
+
+    GWCli->>DevAuth: loadDeviceToken()
+    DevAuth-->>GWCli: token or null
+
+    GWCli->>GW: WebSocket connect
+    GW-->>GWCli: challenge nonce
+
+    GWCli->>DevAuth: buildConnectDeviceBlock(nonce)
+    DevAuth->>Vendor: v3 payload field order + format
+    Note over DevAuth: Build v3 payload<br/>Sign with Ed25519 private key
+    DevAuth-->>GWCli: ConnectDeviceBlock
+
+    GWCli->>GW: connect frame + auth + device block
+
+    alt First time (no deviceToken)
+        GW->>GW: Loopback detection<br/>Auto-pair device
+        GW-->>GWCli: connected + deviceToken
+        GWCli->>DevAuth: saveDeviceToken (0600)
+    else Has deviceToken
+        GW->>GW: Validate token + signature
+        GW-->>GWCli: connected with scopes
+    end
+
+    Note over GWCli: Connection established<br/>Return to caller
+</pre>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 11. SEQUENCE: TOOL DISPATCH -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="seq-dispatch">
+<h2><span class="badge">Sequence</span> MCP Bridge Tool Dispatch</h2>
+<p class="section-desc">How a tool call from Claude Code routes through the MCP bridge &mdash; native handling vs. gateway delegation vs. unimplemented stubs.</p>
+
+<div class="arch-tab-container">
+<div class="arch-tab-bar">
+  <button class="arch-tab active" data-panel="seqdisp-current">Current</button>
+  <button class="arch-tab proposed" data-panel="seqdisp-proposed">Proposed</button>
+</div>
+
+<div id="seqdisp-current" class="arch-panel active">
+<div class="diagram-container">
+<pre class="mermaid">
+sequenceDiagram
+    participant CC as Claude Code CLI
+    participant MCP as MCP Server (stdio)
+    participant Router as Tool Router
+    participant Native as Native Handler
+    participant GWClient as GatewayWsClient
+    participant GW as OpenClaw Gateway
+
+    CC->>MCP: CallToolRequest name=web_search
+    MCP->>Router: Dispatch by tool name
+
+    alt Native tool (web_search, web_fetch, memory_*)
+        Router->>Native: handleWebSearch(args)
+        Native->>Native: Brave API HTTP request
+        Native-->>Router: ToolResult content
+    else Gateway-delegated (message, sessions, cron, etc)
+        Router->>GWClient: callGatewayWs(method, params)
+        GWClient->>GW: rpc request
+        GW-->>GWClient: rpc response
+        GWClient-->>Router: ToolResult
+    else Unimplemented (browser, canvas, nodes, etc)
+        Router-->>MCP: ToolResult isError: not implemented
+    end
+
+    Router-->>MCP: ToolResult
+    MCP-->>CC: CallToolResponse
+</pre>
+</div>
+</div>
+
+<div id="seqdisp-proposed" class="arch-panel">
+<div class="change-note">
+  <strong>Changes:</strong>
+  <ul>
+    <li>Router in <code>bridge/server.ts</code> dispatches to module-level handlers</li>
+    <li>Native tools handled by <code>bridge/native-tools.ts</code></li>
+    <li>Gateway tools handled by <code>bridge/gateway-tools.ts</code></li>
+    <li>Gateway client in its own module with focused responsibility</li>
+  </ul>
+</div>
+<div class="diagram-container">
+<pre class="mermaid-deferred">
+sequenceDiagram
+    participant CC as Claude Code CLI
+    participant Srv as bridge/server.ts
+    participant Nat as bridge/native-tools.ts
+    participant HTML as bridge/html-convert.ts
+    participant GWTools as bridge/gateway-tools.ts
+    participant GWCli as bridge/gateway-client.ts
+    participant GW as OpenClaw Gateway
+
+    CC->>Srv: CallToolRequest name=web_fetch
+    Srv->>Srv: Dispatch by tool name
+
+    alt Native tool (web_search, web_fetch, memory_*)
+        Srv->>Nat: handleWebFetch(args)
+        Nat->>Nat: HTTP fetch
+        Nat->>HTML: htmlToMarkdown(body)
+        HTML-->>Nat: converted text
+        Nat-->>Srv: ToolResult content
+    else Gateway-delegated (message, sessions, cron, etc)
+        Srv->>GWTools: handleMessage(args)
+        GWTools->>GWCli: request(method, params)
+        GWCli->>GW: WS rpc request
+        GW-->>GWCli: WS rpc response
+        GWCli-->>GWTools: response
+        GWTools-->>Srv: ToolResult
+    else Unimplemented (browser, canvas, nodes, etc)
+        Srv-->>CC: ToolResult isError: not implemented
+    end
+
+    Srv-->>CC: CallToolResponse
+</pre>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 12. SEQUENCE: COMPACTION -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="seq-compact">
+<h2><span class="badge">Sequence</span> Compaction Request</h2>
+<p class="section-desc">Current (degenerate) compaction flow &mdash; entirely defers to Claude Code's native auto-compaction.</p>
+
+<div class="arch-tab-container">
+<div class="arch-tab-bar">
+  <button class="arch-tab active" data-panel="seqcmp-current">Current</button>
+  <button class="arch-tab proposed" data-panel="seqcmp-proposed">Proposed</button>
+</div>
+
+<div id="seqcmp-current" class="arch-panel active">
+<div class="diagram-container">
+<pre class="mermaid">
+sequenceDiagram
+    participant OC as OpenClaw Gateway
+    participant Adapter as adapter.ts
+    participant Compact as compaction.ts
+    participant Session as session.ts
+
+    OC->>Adapter: compact(params)
+    Adapter->>Compact: compactSession(params)
+    Compact->>Session: loadSession(sessionId)
+
+    alt No binding exists
+        Session-->>Compact: null
+        Compact-->>Adapter: compacted: false
+    else Binding exists
+        Session-->>Compact: SessionBinding
+        Compact-->>Adapter: compacted: false<br/>Defer to CC native compaction
+    end
+
+    Adapter-->>OC: CompactResult
+</pre>
+</div>
+</div>
+
+<div id="seqcmp-proposed" class="arch-panel">
+<p class="no-changes">No structural changes. Compaction remains a pass-through to CC's native auto-compaction. The test bug (expecting <code>compacted: true</code>) has been fixed in Phase 1a.</p>
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 13. STATE: SESSION LIFECYCLE -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="state-session">
+<h2><span class="badge">State Machine</span> Session Lifecycle</h2>
+<p class="section-desc">How an OpenClaw-to-Claude Code session binding evolves over time, including the retry path on resume failure.</p>
+
+<div class="arch-tab-container">
+<div class="arch-tab-bar">
+  <button class="arch-tab active" data-panel="state-current">Current</button>
+  <button class="arch-tab proposed" data-panel="state-proposed">Proposed</button>
+</div>
+
+<div id="state-current" class="arch-panel active">
+<div class="diagram-container">
+<pre class="mermaid">
+stateDiagram-v2
+    [*] --> Unbound: First turn for this OC session
+
+    Unbound --> Querying: runAttempt called
+
+    Querying --> Bound: Turn completes successfully
+
+    Bound --> Resuming: Next turn starts
+
+    Resuming --> Querying: Resume succeeds
+
+    Resuming --> RetryWithout: Resume fails
+
+    RetryWithout --> Querying: Retry without resume
+
+    Querying --> Error: Turn fails
+
+    Error --> Bound: Binding unchanged
+
+    Bound --> Cleared: reset called
+
+    Cleared --> Unbound: Next turn starts
+
+    Bound --> Bound: compactSession no-op
+</pre>
+</div>
+</div>
+
+<div id="state-proposed" class="arch-panel">
+<p class="no-changes">No structural changes. The session state machine is identical. Path resolution moves to <code>paths.ts</code> internally, but the lifecycle semantics are unchanged.</p>
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 14. DATA RESIDENCY -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="data">
+<h2><span class="badge">Data Residency</span> Where Data Lives</h2>
+<p class="section-desc">Mapping of all persistent and transient data across the filesystem, process memory, and external services.</p>
+
+<div class="arch-tab-container">
+<div class="arch-tab-bar">
+  <button class="arch-tab active" data-panel="data-current">Current</button>
+  <button class="arch-tab proposed" data-panel="data-proposed">Proposed</button>
+</div>
+
+<div id="data-current" class="arch-panel active">
+<div class="diagram-container">
+<pre class="mermaid">
+graph TB
+    subgraph FS["Local Filesystem"]
+        subgraph WS["~/.openclaw/workspace/"]
+            Soul["SOUL.md\nIDENTITY.md\nUSER.md"]
+            Agents["AGENTS.md\nTOOLS.md"]
+            Mem["MEMORY.md\nHEARTBEAT.md"]
+            Daily["memory/YYYY-MM-DD.md"]
+        end
+
+        subgraph Bind["~/.openclaw/harness-bindings/claude-code/"]
+            BJ["sessionId.json\nSession bindings"]
+            DI["device-identity.json\nEd25519 keypair"]
+            DT["device-token.json\nGateway device token"]
+        end
+
+        subgraph CCS["~/.claude/"]
+            CCP["projects/\nCC session history"]
+            CCA["auth/\nOAuth tokens"]
+        end
+
+        subgraph OCS["OpenClaw State"]
+            NDJSON["Session transcripts (NDJSON)"]
+            OCJSON["openclaw.json config"]
+        end
+    end
+
+    subgraph InMem["In-Memory (process lifetime)"]
+        CC2["Capabilities Cache\n5-min TTL"]
+        SR["Subagent Registry\nPer-turn"]
+        RF["pendingRestartReason\nProcess-global"]
+        WC["WebSocket Connection\nPer-bridge"]
+    end
+
+    subgraph Ext["External"]
+        ChDB["Chronicle PostgreSQL\nGraph memory"]
+        AnSess["Anthropic Cloud\nCC session state"]
+    end
+</pre>
+</div>
+<div class="callout callout-info">
+  <strong>Critical data flows:</strong> Session binding files are the only durable link between OpenClaw and CC sessions. If deleted, resume is lost but not catastrophic. Device identity auto-regenerates on deletion. Capabilities cache has a 5-minute TTL.
+</div>
+</div>
+
+<div id="data-proposed" class="arch-panel">
+<div class="change-note">
+  <strong>Changes:</strong>
+  <ul>
+    <li>New <code>vendor/</code> directory added to source tree (build-time only, not runtime data)</li>
+    <li>All path knowledge centralized in <code>paths.ts</code> &mdash; single source of truth</li>
+    <li>Subagent registry moves from adapter to <code>VisibilityTracker</code> instance</li>
+    <li>Pending restart reason moves from harness closure to <code>restart-intercept.ts</code> module state</li>
+  </ul>
+</div>
+<div class="diagram-container">
+<pre class="mermaid-deferred">
+graph TB
+    subgraph FS["Local Filesystem"]
+        subgraph WS["~/.openclaw/workspace/"]
+            Soul["SOUL.md\nIDENTITY.md\nUSER.md"]
+            Agents["AGENTS.md\nTOOLS.md"]
+            Mem["MEMORY.md\nHEARTBEAT.md"]
+            Daily["memory/YYYY-MM-DD.md"]
+        end
+
+        subgraph Bind["~/.openclaw/harness-bindings/claude-code/"]
+            BJ["sessionId.json\nSession bindings"]
+            DI["device-identity.json\nEd25519 keypair"]
+            DT["device-token.json\nGateway device token"]
+        end
+
+        subgraph CCS["~/.claude/"]
+            CCP["projects/\nCC session history"]
+            CCA["auth/\nOAuth tokens"]
+        end
+
+        subgraph OCS["OpenClaw State"]
+            NDJSON["Session transcripts (NDJSON)"]
+            OCJSON["openclaw.json config"]
+        end
+
+        subgraph VendorFS["src/vendor/ (build-time)"]
+            VP["openclaw-protocol.ts"]
+            VDA["openclaw-device-auth.ts"]
+            VAPI["openclaw-plugin-api.d.ts"]
+            VVER["VERSION"]
+        end
+    end
+
+    subgraph InMem["In-Memory (process lifetime)"]
+        CC2["Capabilities Cache\n5-min TTL"]
+        VIS["VisibilityTracker\n(per-turn instance)\nSubagent registry\nHeartbeat timer\nSpiral state"]
+        RI["RestartInterceptState\nModule-scoped\npendingRestartReason"]
+        WC["WebSocket Connection\nPer-bridge instance"]
+    end
+
+    subgraph PathMod["paths.ts (centralized)"]
+        PP["All path constants\nresolved from single module"]
+    end
+
+    subgraph Ext["External"]
+        ChDB["Chronicle PostgreSQL\nGraph memory"]
+        AnSess["Anthropic Cloud\nCC session state"]
+    end
+
+    PP -.->|resolves| WS
+    PP -.->|resolves| Bind
+</pre>
+</div>
+<div class="callout callout-success">
+  <strong>Data ownership is explicit.</strong> <code>paths.ts</code> centralizes all filesystem path knowledge. <code>VisibilityTracker</code> owns per-turn tracking state (constructed fresh each turn, disposed after). <code>vendor/</code> adds build-time protocol snapshots for drift detection.
+</div>
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 15. MODULE DEPENDENCY GRAPH -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="deps">
+<h2><span class="badge">Dependencies</span> Module Dependency Graph</h2>
+<p class="section-desc">Precise import relationships between all source modules. Dashed lines = lazy/dynamic imports. Note the separate tree for standalone MCP Bridge modules.</p>
+
+<div class="arch-tab-container">
+<div class="arch-tab-bar">
+  <button class="arch-tab active" data-panel="deps-current">Current</button>
+  <button class="arch-tab proposed" data-panel="deps-proposed">Proposed</button>
+</div>
+
+<div id="deps-current" class="arch-panel active">
+<div class="diagram-container">
+<pre class="mermaid">
+graph LR
+    subgraph InProc["In-Process Modules"]
+        idx[index.ts]
+        adp[adapter.ts]
+        hrn[harness.ts]
+        prt[protocol.ts]
+        prv[provider.ts]
+        ses[session.ts]
+        pfl[preflight.ts]
+        ctx[context.ts]
+        cmp[compaction.ts]
+        dgn[diagnostics.ts]
+        inr[inerrata.ts]
+        typ[types.ts]
+    end
+
+    subgraph Standalone["Standalone Process"]
+        mcb[mcp-bridge.ts]
+        mct[mcp-tools.ts]
+        dau[device-auth.ts]
+    end
+
+    subgraph ExtDep["External"]
+        SDK["claude-agent-sdk"]
+        MSDK["mcp/sdk"]
+        NCR["node:crypto"]
+    end
+
+    idx --> adp
+    idx --> hrn
+    idx --> prv
+    idx --> dgn
+    idx --> ses
+
+    adp --> hrn
+    adp --> cmp
+    adp --> typ
+
+    hrn --> prt
+    hrn --> ses
+    hrn --> pfl
+    hrn --> prv
+    hrn --> inr
+    hrn --> ctx
+
+    prt -.-> SDK
+
+    prv --> ses
+    prv --> typ
+
+    pfl --> typ
+    pfl -.-> ses
+
+    ses --> typ
+    cmp --> ses
+    cmp --> typ
+
+    dgn --> ses
+    dgn --> prv
+    dgn --> pfl
+    dgn --> typ
+
+    inr --> typ
+
+    mcb --> mct
+    mcb --> dau
+    mcb --> MSDK
+
+    dau --> NCR
+
+    hrn -.-> SDK
+</pre>
+</div>
+<table>
+  <thead><tr><th>Observation</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td><code>types.ts</code> is a leaf node</td><td>Imported by 7 modules, imports nothing</td></tr>
+    <tr><td><code>session.ts</code> is most depended-upon</td><td>5 direct dependents</td></tr>
+    <tr><td><code>harness.ts</code> has highest coupling</td><td>6 direct imports &mdash; most of any module</td></tr>
+    <tr><td><code>protocol.ts</code> has type-only SDK dep</td><td>No runtime dependency on the SDK</td></tr>
+    <tr><td>MCP modules form separate tree</td><td>Zero shared imports with in-process modules</td></tr>
+    <tr><td>Lazy import in preflight to session</td><td>Circular dependency workaround through provider</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div id="deps-proposed" class="arch-panel">
+<div class="change-note">
+  <strong>Changes:</strong>
+  <ul>
+    <li><code>harness.ts</code> coupling reduced: 6 &rarr; 8 imports but each is a focused module (net coupling decrease)</li>
+    <li><code>adapter.ts</code> gains <code>visibility.ts</code> import, loses inline tracking code</li>
+    <li>Lazy import in <code>preflight.ts</code> replaced with static import</li>
+    <li><code>paths.ts</code> becomes new leaf node (imported by session, context, diagnostics)</li>
+    <li>Bridge tree decomposed: <code>bridge/</code> has clean linear dependency chain</li>
+    <li><code>vendor/</code> types imported by <code>device-auth.ts</code> and <code>bridge/gateway-client.ts</code></li>
+  </ul>
+</div>
+<div class="diagram-container">
+<pre class="mermaid-deferred">
+graph LR
+    subgraph InProc["In-Process Modules"]
+        idx[index.ts]
+        adp[adapter.ts]
+        vis[visibility.ts]
+        hrn[harness.ts]
+        sp[stream-processor.ts]
+        ri[restart-intercept.ts]
+        qb[query-builder.ts]
+        prt[protocol.ts]
+        prv[provider.ts]
+        ses[session.ts]
+        pth[paths.ts]
+        pfl[preflight.ts]
+        ctx[context.ts]
+        cmp[compaction.ts]
+        dgn[diagnostics.ts]
+        inr[inerrata.ts]
+        typ[types.ts]
+    end
+
+    subgraph Bridge["bridge/ (Standalone Process)"]
+        bidx[bridge/index.ts]
+        bsrv[bridge/server.ts]
+        bnat[bridge/native-tools.ts]
+        bgw[bridge/gateway-tools.ts]
+        bcli[bridge/gateway-client.ts]
+        bhtml[bridge/html-convert.ts]
+    end
+
+    subgraph Other["Standalone"]
+        mct[mcp-tools.ts]
+        dau[device-auth.ts]
+    end
+
+    subgraph Vendor["vendor/"]
+        vp[openclaw-protocol.ts]
+        vda[openclaw-device-auth.ts]
+    end
+
+    subgraph ExtDep["External"]
+        SDK["claude-agent-sdk"]
+        MSDK["mcp/sdk"]
+        NCR["node:crypto"]
+    end
+
+    idx --> adp
+    idx --> hrn
+    idx --> prv
+    idx --> dgn
+    idx --> ses
+
+    adp --> hrn
+    adp --> vis
+    adp --> cmp
+    adp --> typ
+
+    hrn --> sp
+    hrn --> ri
+    hrn --> qb
+    hrn --> prt
+    hrn --> ses
+    hrn --> pfl
+    hrn --> prv
+    hrn --> inr
+    hrn --> ctx
+
+    sp --> prt
+    qb --> inr
+    qb --> prv
+
+    prt -.-> SDK
+
+    prv --> ses
+    prv --> typ
+
+    pfl --> ses
+    pfl --> typ
+
+    ses --> pth
+    ses --> typ
+
+    ctx --> pth
+    ctx --> typ
+
+    cmp --> ses
+    cmp --> typ
+
+    dgn --> ses
+    dgn --> pth
+    dgn --> prv
+    dgn --> pfl
+    dgn --> typ
+
+    inr --> typ
+
+    bidx --> bsrv
+    bsrv --> bnat
+    bsrv --> bgw
+    bsrv --> mct
+    bsrv --> MSDK
+    bnat --> bhtml
+    bgw --> bcli
+    bcli --> dau
+    bcli --> vp
+
+    dau --> vda
+    dau --> NCR
+
+    hrn -.-> SDK
+</pre>
+</div>
+<table>
+  <thead><tr><th>Observation</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td><code>types.ts</code> still a leaf node</td><td>Imported by 8 modules (was 7), still imports nothing</td></tr>
+    <tr><td><code>paths.ts</code> new leaf node</td><td>Imported by 3 modules (session, context, diagnostics)</td></tr>
+    <tr><td><code>harness.ts</code> imports more modules</td><td>But each is smaller and focused &mdash; net complexity decreases</td></tr>
+    <tr><td>No lazy imports remain</td><td>Preflight circular workaround eliminated</td></tr>
+    <tr><td>Bridge has linear dependency chain</td><td>server &rarr; native/gateway &rarr; html/client &rarr; auth &mdash; no cycles</td></tr>
+    <tr><td>Vendor types are build-time only</td><td>Imported by device-auth and gateway-client for protocol compliance</td></tr>
+  </tbody>
+</table>
+</div>
+</div>
+</section>
+
+</body>
+</html>
