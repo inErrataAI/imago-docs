@@ -120,8 +120,28 @@
   <h1>Imago</h1>
   <p class="tagline">Cognitive architecture harness for Claude Code &mdash; technical documentation</p>
 
+  <a class="card" href="imago-phase3-standalone.html">
+    <h2>Phase 3 Standalone Migration Specification <span class="badge-new">NEW</span></h2>
+    <p>Decouple Imago from OpenClaw: standalone gateway server (HTTP/WS), session router with composite keys, event bus with streaming broadcast, config manager, cron service, Discord adapter (multi-guild), webchat UI extraction, and parallel-validation cutover with 5-layer safety net.</p>
+    <div class="meta">
+      <span>10 sections</span>
+      <span>~5,900 new LOC</span>
+      <span>~206 new tests</span>
+    </div>
+  </a>
+
+  <a class="card" href="imago-phase3-architecture.html">
+    <h2>Phase 3 Architecture Diagrams <span class="badge-new">NEW</span></h2>
+    <p>C4 context (plugin vs standalone), paths.ts dependency map, full connection chain sequence, gateway component diagram, session routing flowchart, event bus emit-to-render, migration safety layers, cutover sequence, and module dependency graph with standalone/plugin mode tabs.</p>
+    <div class="meta">
+      <span>9 diagrams</span>
+      <span>Mermaid rendered</span>
+      <span>Phase 3 companion</span>
+    </div>
+  </a>
+
   <a class="card" href="imago-phase2-refactor.html">
-    <h2>Phase 2 Refactor Specification <span class="badge-new">NEW</span></h2>
+    <h2>Phase 2 Refactor Specification</h2>
     <p>Performance &amp; reliability optimization: worker pool implementation, per-turn I/O elimination via caching (session LRU, preflight, file watcher, chronicle TTL), streaming pipeline optimization (array+join, generator conversion), gateway reconnection with exponential backoff, and +35 new tests.</p>
     <div class="meta">
       <span>5 sections</span>
@@ -131,7 +151,7 @@
   </a>
 
   <a class="card" href="imago-phase2-architecture.html">
-    <h2>Phase 2 Architecture Diagrams <span class="badge-new">NEW</span></h2>
+    <h2>Phase 2 Architecture Diagrams</h2>
     <p>Before/after data flow sequences, worker pool lifecycle state machine, cache architecture graph, gateway connection state machine, string accumulation comparison, harness integration flowchart, module dependency graph, and execution timeline.</p>
     <div class="meta">
       <span>9 diagrams</span>

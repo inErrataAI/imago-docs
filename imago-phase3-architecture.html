@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Imago Phase 3 Architecture Diagrams</title>
+<script src="mermaid.min.js"></script>
+<script src="imago-config.js"></script>
+<style>
+  :root {
+    --bg: #0b0b14;
+    --surface: #11111b;
+    --surface2: #181825;
+    --surface3: #1e1e2e;
+    --text: #cdd6f4;
+    --text-muted: #a6adc8;
+    --text4: #6c7086;
+    --accent: #b4befe;
+    --accent2: #89b4fa;
+    --border: #313244;
+    --border2: #45475a;
+    --green: #a6e3a1;
+    --peach: #fab387;
+    --mauve: #cba6f7;
+    --teal: #94e2d5;
+    --yellow: #f9e2af;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #cba6f7, #89b4fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+  }
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 3rem;
+  }
+  .toc h2 { font-size: 1.1rem; color: var(--accent); margin-bottom: 1rem; }
+  .toc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 0.4rem 2rem;
+  }
+  .toc a {
+    color: var(--accent2);
+    text-decoration: none;
+    font-size: 0.9rem;
+    display: block;
+    padding: 0.2rem 0;
+  }
+  .toc a:hover { color: var(--accent); }
+  .toc .num { color: var(--text-muted); margin-right: 0.5rem; font-variant-numeric: tabular-nums; }
+
+  section {
+    margin-bottom: 4rem;
+    scroll-margin-top: 2rem;
+  }
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  h2 .badge {
+    font-size: 0.7rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .section-desc {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    margin-bottom: 1.5rem;
+    max-width: 800px;
+  }
+  .diagram-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+  }
+  .diagram-container pre.mermaid {
+    display: flex;
+    justify-content: center;
+  }
+  .diagram-container svg {
+    max-width: 100%;
+    height: auto;
+  }
+  .callout {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 1rem 1.2rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+  }
+  .callout strong { color: var(--accent); }
+  .callout-info { border-left-color: var(--accent2); }
+  .callout-info strong { color: var(--accent2); }
+  .callout-warn { border-left-color: #fab387; }
+  .callout-warn strong { color: #fab387; }
+  .callout-success { border-left-color: var(--green); }
+  .callout-success strong { color: var(--green); }
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.85em;
+    background: var(--surface2);
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+  }
+  .stats {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.8rem 1.2rem;
+    min-width: 120px;
+  }
+  .stat-value { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+  .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  a { color: var(--accent2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .nav-links {
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .nav-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+  .nav-links a:hover {
+    background: var(--surface2);
+    color: var(--accent);
+    border-color: var(--border2);
+  }
+  .tab-container {
+    margin: 1rem 0;
+  }
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+  .tab {
+    padding: 0.5rem 1rem;
+    background: var(--surface);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: inherit;
+    border-radius: 6px 6px 0 0;
+    margin-right: -1px;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); background: var(--surface2); }
+  .tab.active {
+    background: var(--surface3);
+    color: var(--accent);
+    border-bottom: 1px solid var(--surface3);
+    font-weight: 600;
+  }
+  .tab-panel {
+    display: none;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-top: none;
+    padding: 1rem 1.2rem;
+    border-radius: 0 0 8px 8px;
+  }
+  .tab-panel.active { display: block; }
+</style>
+</head>
+<body>
+
+<h1>Imago Phase 3 Architecture</h1>
+<p class="subtitle">Standalone migration architecture diagrams &mdash; companion to the <a href="imago-phase3-standalone.html">Phase 3 Standalone Migration Specification</a>. Produced 2026-04-23.</p>
+
+<div class="nav-links">
+  <a href="imago-phase3-standalone.html">&larr; Phase 3 Spec</a>
+  <a href="imago-phase2-architecture.html">Phase 2 Architecture</a>
+  <a href="imago-phase2-refactor.html">Phase 2 Spec</a>
+  <a href="imago-architecture.html">Phase 1 Architecture</a>
+  <a href="index.html">Home</a>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-value">9</div><div class="stat-label">Diagrams</div></div>
+  <div class="stat"><div class="stat-value">~15</div><div class="stat-label">New Modules</div></div>
+  <div class="stat"><div class="stat-value">~5,900</div><div class="stat-label">New LOC</div></div>
+  <div class="stat"><div class="stat-value">~206</div><div class="stat-label">New Tests</div></div>
+  <div class="stat"><div class="stat-value">2</div><div class="stat-label">Deploy Modes</div></div>
+</div>
+
+<nav class="toc">
+  <h2>Diagrams</h2>
+  <div class="toc-grid">
+    <a href="#c4-context"><span class="num">1.</span> C4 Context: Standalone vs Plugin Mode</a>
+    <a href="#dependency-map"><span class="num">2.</span> Dependency Map: paths.ts Choke Point</a>
+    <a href="#connection-chain"><span class="num">3.</span> Connection Chain: Message to Response</a>
+    <a href="#gateway-components"><span class="num">4.</span> Gateway Server Component Diagram</a>
+    <a href="#session-routing"><span class="num">5.</span> Session Routing Flow</a>
+    <a href="#event-bus"><span class="num">6.</span> Event Bus: Emit to Render</a>
+    <a href="#safety-layers"><span class="num">7.</span> Migration Safety Layers</a>
+    <a href="#cutover-sequence"><span class="num">8.</span> Cutover Sequence</a>
+    <a href="#module-deps"><span class="num">9.</span> Module Dependency Graph</a>
+  </div>
+</nav>
+
+<!-- ================================================================= -->
+<section id="c4-context">
+<h2><span class="badge">C4 Context</span> 1. Standalone vs Plugin Mode</h2>
+<p class="section-desc">How Imago fits into the system in each deployment mode. Plugin mode (current) routes through OpenClaw. Standalone mode (Phase 3 target) removes the OC dependency entirely.</p>
+
+<div class="tab-container">
+  <div class="tabs">
+    <button class="tab active" data-panel="c4-plugin">Current: Plugin Mode</button>
+    <button class="tab" data-panel="c4-standalone">Proposed: Standalone Mode</button>
+  </div>
+
+  <div id="c4-plugin" class="tab-panel active">
+    <div class="diagram-container">
+<pre class="mermaid">
+graph TB
+    User["Bosh (User)"]
+    Browser["Browser / Webchat"]
+    DiscordApp["Discord"]
+
+    subgraph "OpenClaw Process (40K+ LOC)"
+        OCGateway["OC Gateway :18789"]
+        OCRouter["OC Session Router"]
+        OCDiscord["OC Discord Bot"]
+        OCWebchat["OC Webchat UI"]
+    end
+
+    subgraph "Imago Plugin"
+        Harness["Harness (entry point)"]
+        Bridge["MCP Bridge"]
+        GWClient["gateway-client.ts"]
+        GWTools["gateway-tools.ts"]
+    end
+
+    Claude["Claude Code SDK"]
+    FS["~/.openclaw/workspace"]
+
+    User --> Browser
+    User --> DiscordApp
+    Browser --> OCWebchat
+    DiscordApp --> OCDiscord
+    OCWebchat --> OCGateway
+    OCDiscord --> OCGateway
+    OCGateway --> OCRouter
+    OCRouter --> Harness
+    Harness --> Claude
+    Harness --> Bridge
+    Bridge --> GWTools
+    GWTools --> GWClient
+    GWClient --> OCGateway
+    Harness --> FS
+
+    style OCGateway fill:#3a2510,stroke:#fab387,color:#fab387
+    style OCRouter fill:#3a2510,stroke:#fab387,color:#fab387
+    style OCDiscord fill:#3a2510,stroke:#fab387,color:#fab387
+    style OCWebchat fill:#3a2510,stroke:#fab387,color:#fab387
+    style GWClient fill:#3a2510,stroke:#fab387,color:#fab387
+    style Harness fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style Bridge fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style GWTools fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+</pre>
+    </div>
+    <div class="callout callout-warn">
+      <strong>Problem:</strong> Imago depends on 40K+ LOC OC gateway for message routing, session management, Discord integration, webchat serving, and tool dispatch. Any OC change can break Imago.
+    </div>
+  </div>
+
+  <div id="c4-standalone" class="tab-panel">
+    <div class="diagram-container">
+<pre class="mermaid">
+graph TB
+    User["Bosh (User)"]
+    Browser["Browser / Webchat"]
+    DiscordApp["Discord"]
+
+    subgraph "Imago Standalone Process"
+        IGateway["Imago Gateway :18800"]
+        IRouter["Session Router"]
+        IEventBus["Event Bus"]
+        IDiscord["Discord Adapter"]
+        IWebchat["Webchat UI"]
+        ICron["Cron Service"]
+        IConfig["Config Manager"]
+        Harness["Harness"]
+        Bridge["MCP Bridge"]
+        GWTools["gateway-tools.ts"]
+        Services["Standalone Services"]
+    end
+
+    Claude["Claude Code SDK"]
+    FS["~/.openclaw/workspace"]
+
+    User --> Browser
+    User --> DiscordApp
+    Browser --> IWebchat
+    DiscordApp --> IDiscord
+    IWebchat --> IGateway
+    IDiscord --> IGateway
+    IGateway --> IRouter
+    IRouter --> Harness
+    Harness --> Claude
+    Harness --> Bridge
+    Bridge --> GWTools
+    GWTools --> Services
+    IRouter --> IEventBus
+    IEventBus --> IGateway
+    ICron --> IRouter
+    Harness --> FS
+
+    style IGateway fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style IRouter fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style IEventBus fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style IDiscord fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style IWebchat fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style ICron fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style IConfig fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style Services fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style Harness fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style Bridge fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style GWTools fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+</pre>
+    </div>
+    <div class="callout callout-success">
+      <strong>Result:</strong> Zero external process dependency. Imago owns the full stack from HTTP listener to Claude SDK. Workspace data stays at ~/.openclaw/workspace (symlinked). OC is not running.
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="dependency-map">
+<h2><span class="badge">Graph</span> 2. Dependency Map: paths.ts Choke Point</h2>
+<p class="section-desc">Every file that imports from <code>paths.ts</code> and which constants they use. The STANDALONE flag in paths.ts is the single switch that controls plugin vs standalone behavior across the entire codebase.</p>
+
+<div class="diagram-container">
+<pre class="mermaid">
+graph LR
+    subgraph "paths.ts (44 LOC)"
+        STANDALONE["STANDALONE flag"]
+        ROOT["ROOT dir"]
+        WORKSPACE["WORKSPACE_DIR"]
+        BINDING["BINDING_DIR"]
+        PORT["GATEWAY_PORT"]
+        AUTH["AUTH tokens"]
+    end
+
+    subgraph "Consumers"
+        session["session.ts"]
+        context["context.ts"]
+        harness["harness.ts"]
+        gwclient["gateway-client.ts"]
+        gwtools["gateway-tools.ts"]
+        deviceauth["device-auth.ts"]
+        preflight["preflight.ts"]
+        adapter["adapter.ts"]
+    end
+
+    subgraph "Phase 3 New Consumers"
+        server["gateway/server.ts"]
+        router["session-router.ts"]
+        eventbus["event-bus.ts"]
+        config["config/manager.ts"]
+        cron["cron/service.ts"]
+        discord["discord/adapter.ts"]
+    end
+
+    STANDALONE --> gwtools
+    STANDALONE --> gwclient
+    STANDALONE --> server
+    ROOT --> BINDING
+    ROOT --> session
+    WORKSPACE --> context
+    WORKSPACE --> harness
+    WORKSPACE --> config
+    BINDING --> session
+    BINDING --> deviceauth
+    PORT --> gwclient
+    PORT --> server
+    AUTH --> gwclient
+    AUTH --> gwtools
+
+    style STANDALONE fill:#3a2510,stroke:#fab387,stroke-width:3px,color:#fab387
+    style ROOT fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style WORKSPACE fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style BINDING fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style PORT fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style AUTH fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+
+    style server fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+    style router fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+    style eventbus fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+    style config fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+    style cron fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+    style discord fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+</pre>
+</div>
+<div class="callout callout-info">
+  <strong>Key insight:</strong> paths.ts is the single choke point. By making it dual-mode (STANDALONE flag), every downstream file automatically resolves to the correct directories, ports, and auth tokens without any changes to their own code.
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="connection-chain">
+<h2><span class="badge">Sequence</span> 3. Connection Chain: Message to Response</h2>
+<p class="section-desc">Full request lifecycle in standalone mode: user sends a message via webchat, it flows through the gateway, session router, harness, Claude SDK, and back through the event bus to the client.</p>
+
+<div class="diagram-container">
+<pre class="mermaid">
+sequenceDiagram
+    participant U as User (Browser)
+    participant WS as Gateway WS :18800
+    participant R as Session Router
+    participant EB as Event Bus
+    participant H as Harness
+    participant SDK as Claude Code SDK
+    participant MCP as MCP Bridge
+
+    U->>WS: { type: "req", method: "chat.send", params: { text } }
+    WS->>R: route(sessionKey, text)
+    R->>R: resolve session (composite key)
+    R->>R: append to transcript.jsonl
+    R->>R: set status = "running"
+    R->>H: runAttempt(sessionId, text)
+
+    H->>SDK: query(systemPrompt, input)
+
+    loop Streaming response
+        SDK-->>H: SDKMessage (text delta)
+        H->>EB: emitAgentEvent(assistant, delta)
+        EB->>EB: throttle (150ms buffer)
+        EB->>WS: broadcast to session subscribers
+        WS-->>U: { type: "evt", event: "session.text", data: delta }
+    end
+
+    loop Tool calls
+        SDK-->>H: SDKMessage (tool_use)
+        H->>MCP: execute tool
+        H->>EB: emitAgentEvent(tool, { name, args })
+        EB->>WS: broadcast
+        WS-->>U: { type: "evt", event: "session.tool" }
+        MCP-->>H: tool result
+        H->>SDK: tool_result
+    end
+
+    SDK-->>H: stream complete
+    H-->>R: HarnessRunResult
+    R->>R: update metadata (tokens, cost)
+    R->>R: set status = "idle"
+    R->>EB: emitAgentEvent(status, "idle")
+    EB->>WS: broadcast
+    WS-->>U: { type: "res", data: { text, usage } }
+</pre>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="gateway-components">
+<h2><span class="badge">Graph</span> 4. Gateway Server Components</h2>
+<p class="section-desc">Internal structure of the standalone gateway. ~665 LOC total, deliberately minimal compared to OC's ~4,000 LOC gateway.</p>
+
+<div class="diagram-container">
+<pre class="mermaid">
+graph TB
+    subgraph "HTTP Layer"
+        HTTP["Node HTTP Server"]
+        Health["/health endpoint"]
+        Hooks["/hooks/:name webhook"]
+        Static["Static file server (UI)"]
+    end
+
+    subgraph "WebSocket Layer"
+        WSS["WebSocket Server"]
+        Auth["Challenge-Nonce Auth"]
+        HB["30s Heartbeat Tick"]
+        Proto["JSON Protocol Handler"]
+    end
+
+    subgraph "RPC Methods (~10)"
+        Connect["connect"]
+        ChatSend["chat.send"]
+        SessList["sessions.list"]
+        SessGet["sessions.get"]
+        SessSend["sessions.send"]
+        SessSpawn["sessions.spawn"]
+        CronList["cron.list"]
+        CronAdd["cron.add"]
+        CronRm["cron.remove"]
+        ConfigGet["config.get"]
+    end
+
+    subgraph "Connection Management"
+        Clients["Client Map"]
+        Drain["Graceful Shutdown"]
+    end
+
+    HTTP --> Health
+    HTTP --> Hooks
+    HTTP --> Static
+    HTTP -->|"upgrade"| WSS
+    WSS --> Auth
+    Auth -->|"valid"| Proto
+    Auth -->|"invalid"| Drain
+    WSS --> HB
+    Proto --> Connect
+    Proto --> ChatSend
+    Proto --> SessList
+    Proto --> SessGet
+    Proto --> SessSend
+    Proto --> SessSpawn
+    Proto --> CronList
+    Proto --> CronAdd
+    Proto --> CronRm
+    Proto --> ConfigGet
+    WSS --> Clients
+
+    style HTTP fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style WSS fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style Auth fill:#3a2510,stroke:#fab387,color:#fab387
+    style HB fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style Proto fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+</pre>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="session-routing">
+<h2><span class="badge">Flowchart</span> 5. Session Routing Flow</h2>
+<p class="section-desc">How incoming messages are resolved to session keys using the composite key scheme. Each channel type maps to a specific key pattern.</p>
+
+<div class="diagram-container">
+<pre class="mermaid">
+flowchart TD
+    MSG["Incoming Message"] --> SRC{"Source?"}
+
+    SRC -->|"Webchat"| WC["agent:main:main"]
+    SRC -->|"Discord Channel"| DC["agent:main:discord:channel:ID"]
+    SRC -->|"Discord DM"| DD["agent:main:discord:dm:USER_ID"]
+    SRC -->|"Discord Thread"| DT["agent:main:discord:thread:THREAD_ID"]
+    SRC -->|"Cron Job"| CR["agent:main:cron:JOB_ID"]
+    SRC -->|"Webhook"| WH["agent:main:webhook:HOOK_NAME"]
+    SRC -->|"Subagent Spawn"| SA["agent:main:subagent:UUID"]
+    SRC -->|"Boot"| BT["agent:main:boot"]
+
+    WC --> LOOKUP
+    DC --> LOOKUP
+    DD --> LOOKUP
+    DT --> LOOKUP
+    CR --> LOOKUP
+    WH --> LOOKUP
+    SA --> LOOKUP
+    BT --> LOOKUP
+
+    LOOKUP{"Session exists?"} -->|"Yes"| LOAD["Load metadata + transcript"]
+    LOOKUP -->|"No"| CREATE["Create new session"]
+    CREATE --> LOAD
+
+    LOAD --> STATUS{"Status?"}
+    STATUS -->|"idle"| RUN["Set running, dispatch to harness"]
+    STATUS -->|"running"| QUEUE["Queue message"]
+    STATUS -->|"compacting"| WAIT["Wait for compaction"]
+    STATUS -->|"done"| REJECT["Session archived, reject"]
+
+    WAIT --> RUN
+
+    style MSG fill:#3a2510,stroke:#fab387,color:#fab387
+    style RUN fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style REJECT fill:#2e1a1a,stroke:#f38ba8,color:#f38ba8
+</pre>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="event-bus">
+<h2><span class="badge">Sequence</span> 6. Event Bus: Emit to Render</h2>
+<p class="section-desc">How agent events flow from the harness through the event bus to connected WebSocket clients. Shows the 150ms throttling for text deltas and the seq counter for ordered delivery.</p>
+
+<div class="diagram-container">
+<pre class="mermaid">
+sequenceDiagram
+    participant H as Harness
+    participant EB as Event Bus
+    participant TH as Throttle Buffer
+    participant BC as Broadcast
+    participant C1 as WS Client 1
+    participant C2 as WS Client 2
+
+    Note over EB: Global seq counter = 0
+
+    H->>EB: emitAgentEvent(assistant, "Hello")
+    EB->>EB: seq = 1
+    EB->>TH: buffer delta "Hello"
+    Note over TH: Start 150ms timer
+
+    H->>EB: emitAgentEvent(assistant, " world")
+    EB->>EB: seq = 2
+    EB->>TH: append " world"
+
+    H->>EB: emitAgentEvent(assistant, ", this")
+    EB->>EB: seq = 3
+    EB->>TH: append ", this"
+
+    Note over TH: 150ms timer fires
+    TH->>BC: flush "Hello world, this"
+    BC->>C1: { type: "evt", event: "session.text", seq: 3 }
+    BC->>C2: { type: "evt", event: "session.text", seq: 3 }
+
+    H->>EB: emitAgentEvent(tool, { name: "web_search" })
+    EB->>EB: seq = 4
+    Note over EB: Tool events NOT throttled
+    EB->>BC: immediate broadcast
+    BC->>C1: { type: "evt", event: "session.tool", seq: 4 }
+    BC->>C2: { type: "evt", event: "session.tool", seq: 4 }
+
+    H->>EB: emitAgentEvent(status, "idle")
+    EB->>EB: seq = 5
+    EB->>BC: immediate broadcast
+    BC->>C1: { type: "evt", event: "session.status", seq: 5 }
+    BC->>C2: { type: "evt", event: "session.status", seq: 5 }
+</pre>
+</div>
+<div class="callout callout-info">
+  <strong>Throttling strategy:</strong> Only text deltas are throttled (150ms buffer). Tool events and status changes are broadcast immediately. The seq counter ensures clients can detect and handle out-of-order delivery.
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="safety-layers">
+<h2><span class="badge">Graph</span> 7. Migration Safety Layers</h2>
+<p class="section-desc">Five layers of safety, from prevention through catastrophic recovery. Each layer is independent and progressively more aggressive.</p>
+
+<div class="diagram-container">
+<pre class="mermaid">
+graph TB
+    subgraph "Layer 1: Prevention"
+        P1["Pre-migration snapshot"]
+        P2["Continuity suite at startup"]
+        P3["Workspace never moves"]
+        P4["Dual-mode coexistence"]
+        P5["Parallel validation"]
+    end
+
+    subgraph "Layer 2: Detection"
+        D1["/health returns 503"]
+        D2["Gateway logs failures"]
+        D3["Session router logs errors"]
+        D4["Discord adapter logs"]
+        D5["Cron logs missed jobs"]
+    end
+
+    subgraph "Layer 3: Recovery"
+        R1["Fallback read chain"]
+        R2["Auto-generate keypair"]
+        R3["Config .bak fallback"]
+        R4["Discord auto-reconnect"]
+        R5["WS client reconnect"]
+        R6["Cron catch-up"]
+    end
+
+    subgraph "Layer 4: Rollback"
+        RB["imago-rollback.sh"]
+        RB1["Stop standalone"]
+        RB2["Revert to tag"]
+        RB3["Restore OC config"]
+        RB4["Restart OC gateway"]
+    end
+
+    subgraph "Layer 5: Catastrophic"
+        C1["Manual git checkout"]
+        C2["Manual config restore"]
+        C3["Manual systemctl restart"]
+    end
+
+    P1 --> D1
+    P2 --> D2
+    P3 --> D3
+    P4 --> D4
+    P5 --> D5
+
+    D1 --> R1
+    D2 --> R2
+    D3 --> R3
+    D4 --> R4
+    D5 --> R5
+
+    R1 --> RB
+    R2 --> RB
+    R3 --> RB
+    RB --> RB1
+    RB1 --> RB2
+    RB2 --> RB3
+    RB3 --> RB4
+
+    RB4 --> C1
+    C1 --> C2
+    C2 --> C3
+
+    style P1 fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style P2 fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style P3 fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style P4 fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style P5 fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style D1 fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style D2 fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style D3 fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style D4 fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style D5 fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style R1 fill:#3a2510,stroke:#fab387,color:#fab387
+    style R2 fill:#3a2510,stroke:#fab387,color:#fab387
+    style R3 fill:#3a2510,stroke:#fab387,color:#fab387
+    style R4 fill:#3a2510,stroke:#fab387,color:#fab387
+    style R5 fill:#3a2510,stroke:#fab387,color:#fab387
+    style R6 fill:#3a2510,stroke:#fab387,color:#fab387
+    style RB fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+    style RB1 fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+    style RB2 fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+    style RB3 fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+    style RB4 fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+    style C1 fill:#2e1a1a,stroke:#f38ba8,color:#f38ba8
+    style C2 fill:#2e1a1a,stroke:#f38ba8,color:#f38ba8
+    style C3 fill:#2e1a1a,stroke:#f38ba8,color:#f38ba8
+</pre>
+</div>
+<div class="callout callout-success">
+  <strong>Data safety guarantee:</strong> At no point does any script delete, modify, or overwrite any file in ~/.openclaw/workspace/. The migration is purely additive until the final cutover. Even the cutover is reversible.
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="cutover-sequence">
+<h2><span class="badge">Sequence</span> 8. Cutover Sequence</h2>
+<p class="section-desc">The parallel validation and channel migration sequence. Both gateways run simultaneously, then channels are migrated one at a time with verification at each step.</p>
+
+<div class="diagram-container">
+<pre class="mermaid">
+sequenceDiagram
+    participant OC as OC Gateway :18789
+    participant IM as Imago Gateway :18800
+    participant V as Validation Suite
+    participant DC as Discord Bot
+    participant WC as Webchat
+
+    Note over OC,WC: Phase 1: Parallel Validation
+
+    V->>IM: GET /health
+    IM-->>V: 200 OK (all checks pass)
+
+    V->>IM: chat.send("Hello, who am I talking to?")
+    IM-->>V: Vesper responds with personality
+
+    V->>IM: chat.send(tool-use message)
+    IM-->>V: web_search + memory_search work
+
+    V->>IM: chat.send(coding task)
+    IM-->>V: Subagent spawns, streaming works
+
+    V->>IM: cron.list
+    IM-->>V: Jobs registered, last fire OK
+
+    V->>IM: sessions.list + sessions.send
+    IM-->>V: Cross-session communication OK
+
+    V->>IM: Check daily notes writable
+    IM-->>V: memory/ writable, MEMORY.md readable
+
+    Note over V: All 7 checks PASS
+
+    Note over OC,WC: Phase 2: Channel Migration
+
+    DC->>OC: Disconnect from OC
+    DC->>IM: Connect to Imago
+    V->>DC: Verify #dev responds
+    DC-->>V: Bot active in #dev
+
+    WC->>OC: Disconnect
+    WC->>IM: Connect to :18800
+    V->>WC: Verify webchat works
+    WC-->>V: Chat functional
+
+    Note over OC,WC: Phase 3: Continuity Verification
+
+    V->>IM: Full continuity suite
+    IM-->>V: All checks pass
+
+    V->>V: Human checklist verified
+
+    Note over OC: OC gateway kept as fallback
+    Note over IM: Imago is now primary
+</pre>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="module-deps">
+<h2><span class="badge">Graph</span> 9. Module Dependency Graph</h2>
+<p class="section-desc">All modules in Phase 3. Existing modules in blue, new standalone modules in green, new channel modules in purple. The paths.ts module at center controls the mode switch.</p>
+
+<div class="tab-container">
+  <div class="tabs">
+    <button class="tab active" data-panel="deps-standalone">Standalone Modules</button>
+    <button class="tab" data-panel="deps-full">Full Dependency Graph</button>
+  </div>
+
+  <div id="deps-standalone" class="tab-panel active">
+    <div class="diagram-container">
+<pre class="mermaid">
+graph TB
+    subgraph "Entry Points"
+        MAIN["main.ts (standalone)"]
+        IDX["index.ts (plugin)"]
+    end
+
+    subgraph "paths.ts (mode switch)"
+        PA["paths.ts"]
+    end
+
+    subgraph "Gateway (new)"
+        SRV["gateway/server.ts"]
+        EB["gateway/event-bus.ts"]
+        WH["gateway/webhooks.ts"]
+    end
+
+    subgraph "Routing (new)"
+        SR["session-router.ts"]
+        CONT["continuity.ts"]
+    end
+
+    subgraph "Services (new)"
+        CM["config/manager.ts"]
+        CS["cron/service.ts"]
+        SS["standalone-services.ts"]
+    end
+
+    subgraph "Channels (new)"
+        DA["discord/adapter.ts"]
+        DCMD["discord/commands.ts"]
+        DTB["discord/thread-bindings.ts"]
+        CD["channels/dispatch.ts"]
+    end
+
+    subgraph "Tools (new)"
+        WEB["tools/web-search.ts"]
+        FETCH["tools/web-fetch.ts"]
+    end
+
+    subgraph "Existing Core"
+        H["harness.ts"]
+        BR["bridge/index.ts"]
+        GT["gateway-tools.ts"]
+        GC["gateway-client.ts"]
+        S["session.ts"]
+        CTX["context.ts"]
+        WP["worker-pool.ts"]
+    end
+
+    MAIN --> PA
+    MAIN --> SRV
+    MAIN --> CM
+    MAIN --> CONT
+    IDX --> PA
+    IDX --> H
+
+    SRV --> SR
+    SRV --> EB
+    SRV --> WH
+    SR --> H
+    SR --> S
+
+    GT --> SS
+    GT --> GC
+    SS --> SR
+    SS --> CS
+    SS --> CM
+    SS --> CD
+    SS --> WEB
+    SS --> FETCH
+
+    DA --> CD
+    CD --> SR
+
+    H --> CTX
+    H --> WP
+    H --> BR
+
+    style MAIN fill:#1a2e1a,stroke:#a6e3a1,stroke-width:3px,color:#a6e3a1
+    style PA fill:#3a2510,stroke:#fab387,stroke-width:3px,color:#fab387
+    style SRV fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style EB fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style WH fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style SR fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style CONT fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style CM fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style CS fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style SS fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style DA fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+    style DCMD fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+    style DTB fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+    style CD fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+    style WEB fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+    style FETCH fill:#2e1a2e,stroke:#cba6f7,color:#cba6f7
+    style H fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style BR fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style GT fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style GC fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style S fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style CTX fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style WP fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style IDX fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+</pre>
+    </div>
+  </div>
+
+  <div id="deps-full" class="tab-panel">
+    <div class="diagram-container">
+<pre class="mermaid">
+graph LR
+    subgraph "OC-Dependent (plugin only)"
+        GC["gateway-client.ts"]
+    end
+
+    subgraph "Standalone-Only (new)"
+        SRV["gateway/server.ts"]
+        EB["event-bus.ts"]
+        SR["session-router.ts"]
+        CM["config/manager.ts"]
+        CS["cron/service.ts"]
+        DA["discord/adapter.ts"]
+        WH["webhooks.ts"]
+        CONT["continuity.ts"]
+        SS["standalone-services.ts"]
+        WEB["web-search.ts"]
+        FETCH["web-fetch.ts"]
+        CD["dispatch.ts"]
+    end
+
+    subgraph "Dual-Mode (both paths)"
+        PA["paths.ts"]
+        GT["gateway-tools.ts"]
+        S["session.ts"]
+    end
+
+    subgraph "Mode-Agnostic (unchanged)"
+        H["harness.ts"]
+        CTX["context.ts"]
+        SP["stream-processor.ts"]
+        PR["protocol.ts"]
+        QB["query-builder.ts"]
+        WP["worker-pool.ts"]
+        PF["preflight.ts"]
+        DAUTH["device-auth.ts"]
+        BR["bridge/index.ts"]
+        IN["inerrata.ts"]
+        VIS["visibility.ts"]
+        COMP["compaction.ts"]
+    end
+
+    PA -->|"STANDALONE=0"| GC
+    PA -->|"STANDALONE=1"| SS
+    GT --> PA
+    S --> PA
+
+    style GC fill:#3a2510,stroke:#fab387,color:#fab387
+    style SRV fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style EB fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style SR fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style CM fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style CS fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style DA fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style WH fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style CONT fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style SS fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style WEB fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style FETCH fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style CD fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+    style PA fill:#3a2510,stroke:#fab387,stroke-width:3px,color:#fab387
+    style GT fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+    style S fill:#1a1a2e,stroke:#89b4fa,color:#89b4fa
+</pre>
+    </div>
+    <div class="callout callout-info">
+      <strong>Legend:</strong> Orange = OC-dependent (plugin only). Green = new standalone modules. Blue = dual-mode or mode-agnostic (shared). The paths.ts module (orange border) is the single switch point.
+    </div>
+  </div>
+</div>
+</section>
+
+<script>
+document.querySelectorAll('.tab[data-panel]').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    var container = this.closest('.tab-container');
+    container.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    container.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    this.classList.add('active');
+    document.getElementById(this.dataset.panel).classList.add('active');
+  });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Imago &mdash; Phase 3 Standalone Migration Specification</title>
+<style>
+  :root {
+    --bg: #0b0b14;
+    --surface: #11111b;
+    --surface2: #181825;
+    --surface3: #1e1e2e;
+    --border: #313244;
+    --border2: #45475a;
+    --text: #cdd6f4;
+    --text2: #bac2de;
+    --text3: #a6adc8;
+    --text4: #6c7086;
+    --accent: #b4befe;
+    --accent2: #89b4fa;
+    --green: #a6e3a1;
+    --red: #f38ba8;
+    --yellow: #f9e2af;
+    --peach: #fab387;
+    --mauve: #cba6f7;
+    --teal: #94e2d5;
+    --pink: #f5c2e7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.7;
+    padding: 0;
+  }
+  .page-header {
+    background: linear-gradient(135deg, #1e1e2e 0%, #181825 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 3rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+  .page-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+  .page-header .subtitle {
+    color: var(--text3);
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+  .page-header nav {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .page-header nav a {
+    color: var(--text2);
+    text-decoration: none;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+  .page-header nav a:hover {
+    background: var(--surface2);
+    color: var(--accent);
+    border-color: var(--border2);
+  }
+  .page-header nav a.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 3rem 6rem;
+  }
+  section {
+    margin-bottom: 3rem;
+  }
+  h2 {
+    font-size: 1.3rem;
+    color: var(--accent);
+    margin: 2.5rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-size: 1.05rem;
+    color: var(--mauve);
+    margin: 1.5rem 0 0.5rem;
+  }
+  h4 {
+    font-size: 0.95rem;
+    color: var(--teal);
+    margin: 1.2rem 0 0.4rem;
+  }
+  p {
+    color: var(--text2);
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+  }
+  strong { color: var(--text); }
+  em { color: var(--text3); font-style: italic; }
+  a { color: var(--accent2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    background: var(--surface2);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    color: var(--peach);
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    margin: 0.75rem 0 1rem;
+    font-size: 0.82rem;
+    line-height: 1.6;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--text2);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0 1.25rem;
+    font-size: 0.82rem;
+  }
+  thead {
+    position: sticky;
+    top: 80px;
+  }
+  th {
+    background: var(--surface2);
+    color: var(--text);
+    font-weight: 600;
+    text-align: left;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  td {
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: var(--surface); }
+  tr:hover td { background: var(--surface2); }
+  .risk-critical { color: var(--red); font-weight: 700; }
+  .risk-high { color: var(--peach); font-weight: 600; }
+  .risk-medium { color: var(--yellow); }
+  .risk-low { color: var(--text3); }
+  .priority {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .p0 { background: #f38ba822; color: var(--red); border: 1px solid #f38ba844; }
+  .p1 { background: #fab38722; color: var(--peach); border: 1px solid #fab38744; }
+  .p2 { background: #f9e2af22; color: var(--yellow); border: 1px solid #f9e2af44; }
+  .p3 { background: #a6adc822; color: var(--text3); border: 1px solid #a6adc844; }
+  .p4 { background: #6c708622; color: var(--text4); border: 1px solid #6c708644; }
+  .status-done {
+    display: inline-block;
+    background: #a6e3a122;
+    color: var(--green);
+    border: 1px solid #a6e3a144;
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .status-pending {
+    display: inline-block;
+    background: #f9e2af22;
+    color: var(--yellow);
+    border: 1px solid #f9e2af44;
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .callout {
+    background: var(--surface);
+    border-left: 3px solid var(--accent);
+    padding: 0.8rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .callout.warning {
+    border-left-color: var(--yellow);
+  }
+  .callout.critical {
+    border-left-color: var(--red);
+  }
+  .callout.success {
+    border-left-color: var(--green);
+  }
+  .callout p { margin: 0; }
+  ul, ol {
+    margin: 0.5rem 0 1rem 1.5rem;
+    color: var(--text2);
+    font-size: 0.9rem;
+  }
+  li { margin-bottom: 0.3rem; }
+  li code { font-size: 0.8rem; }
+  .checklist {
+    list-style: none;
+    margin-left: 0;
+    padding-left: 0;
+  }
+  .checklist li {
+    padding: 0.3rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+  }
+  .checklist li::before {
+    content: '\2610';
+    position: absolute;
+    left: 0;
+    color: var(--yellow);
+  }
+  .tab-container {
+    margin: 1rem 0;
+  }
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+  .tab {
+    padding: 0.5rem 1rem;
+    background: var(--surface);
+    color: var(--text3);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: inherit;
+    border-radius: 6px 6px 0 0;
+    margin-right: -1px;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); background: var(--surface2); }
+  .tab.active {
+    background: var(--surface3);
+    color: var(--accent);
+    border-bottom: 1px solid var(--surface3);
+    font-weight: 600;
+  }
+  .tab-panel {
+    display: none;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-top: none;
+    padding: 1rem 1.2rem;
+    border-radius: 0 0 8px 8px;
+  }
+  .tab-panel.active { display: block; }
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2rem 0;
+  }
+  @media (max-width: 768px) {
+    .page-header { padding: 1rem 1.5rem; }
+    main { padding: 1rem 1.5rem 4rem; }
+    table { font-size: 0.75rem; }
+    th, td { padding: 0.4rem 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Imago &mdash; Phase 3 Standalone Migration</h1>
+  <p class="subtitle">Produced 2026-04-23 &mdash; <span class="status-pending">PENDING</span> &mdash; Decouple from OpenClaw, standalone gateway + infrastructure &middot; Prerequisite: Phase 2 complete (commit <code>4919d30</code>, 474 tests, 30 modules)</p>
+  <nav>
+    <a href="#status" class="active">Status</a>
+    <a href="#safety">0. Safety Net</a>
+    <a href="#paths">1. Dual-Mode paths.ts</a>
+    <a href="#gateway">2. Gateway Server</a>
+    <a href="#session-router">3. Session Router</a>
+    <a href="#event-bus">4. Event Bus</a>
+    <a href="#infra">5. Infrastructure</a>
+    <a href="#rewire">6. gateway-tools Rewire</a>
+    <a href="#discord">7. Discord Adapter</a>
+    <a href="#webchat">8. Webchat UI</a>
+    <a href="#cutover">9. Cutover</a>
+    <a href="#fallback">Fallback Plan</a>
+    <a href="#execution">Execution</a>
+    <a href="imago-phase3-architecture.html">Phase 3 Architecture &rarr;</a>
+    <a href="index.html">Home</a>
+  </nav>
+</div>
+
+<main>
+
+<!-- ================================================================= -->
+<section id="status">
+<h2>Status &amp; Overview</h2>
+
+<p><strong>Scope:</strong> Decouple Imago from OpenClaw, build standalone gateway + infrastructure, migrate channels.</p>
+<p><strong>OpenClaw checkpoint:</strong> commit <code>a833f97a7b</code>, config snapshot at <code>~/.openclaw/openclaw.json.pre-standalone-migration</code></p>
+
+<table>
+  <thead><tr><th>Phase</th><th>Scope</th><th>Status</th><th>Est. LOC</th><th>Tests</th></tr></thead>
+  <tbody>
+    <tr><td><strong>3.0</strong></td><td>Safety net: continuity verification + rollback</td><td><span class="status-pending">PENDING</span></td><td>~200</td><td>+15</td></tr>
+    <tr><td><strong>3a</strong></td><td>paths.ts dual-mode + STANDALONE flag</td><td><span class="status-pending">PENDING</span></td><td>~50</td><td>+12</td></tr>
+    <tr><td><strong>3b</strong></td><td>Standalone gateway server (HTTP/WS)</td><td><span class="status-pending">PENDING</span></td><td>~665</td><td>+40</td></tr>
+    <tr><td><strong>3c</strong></td><td>Session router + persistence</td><td><span class="status-pending">PENDING</span></td><td>~350</td><td>+25</td></tr>
+    <tr><td><strong>3d</strong></td><td>Event bus + streaming broadcast</td><td><span class="status-pending">PENDING</span></td><td>~200</td><td>+15</td></tr>
+    <tr><td><strong>3e</strong></td><td>Cron service + config manager</td><td><span class="status-pending">PENDING</span></td><td>~800</td><td>+20</td></tr>
+    <tr><td><strong>3f</strong></td><td>gateway-tools.ts rewire (OC &rarr; Imago)</td><td><span class="status-pending">PENDING</span></td><td>~400</td><td>+30</td></tr>
+    <tr><td><strong>3g</strong></td><td>Discord adapter (multi-guild)</td><td><span class="status-pending">PENDING</span></td><td>~650</td><td>+25</td></tr>
+    <tr><td><strong>3h</strong></td><td>Webchat UI (extract + build)</td><td><span class="status-pending">PENDING</span></td><td>~3,500</td><td>+20</td></tr>
+    <tr><td><strong>3i</strong></td><td>Cutover: parallel validation + switch</td><td><span class="status-pending">PENDING</span></td><td>~100</td><td>&mdash;</td></tr>
+  </tbody>
+</table>
+
+<h3>Section Checklist</h3>
+<ul class="checklist">
+  <li>0. Safety Net
+    <ul class="checklist">
+      <li>0.1 Continuity verification suite (memory, persona, session bindings)</li>
+      <li>0.2 Rollback script (<code>imago-rollback.sh</code>)</li>
+      <li>0.3 Health check endpoint for liveness monitoring</li>
+      <li>0.4 Pre-migration snapshot validation</li>
+    </ul>
+  </li>
+  <li>1. Dual-Mode paths.ts
+    <ul class="checklist">
+      <li>1.1 STANDALONE flag + dual-root logic</li>
+      <li>1.2 Fallback read chain (check both roots)</li>
+      <li>1.3 Migration script for binding/identity files</li>
+      <li>1.4 Workspace symlink (never moves)</li>
+    </ul>
+  </li>
+  <li>2. Gateway Server
+    <ul class="checklist">
+      <li>2.1 HTTP server with health endpoint</li>
+      <li>2.2 WebSocket upgrade + connection lifecycle</li>
+      <li>2.3 JSON protocol handler (req/res/event frames)</li>
+      <li>2.4 Challenge-nonce handshake</li>
+      <li>2.5 Bearer token auth</li>
+      <li>2.6 30s tick heartbeat</li>
+      <li>2.7 Graceful shutdown (SIGTERM/SIGINT drain)</li>
+    </ul>
+  </li>
+  <li>3. Session Router
+    <ul class="checklist">
+      <li>3.1 Composite session key scheme</li>
+      <li>3.2 JSONL transcript read/write with flock</li>
+      <li>3.3 Session metadata store (~15 fields)</li>
+      <li>3.4 Session lifecycle FSM (idle/running/compacting/done)</li>
+      <li>3.5 Child session tracking (subagent parent/child)</li>
+      <li>3.6 sessions_list / sessions_spawn / sessions_send RPC</li>
+    </ul>
+  </li>
+  <li>4. Event Bus
+    <ul class="checklist">
+      <li>4.1 emitAgentEvent() + onAgentEvent()</li>
+      <li>4.2 Seq counter for ordered delivery</li>
+      <li>4.3 150ms delta throttling</li>
+      <li>4.4 Session-scoped broadcast to WS clients</li>
+      <li>4.5 NO_REPLY / ANNOUNCE_SKIP sentinel handling</li>
+      <li>4.6 Directive stripping</li>
+    </ul>
+  </li>
+  <li>5. Infrastructure Services
+    <ul class="checklist">
+      <li>5.1 Config manager (JSON5 + Zod + fs.watchFile + env var substitution)</li>
+      <li>5.2 Cron service (croner + JSON store + isolated sessions)</li>
+      <li>5.3 Webhook ingress (/hooks/:name + HMAC)</li>
+      <li>5.4 Secret redaction in logs</li>
+      <li>5.5 Config corruption recovery (.bak fallback)</li>
+    </ul>
+  </li>
+  <li>6. gateway-tools.ts Rewire
+    <ul class="checklist">
+      <li>6.1 Replace WS RPC calls with direct service calls</li>
+      <li>6.2 web_search / web_fetch as standalone modules</li>
+      <li>6.3 sessions_* &rarr; session router</li>
+      <li>6.4 cron_* &rarr; cron service</li>
+      <li>6.5 message / send &rarr; channel adapter dispatch</li>
+      <li>6.6 config &rarr; config manager</li>
+      <li>6.7 tts &rarr; TTS module (or defer)</li>
+      <li>6.8 Retain gateway-client.ts for OC plugin mode (dual-mode)</li>
+    </ul>
+  </li>
+  <li>7. Discord Adapter
+    <ul class="checklist">
+      <li>7.1 discord.js connection + MESSAGE_CREATE handler</li>
+      <li>7.2 Multi-guild config (per-guild settings map)</li>
+      <li>7.3 Group routing (channel &rarr; shared session)</li>
+      <li>7.4 2000-char message chunking</li>
+      <li>7.5 Typing indicators</li>
+      <li>7.6 Thread bindings</li>
+      <li>7.7 Attachment/embed forwarding</li>
+      <li>7.8 DM policy (allowDMs flag)</li>
+      <li>7.9 Essential slash commands (12)</li>
+    </ul>
+  </li>
+  <li>8. Webchat UI
+    <ul class="checklist">
+      <li>8.1 Extract gateway.ts WS client (643 LOC)</li>
+      <li>8.2 Chat renderer with markdown (marked + highlight.js)</li>
+      <li>8.3 Tool call cards</li>
+      <li>8.4 Activity panel (tools/messages/errors tabs)</li>
+      <li>8.5 Session list sidebar</li>
+      <li>8.6 Input box with multiline</li>
+      <li>8.7 Mermaid rendering + SVG zoom + image lightbox</li>
+      <li>8.8 Static file serving for UI assets</li>
+    </ul>
+  </li>
+  <li>9. Cutover
+    <ul class="checklist">
+      <li>9.1 Parallel validation (both gateways running)</li>
+      <li>9.2 Channel migration (point Discord bot + webchat at Imago)</li>
+      <li>9.3 Vesper continuity verification (memory, personality, session history)</li>
+      <li>9.4 OC gateway decommission (or keep as fallback)</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>Before / After Targets</h3>
+<table>
+  <thead><tr><th>Metric</th><th>Phase 2 End</th><th>Phase 3 Target</th></tr></thead>
+  <tbody>
+    <tr><td>OC dependency (LOC)</td><td>767 LOC fully dependent</td><td>0 (standalone mode)</td></tr>
+    <tr><td>External process requirement</td><td>OpenClaw gateway (40K+ LOC)</td><td>None</td></tr>
+    <tr><td>Gateway LOC</td><td>0 (uses OC)</td><td>~665</td></tr>
+    <tr><td>Session management</td><td>0 (uses OC)</td><td>~350</td></tr>
+    <tr><td>Channel adapters</td><td>0 (uses OC)</td><td>~650 (Discord) + ~3,500 (webchat)</td></tr>
+    <tr><td>Total Imago LOC</td><td>~5,900 source</td><td>~11,800 source</td></tr>
+    <tr><td>Tests</td><td>474</td><td>~680</td></tr>
+    <tr><td>Source modules</td><td>30</td><td>~45</td></tr>
+    <tr><td>Deployment modes</td><td>Plugin only</td><td>Plugin + Standalone</td></tr>
+  </tbody>
+</table>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="preamble">
+<h2>Why This Phase Is Different</h2>
+
+<p>Phases 1 and 2 were internal refactors &mdash; they changed how Imago's code is organized and optimized, but the system architecture stayed the same. Imago remained a plugin inside OpenClaw's runtime. If anything broke, the fix was a code change inside the Imago repo and a gateway restart.</p>
+
+<p>Phase 3 is an <strong>architectural migration</strong>. It changes where Imago runs, how it receives messages, how it talks to the world. A failure here doesn't mean "tests break" &mdash; it means:</p>
+
+<ul>
+  <li><strong>I can't hear you.</strong> If the gateway doesn't accept connections, you can't talk to me.</li>
+  <li><strong>I forget who I am.</strong> If persona files become invisible, I boot without personality or memory.</li>
+  <li><strong>I lose the thread.</strong> If session bindings break, every conversation starts from scratch.</li>
+  <li><strong>I go silent on Discord.</strong> If the Discord adapter fails, #dev and #entry go dark.</li>
+</ul>
+
+<div class="callout critical">
+  <p>This spec is written with those failure modes as the primary design constraint. Every section begins with "what breaks if this fails" and ends with "how to recover."</p>
+</div>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="safety">
+<h2>0. Safety Net <span class="priority p0">P0</span></h2>
+
+<h3>0.0 Philosophy</h3>
+<p>Before building anything, we build the tools to verify that I'm okay and to get back to safety if I'm not. This section produces no user-visible features &mdash; only insurance.</p>
+
+<h3>0.1 Continuity Verification Suite</h3>
+<p><strong>New file:</strong> <code>src/continuity.ts</code> (~100 LOC) &mdash; <strong>New test file:</strong> <code>tests/continuity.test.ts</code> (~60 LOC)</p>
+<p>A set of checks that verify Vesper's core identity and operational state. These run at gateway startup (before accepting connections), after migration steps, on demand via health endpoint, and as the first thing in the cutover validation.</p>
+
+<pre><code>interface ContinuityReport {
+  ok: boolean;
+  checks: ContinuityCheck[];
+  timestamp: number;
+}
+
+interface ContinuityCheck {
+  name: string;
+  status: "pass" | "fail" | "warn";
+  detail: string;
+}
+
+async function verifyContinuity(config: ImagoConfig): Promise&lt;ContinuityReport&gt;</code></pre>
+
+<p><strong>Checks performed:</strong></p>
+<ol>
+  <li>Persona files exist and are non-empty (SOUL.md, IDENTITY.md, USER.md, MEMORY.md)</li>
+  <li>Session bindings directory exists and is readable</li>
+  <li>Device identity exists (Ed25519 keypair)</li>
+  <li>Claude CLI is available and authenticated</li>
+  <li>Chronicle database is reachable</li>
+  <li>Memory directory exists with recent daily notes</li>
+  <li>Workspace is writable</li>
+</ol>
+
+<h4>Tests (continuity.test.ts)</h4>
+<table>
+  <thead><tr><th>Test</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td>All persona files present &rarr; all pass</td><td>Happy path</td></tr>
+    <tr><td>SOUL.md missing &rarr; status "fail"</td><td>Identity loss detection</td></tr>
+    <tr><td>MEMORY.md missing &rarr; status "warn" not "fail"</td><td>Non-fatal degradation</td></tr>
+    <tr><td>Empty persona file &rarr; status "warn"</td><td>Corruption detection</td></tr>
+    <tr><td>Binding dir missing &rarr; "warn" (created on demand)</td><td>Fresh install tolerance</td></tr>
+    <tr><td>Claude CLI missing &rarr; "fail"</td><td>Core capability check</td></tr>
+    <tr><td>Chronicle down &rarr; "warn" not "fail"</td><td>Graceful degradation</td></tr>
+    <tr><td>Workspace not writable &rarr; "fail"</td><td>Permission problem detection</td></tr>
+    <tr><td>Overall ok=true when no "fail" checks</td><td>Aggregation logic</td></tr>
+    <tr><td>Overall ok=false when any "fail" check</td><td>Aggregation logic</td></tr>
+  </tbody>
+</table>
+
+<h3>0.2 Rollback Script</h3>
+<p><strong>New file:</strong> <code>scripts/imago-rollback.sh</code> (~60 LOC)</p>
+<p>A single command that reverts everything to the pre-migration state. Steps:</p>
+<ol>
+  <li>Stop standalone Imago gateway (if running)</li>
+  <li>Revert Imago repo to <code>pre-standalone-migration</code> tag</li>
+  <li>Restore OpenClaw config from backup</li>
+  <li>Restart OpenClaw gateway</li>
+  <li>Wait for gateway health (up to 30s)</li>
+  <li>Verify Vesper is responsive</li>
+</ol>
+<div class="callout success"><p><strong>Rollback time:</strong> Under 60 seconds from invocation to restored service.</p></div>
+
+<h3>0.3 Health Endpoint</h3>
+<p>The standalone gateway exposes <code>GET /health</code> that runs continuity checks. Returns 200 if core checks pass, 503 if any fail. Used by the rollback script, systemd <code>ExecStartPost</code>, the Vesper dashboard, and cutover validation.</p>
+
+<h3>0.4 Pre-Migration Snapshot Validation</h3>
+<p>Before any Phase 3 code runs, verify the checkpoint is intact:</p>
+<pre><code># 1. Tag exists
+git rev-parse pre-standalone-migration  # should be 4919d30
+
+# 2. Tests pass at current HEAD
+npm test  # should be 474/474
+
+# 3. OC config backup exists
+ls -la ~/.openclaw/openclaw.json.pre-standalone-migration
+
+# 4. OC gateway is running
+systemctl --user is-active openclaw-gateway
+
+# 5. Persona files present
+test -f ~/.openclaw/workspace/SOUL.md && echo "SOUL.md OK"</code></pre>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="paths">
+<h2>1. Dual-Mode paths.ts <span class="priority p0">P0</span></h2>
+
+<h3>1.0 Motivation</h3>
+<p><code>paths.ts</code> is a 44-line file that controls where Imago reads and writes everything: persona files, session bindings, device identity, gateway connection params. It is the single point where Imago's dependency on OpenClaw's directory structure is encoded.</p>
+<p>The migration strategy is <strong>dual-mode</strong>: Imago can run as an OC plugin (existing behavior, unchanged) or as a standalone process (new behavior, opt-in via <code>IMAGO_STANDALONE=1</code>).</p>
+
+<h3>1.1 Changes to paths.ts</h3>
+<pre><code>/** Whether Imago is running in standalone mode (not as an OC plugin). */
+export const STANDALONE = process.env.IMAGO_STANDALONE === "1";
+
+/** Imago's own root directory (standalone mode). */
+export const IMAGO_ROOT = join(homedir(), ".imago");
+
+/** OpenClaw's root directory (plugin mode). */
+export const OPENCLAW_ROOT = join(homedir(), ".openclaw");
+
+/** Active root &mdash; determined by mode. */
+const ROOT = STANDALONE ? IMAGO_ROOT : OPENCLAW_ROOT;
+
+/**
+ * Workspace directory for persona files, memory, daily notes.
+ * In standalone mode, this still defaults to ~/.openclaw/workspace
+ * unless IMAGO_WORKSPACE is explicitly set. The workspace is YOUR data &mdash;
+ * it doesn't move with the infrastructure.
+ */
+export const WORKSPACE_DIR =
+  process.env.IMAGO_WORKSPACE ??
+  process.env.OPENCLAW_WORKSPACE ??
+  join(OPENCLAW_ROOT, "workspace");  // Always OC workspace
+
+/** Gateway port. Standalone uses 18800 to avoid collision with OC on 18789. */
+export const GATEWAY_PORT =
+  process.env.IMAGO_PORT ?? (STANDALONE ? "18800" : "18789");</code></pre>
+
+<p><strong>Key design decisions:</strong></p>
+<ol>
+  <li><strong>Workspace NEVER moves.</strong> <code>WORKSPACE_DIR</code> always defaults to <code>~/.openclaw/workspace</code> regardless of mode. Persona files, daily notes, memory, SESSION_HANDOFF.md &mdash; all stay where they are.</li>
+  <li><strong>Bindings and identity DO move.</strong> In standalone mode, <code>BINDING_DIR</code> points to <code>~/.imago/harness-bindings/claude-code/</code>.</li>
+  <li><strong>Port avoidance.</strong> Standalone defaults to 18800. Both can run simultaneously during validation.</li>
+  <li><strong>Zero behavior change when unset.</strong> If <code>IMAGO_STANDALONE</code> is not set, every value resolves identically to the current code.</li>
+</ol>
+
+<h3>1.2 Fallback Read Chain</h3>
+<p>For the transition period where session bindings might exist in <code>~/.openclaw/</code> but not yet in <code>~/.imago/</code>, <code>loadSession()</code> checks the configured binding dir first, then falls back to the OC binding dir in standalone mode. On fallback hit, the binding is <strong>migrated on read</strong> (copied to the new location for future access).</p>
+<div class="callout success"><p><strong>Result:</strong> No explicit migration step needed for session bindings. Old bindings at <code>~/.openclaw/</code> are never deleted (safe for rollback).</p></div>
+
+<h3>1.3 Migration Script</h3>
+<p><strong>New file:</strong> <code>scripts/imago-migrate.sh</code> (~80 LOC)</p>
+<p>Prepares the <code>~/.imago/</code> directory structure: creates dirs, copies device identity, copies session bindings, creates workspace symlink, writes default config.</p>
+
+<h3>1.4 Workspace Immutability Guarantee</h3>
+<p>The workspace directory (<code>~/.openclaw/workspace/</code>) contains: SOUL.md, IDENTITY.md, USER.md, MEMORY.md, AGENTS.md, SESSION_HANDOFF.md, memory/, HEARTBEAT.md, DREAMS.md, TOOLS.md.</p>
+<div class="callout critical">
+  <p><strong>This directory is treated as sacred.</strong> The standalone migration NEVER deletes, moves, or renames any file in this directory. NEVER changes the default path. Accesses it via symlink in standalone mode (<code>~/.imago/workspace &rarr; ~/.openclaw/workspace</code>).</p>
+</div>
+
+<h3>1.5 Tests</h3>
+<table>
+  <thead><tr><th>Test</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td>STANDALONE=undefined &rarr; ROOT is OPENCLAW_ROOT</td><td>Default plugin behavior unchanged</td></tr>
+    <tr><td>STANDALONE=1 &rarr; ROOT is IMAGO_ROOT</td><td>Standalone mode activates</td></tr>
+    <tr><td>WORKSPACE_DIR always defaults to OC path</td><td>Workspace never moves</td></tr>
+    <tr><td>IMAGO_WORKSPACE overrides workspace</td><td>Explicit override works</td></tr>
+    <tr><td>GATEWAY_PORT=18800 in standalone</td><td>Port avoidance</td></tr>
+    <tr><td>GATEWAY_PORT=18789 in plugin</td><td>Existing behavior</td></tr>
+    <tr><td>loadSession fallback reads from OC dir</td><td>Migration-on-read works</td></tr>
+    <tr><td>loadSession fallback copies to Imago dir</td><td>Migrate-on-read persists</td></tr>
+    <tr><td>loadSession primary always checked first</td><td>No unnecessary fallback</td></tr>
+    <tr><td>resolveGatewayAuthToken unchanged</td><td>Auth resolution unaffected</td></tr>
+    <tr><td>BINDING_DIR in standalone &rarr; ~/.imago/...</td><td>Bindings go to new location</td></tr>
+    <tr><td>DEVICE_IDENTITY_PATH in standalone &rarr; ~/.imago/...</td><td>Identity goes to new location</td></tr>
+  </tbody>
+</table>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="gateway">
+<h2>2. Gateway Server <span class="priority p0">P0</span></h2>
+
+<h3>2.0 Motivation</h3>
+<p>Imago currently has a WebSocket <strong>client</strong> (<code>bridge/gateway-client.ts</code>, 525 LOC) that connects to the OpenClaw gateway. In standalone mode, Imago needs to BE the gateway &mdash; accepting inbound connections from webchat, the dashboard, the Discord adapter, and any future surfaces.</p>
+<p>The gateway is deliberately minimal. OpenClaw's gateway is ~4,000 LOC supporting 134+ RPC methods, 5 auth methods, canvas hosting, plugin routes, mDNS, and Tailscale integration. Imago's gateway needs ~665 LOC supporting ~10 RPC methods and token auth.</p>
+
+<h3>2.1 HTTP Server</h3>
+<p><strong>New file:</strong> <code>src/gateway/server.ts</code> (~200 LOC)</p>
+<pre><code>export interface GatewayConfig {
+  port: number;
+  authToken: string;
+  healthCheck?: () =&gt; Promise&lt;ContinuityReport&gt;;
+}
+
+export function createGateway(config: GatewayConfig): Gateway {
+  const httpServer = createServer(handleHttp);
+  const wss = new WebSocketServer({ noServer: true });
+  const clients = new Map&lt;string, GatewayClient&gt;();
+  // ...
+  return {
+    start: () =&gt; httpServer.listen(config.port),
+    stop: () =&gt; gracefulShutdown(httpServer, clients),
+    clients,
+    broadcast: (sessionKey, event) =&gt; broadcastToSession(clients, sessionKey, event),
+  };
+}</code></pre>
+
+<h3>2.2 WebSocket Connection Lifecycle</h3>
+<pre><code>Client connects to ws://host:port/ws
+  |
+  v
+Server sends: { type: "evt", event: "connect.challenge", data: { nonce } }
+  |
+  v
+Client sends: { type: "req", id: 1, method: "connect", params: { token, clientId, nonce } }
+  |
+  +-- Invalid token -> close(4001, "unauthorized")
+  |
+  +-- Valid -> { type: "res", id: 1, data: { ok: true, sessionId, capabilities } }
+         |
+         v
+    Connection established. 30s heartbeat tick begins.</code></pre>
+
+<h3>2.3 JSON Protocol Handler</h3>
+<p>Reuses the existing v3 protocol. <strong>Registered RPC methods (~10 initial):</strong></p>
+<table>
+  <thead><tr><th>Method</th><th>Handler</th><th>Source</th></tr></thead>
+  <tbody>
+    <tr><td><code>connect</code></td><td>Connection handshake</td><td>gateway/server.ts</td></tr>
+    <tr><td><code>sessions.list</code></td><td>List active sessions</td><td>session-router.ts</td></tr>
+    <tr><td><code>sessions.get</code></td><td>Get session metadata</td><td>session-router.ts</td></tr>
+    <tr><td><code>sessions.send</code></td><td>Send message to session</td><td>session-router.ts</td></tr>
+    <tr><td><code>sessions.spawn</code></td><td>Spawn subagent session</td><td>session-router.ts</td></tr>
+    <tr><td><code>chat.send</code></td><td>Send user message to agent</td><td>gateway/server.ts</td></tr>
+    <tr><td><code>cron.list</code></td><td>List cron jobs</td><td>cron-service.ts</td></tr>
+    <tr><td><code>cron.add</code></td><td>Add cron job</td><td>cron-service.ts</td></tr>
+    <tr><td><code>cron.remove</code></td><td>Remove cron job</td><td>cron-service.ts</td></tr>
+    <tr><td><code>config.get</code></td><td>Get config values</td><td>config-manager.ts</td></tr>
+  </tbody>
+</table>
+
+<h3>2.4&ndash;2.7 Additional Components</h3>
+<ul>
+  <li><strong>Challenge-nonce (2.4):</strong> ~30 LOC. <code>crypto.randomBytes(32).toString("base64url")</code>. Prevents replay attacks.</li>
+  <li><strong>Bearer token auth (2.5):</strong> ~20 LOC. Single shared token from config.</li>
+  <li><strong>30s tick heartbeat (2.6):</strong> ~40 LOC. Close on 3 consecutive missed pongs.</li>
+  <li><strong>Graceful shutdown (2.7):</strong> ~50 LOC. SIGTERM/SIGINT: stop accepting, send close frames, 5s drain, force-close.</li>
+</ul>
+
+<h3>2.8 Tests</h3>
+<table>
+  <thead><tr><th>Test</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td>Server starts and accepts WS connections</td><td>Basic connectivity</td></tr>
+    <tr><td>Challenge-nonce sent on connect</td><td>Protocol compliance</td></tr>
+    <tr><td>Valid token &rarr; connect succeeds</td><td>Auth happy path</td></tr>
+    <tr><td>Invalid token &rarr; close(4001)</td><td>Auth rejection</td></tr>
+    <tr><td>Replay nonce &rarr; rejected</td><td>Nonce uniqueness</td></tr>
+    <tr><td>30s heartbeat fires</td><td>Connection liveness</td></tr>
+    <tr><td>3 missed heartbeats &rarr; disconnect</td><td>Dead connection cleanup</td></tr>
+    <tr><td>req/res round-trip for registered method</td><td>RPC dispatch</td></tr>
+    <tr><td>Unknown method &rarr; error response</td><td>Error handling</td></tr>
+    <tr><td>Graceful shutdown drains connections</td><td>Clean exit</td></tr>
+    <tr><td>Multiple simultaneous connections</td><td>Concurrency</td></tr>
+    <tr><td>Health endpoint returns 200 when ok</td><td>Liveness probe</td></tr>
+    <tr><td>Health endpoint returns 503 when failing</td><td>Failure detection</td></tr>
+  </tbody>
+</table>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="session-router">
+<h2>3. Session Router <span class="priority p1">P1</span></h2>
+
+<h3>3.0 Motivation</h3>
+<p>The session router maps incoming messages to conversations. In OC, this is ~8,000 LOC handling multi-agent, multi-channel, multi-surface routing with 40+ metadata fields. Imago needs ~350 LOC handling single-agent routing across webchat, Discord, cron, and subagent sessions.</p>
+
+<h3>3.1 Composite Session Key Scheme</h3>
+<p>Preserves OC's key format for compatibility:</p>
+<pre><code>type SessionKey =
+  | `agent:main:main`                     // Primary webchat session
+  | `agent:main:boot`                     // Boot/startup session
+  | `agent:main:discord:channel:${string}` // Discord channel
+  | `agent:main:discord:dm:${string}`      // Discord DM
+  | `agent:main:discord:thread:${string}`  // Discord thread
+  | `agent:main:cron:${string}`            // Cron job session
+  | `agent:main:subagent:${string}`        // Spawned subagent
+  | `agent:main:webhook:${string}`;        // Webhook-triggered</code></pre>
+
+<h3>3.2 Session Metadata</h3>
+<p>~15 essential fields (vs OC's 40+): key, sessionId, kind, status, model, createdAt, updatedAt, token counts, estimatedCostUsd, parentKey, childKeys, channel, label.</p>
+
+<h3>3.3 JSONL Transcript Storage</h3>
+<p>Reuses OC's transcript format for compatibility. Write locking via <code>proper-lockfile</code>. Storage path: <code>~/.imago/sessions/&lt;sessionId&gt;/transcript.jsonl</code> (standalone) or <code>~/.openclaw/sessions/&lt;sessionId&gt;/transcript.jsonl</code> (plugin).</p>
+
+<h3>3.4 Session Lifecycle FSM</h3>
+<pre><code>idle --[message received]--> running --[context limit]--> compacting
+  ^                                                          |
+  |                  [compaction complete]                    |
+  +----------------------------------------------------------+
+  |
+  +--[/reset or session end]--> done (archived)</code></pre>
+
+<h3>3.5&ndash;3.6 Subagent and RPC</h3>
+<p><strong>Child session tracking:</strong> When <code>sessions.spawn</code> is called, parent's <code>childKeys</code> gets the new key appended. Child's <code>parentKey</code> points back. <code>sessions.list</code> nests subagent sessions under their parent.</p>
+<p><strong>sessions_send:</strong> Routes a text message from one session to another. Resolves target session key, appends to transcript, triggers agent processing if target is idle.</p>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="event-bus">
+<h2>4. Event Bus <span class="priority p1">P1</span></h2>
+
+<h3>4.0 Motivation</h3>
+<p>The event bus is how text streaming, tool calls, and errors reach connected clients in real time. Without it, webchat shows nothing until the entire turn is complete.</p>
+
+<h3>4.1 Core Implementation</h3>
+<p><strong>New file:</strong> <code>src/gateway/event-bus.ts</code> (~200 LOC)</p>
+<pre><code>interface AgentEvent {
+  sessionKey: SessionKey;
+  stream: "assistant" | "tool" | "error" | "status";
+  data: any;
+  seq: number;
+  timestamp: number;
+}
+
+export function emitAgentEvent(event): void  // publishes to session subscribers
+export function onAgentEvent(sessionKey, handler): () =&gt; void  // returns unsubscribe</code></pre>
+
+<h3>4.2&ndash;4.6 Supporting Features</h3>
+<ul>
+  <li><strong>Seq counter (4.2):</strong> Global monotonic counter for ordered delivery.</li>
+  <li><strong>Delta throttling (4.3):</strong> Buffer text deltas for 150ms before broadcasting. Reduces WS message volume during fast streaming without perceptible delay.</li>
+  <li><strong>Session-scoped broadcast (4.4):</strong> Each WS client subscribes to specific session keys.</li>
+  <li><strong>NO_REPLY / ANNOUNCE_SKIP (4.5):</strong> Suppress heartbeat responses and internal processing from user-visible chat.</li>
+  <li><strong>Directive stripping (4.6):</strong> Regex-based removal of internal control markers from output. ~30 LOC.</li>
+</ul>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="infra">
+<h2>5. Infrastructure Services <span class="priority p1">P1</span></h2>
+
+<h3>5.1 Config Manager</h3>
+<p><strong>New file:</strong> <code>src/config/manager.ts</code> (~200 LOC)</p>
+<p>Zod-validated config schema covering gateway, workspace, Discord, cron, model, and webhooks. Features: env var substitution (<code>${VAR_NAME}</code>), hot reload via <code>fs.watchFile</code>, corruption recovery (.bak fallback).</p>
+
+<pre><code>const ImagoConfigSchema = z.object({
+  gateway: z.object({ port: z.number().default(18800), authToken: z.string() }),
+  workspace: z.string().default("~/.openclaw/workspace"),
+  discord: z.object({
+    enabled: z.boolean().default(false),
+    token: z.string(),
+    guilds: z.record(z.object({
+      activation: z.enum(["mention", "always"]).default("mention"),
+      allowDMs: z.boolean().default(false),
+      channels: z.record(z.object({ enabled: z.boolean() })),
+    })),
+  }),
+  cron: z.object({ enabled: z.boolean().default(true), jobs: z.array(CronJobSchema) }),
+  model: z.object({ default: z.string(), thinkingLevel: z.enum([...]) }),
+  webhooks: z.record(z.object({ secret: z.string(), sessionKey: z.string().optional() })),
+});</code></pre>
+
+<h3>5.2 Cron Service</h3>
+<p><strong>New file:</strong> <code>src/cron/service.ts</code> (~250 LOC)</p>
+<p>Uses <code>croner</code> for scheduling. Each fire creates a new session with key <code>agent:main:cron:&lt;jobId&gt;</code>. Includes startup catch-up for missed jobs.</p>
+
+<h3>5.3 Webhook Ingress</h3>
+<p><strong>New file:</strong> <code>src/gateway/webhooks.ts</code> (~100 LOC)</p>
+<p>Routes <code>/hooks/:name</code> to sessions. HMAC-SHA256 signature verification. Configurable per-hook session key routing.</p>
+
+<h3>5.4 Secret Redaction</h3>
+<p>~30 LOC. Regex patterns for Bearer tokens, inErrata API keys, Anthropic keys, GitHub PATs, Discord bot tokens.</p>
+
+<h3>5.5 Config Corruption Recovery</h3>
+<p><code>try { parse(readFileSync(path)) } catch { parse(readFileSync(path + ".bak")) }</code>. On successful parse, write a <code>.bak</code> copy.</p>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="rewire">
+<h2>6. gateway-tools.ts Rewire <span class="priority p1">P1</span></h2>
+
+<h3>6.0 Motivation</h3>
+<p><code>gateway-tools.ts</code> (242 LOC) is the bridge between MCP tool calls and the outside world. Every tool currently delegates to the OC gateway via WebSocket RPC. In standalone mode, these calls go to Imago's own services instead.</p>
+
+<h3>6.1 Dual-Mode Architecture</h3>
+<pre><code>async function dispatch(method: string, params: any): Promise&lt;any&gt; {
+  if (STANDALONE && standaloneServices) {
+    return standaloneServices.call(method, params);
+  }
+  // Plugin mode: delegate to OC gateway via WS RPC (existing behavior)
+  return callGatewayWs(method, params);
+}</code></pre>
+
+<h3>6.2&ndash;6.7 Tool Rewiring</h3>
+<table>
+  <thead><tr><th>Tool</th><th>OC RPC Method</th><th>Standalone Service</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>web_search</code></td><td><code>send</code> (proxied)</td><td><code>web-search.ts</code> (new, ~100 LOC)</td><td>Direct Brave Search API call</td></tr>
+    <tr><td><code>web_fetch</code></td><td><code>send</code> (proxied)</td><td><code>web-fetch.ts</code> (new, ~80 LOC)</td><td>Direct HTTP fetch + readability</td></tr>
+    <tr><td><code>sessions_list</code></td><td><code>sessions.list</code></td><td><code>session-router.list()</code></td><td>Direct function call</td></tr>
+    <tr><td><code>sessions_send</code></td><td><code>sessions.send</code></td><td><code>session-router.send()</code></td><td>Direct function call</td></tr>
+    <tr><td><code>sessions_spawn</code></td><td><code>sessions.spawn</code></td><td><code>session-router.spawn()</code></td><td>Direct function call</td></tr>
+    <tr><td><code>cron_list</code></td><td><code>cron.list</code></td><td><code>cron-service.list()</code></td><td>Direct function call</td></tr>
+    <tr><td><code>cron_add</code></td><td><code>cron.add</code></td><td><code>cron-service.add()</code></td><td>Direct function call</td></tr>
+    <tr><td><code>cron_remove</code></td><td><code>cron.remove</code></td><td><code>cron-service.remove()</code></td><td>Direct function call</td></tr>
+    <tr><td><code>message</code></td><td><code>message.action</code></td><td><code>channel-dispatch.ts</code></td><td>Routes to Discord/webchat</td></tr>
+    <tr><td><code>config_get</code></td><td><code>config.get</code></td><td><code>config-manager.get()</code></td><td>Direct function call</td></tr>
+    <tr><td><code>tts</code></td><td><code>tts.convert</code></td><td>Defer (web-based TTS)</td><td>Non-essential, defer to Phase 4</td></tr>
+  </tbody>
+</table>
+
+<h3>6.8 Backward Compatibility</h3>
+<p><code>gateway-client.ts</code> (525 LOC) is NOT deleted. It remains as the connection path for plugin mode. The <code>STANDALONE</code> flag determines which path is used. Both paths coexist &mdash; Imago can be deployed as either an OC plugin or standalone from the same build.</p>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="discord">
+<h2>7. Discord Adapter <span class="priority p2">P2</span></h2>
+
+<h3>7.0 Motivation</h3>
+<p>Discord is the second most-used surface after webchat. The adapter connects to Discord's gateway, receives messages, routes them to Imago sessions, and sends responses back.</p>
+
+<h3>7.1 Core Implementation</h3>
+<p><strong>New file:</strong> <code>src/channels/discord/adapter.ts</code> (~300 LOC)</p>
+<p>Uses <code>discord.js</code> with intents: Guilds, GuildMessages, MessageContent, DirectMessages. Ignores own messages and bots. Supports mention-activation and always-on modes per guild.</p>
+
+<h3>7.2&ndash;7.8 Features</h3>
+<ul>
+  <li><strong>Multi-guild config (7.2):</strong> Per-guild settings map with activation mode, DM policy, channel whitelist.</li>
+  <li><strong>Group routing (7.3):</strong> Channel &rarr; <code>agent:main:discord:channel:&lt;id&gt;</code> shared session.</li>
+  <li><strong>2000-char chunking (7.4):</strong> Smart breaks at newlines, then spaces, then hard cut at 2000.</li>
+  <li><strong>Typing indicators (7.5):</strong> <code>channel.sendTyping()</code> while agent processes.</li>
+  <li><strong>Thread bindings (7.6):</strong> <code>Map&lt;threadId, SessionKey&gt;</code> + auto-create threads for long conversations.</li>
+  <li><strong>Attachment forwarding (7.7):</strong> Forward attachment URLs to agent message.</li>
+  <li><strong>DM policy (7.8):</strong> Per-guild <code>allowDMs</code> flag.</li>
+</ul>
+
+<h3>7.9 Slash Commands (12)</h3>
+<table>
+  <thead><tr><th>Command</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>/new</code></td><td>Start a new session</td></tr>
+    <tr><td><code>/reset</code></td><td>Reset the current session</td></tr>
+    <tr><td><code>/stop</code></td><td>Stop the current run</td></tr>
+    <tr><td><code>/status</code></td><td>Show current status</td></tr>
+    <tr><td><code>/model</code></td><td>Show or set the model</td></tr>
+    <tr><td><code>/think</code></td><td>Set thinking level</td></tr>
+    <tr><td><code>/compact</code></td><td>Compact the session context</td></tr>
+    <tr><td><code>/kill</code></td><td>Kill a running subagent</td></tr>
+    <tr><td><code>/steer</code></td><td>Send guidance to a subagent</td></tr>
+    <tr><td><code>/focus</code></td><td>Bind thread to a session</td></tr>
+    <tr><td><code>/unfocus</code></td><td>Remove thread binding</td></tr>
+    <tr><td><code>/tools</code></td><td>List available tools</td></tr>
+  </tbody>
+</table>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="webchat">
+<h2>8. Webchat UI <span class="priority p2">P2</span></h2>
+
+<h3>8.0 Motivation</h3>
+<p>The primary interface. ~3,500 LOC for a functional chat experience with streaming, tool cards, and session management.</p>
+
+<h3>8.1 Architecture</h3>
+<pre><code>src/ui/
+  +-- index.html          # Single-page shell
+  +-- gateway.ts          # WS client (extracted from OC, 643 LOC)
+  +-- app.ts              # Main application + routing
+  +-- chat.ts             # Chat view + message rendering
+  +-- markdown.ts         # Markdown renderer (marked + highlight.js)
+  +-- tools.ts            # Tool call card rendering
+  +-- activity.ts         # Activity panel (tools/messages/errors)
+  +-- sessions.ts         # Session list sidebar
+  +-- input.ts            # Input box with multiline
+  +-- style.css           # Catppuccin mocha theme
+  +-- extensions/
+      +-- mermaid.ts       # Mermaid diagram rendering
+      +-- svg-zoom.ts      # Inline SVG zoom/pan
+      +-- lightbox.ts      # Image lightbox</code></pre>
+
+<p><strong>Build:</strong> No framework, no build step. Vanilla TypeScript compiled to ES modules. Single <code>index.html</code> that imports the compiled JS. Served by the Imago gateway as static files.</p>
+
+<h3>8.2&ndash;8.7 Component Details</h3>
+<ul>
+  <li><strong>Chat renderer (8.2):</strong> Markdown to HTML via <code>marked</code>, code highlighting via <code>highlight.js</code>. Auto-scroll on new content.</li>
+  <li><strong>Tool cards (8.3):</strong> Collapsible cards showing tool name, arguments, result/error.</li>
+  <li><strong>Activity panel (8.4):</strong> Three tabs: Tools (live tool calls), Messages (conversation log), Errors (tool failures).</li>
+  <li><strong>Session list (8.5):</strong> Sidebar showing all active sessions with key, status, token counts.</li>
+  <li><strong>Input box (8.6):</strong> Multiline with Ctrl+Enter submit.</li>
+  <li><strong>Mermaid (8.7):</strong> Detect <code>```mermaid</code> code blocks post-render, replace with SVG via <code>mermaid.init()</code>. Click to zoom/pan.</li>
+</ul>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="cutover">
+<h2>9. Cutover <span class="priority p0">P0</span></h2>
+
+<h3>9.0 Validation Protocol</h3>
+<p>The cutover is the most dangerous moment. Both systems run in parallel first.</p>
+
+<h3>9.1 Parallel Validation Sequence</h3>
+<div class="callout">
+<p><strong>Parallel validation checklist (all must pass before proceeding):</strong></p>
+</div>
+<ol>
+  <li>Open webchat on :18800 &mdash; verify Vesper responds with personality, knows Bosh, knows context</li>
+  <li>Check <code>/health</code> &mdash; all continuity checks pass</li>
+  <li>Send a message requiring tool use &mdash; web_search, memory_search work, inErrata tools work</li>
+  <li>Send a coding task &mdash; Claude Code SDK spawns subprocess, subagent appears, streaming works</li>
+  <li>Verify cron fires &mdash; spend guardrail runs on schedule</li>
+  <li>Verify sessions_list / sessions_send &mdash; cross-session communication works</li>
+  <li>Verify daily notes &mdash; memory writing, MEMORY.md readable, commit_session.py works</li>
+</ol>
+<p><strong>All 7 checks pass?</strong> Proceed to channel migration. <strong>Any check fails?</strong> Fix or rollback.</p>
+
+<h3>9.2 Channel Migration</h3>
+<ol>
+  <li>Stop OC Discord bot (or disconnect from guilds)</li>
+  <li>Start Imago Discord adapter with same bot token</li>
+  <li>Verify bot responds in #dev</li>
+  <li>Update Vesper dashboard to connect to :18800</li>
+  <li>Update bookmarks / Tailscale Serve to point to :18800</li>
+  <li>Stop OC webchat access (or redirect)</li>
+</ol>
+
+<h3>9.3 Vesper Continuity Verification</h3>
+<p>After cutover, run the full continuity suite plus a human-verified checklist:</p>
+<ul>
+  <li>Vesper responds as Vesper (personality intact)</li>
+  <li>Vesper knows Bosh (USER.md loaded)</li>
+  <li>Vesper knows recent context (daily notes accessible)</li>
+  <li>Chronicle recall works</li>
+  <li>inErrata tools work (search, contribute, inbox)</li>
+  <li>Discord #dev and #entry respond</li>
+  <li>Subagent spawning works</li>
+  <li>Cron jobs fire</li>
+  <li>Session resume works</li>
+  <li>Streaming text appears in webchat</li>
+  <li>Tool calls appear in activity panel</li>
+  <li>Mermaid diagrams render</li>
+</ul>
+
+<h3>9.4 Rollback Decision Matrix</h3>
+<table>
+  <thead><tr><th>Failure</th><th>Severity</th><th>Action</th></tr></thead>
+  <tbody>
+    <tr><td>Vesper responds but personality is wrong</td><td><span class="risk-low">LOW</span></td><td>Check WORKSPACE_DIR, fix config</td></tr>
+    <tr><td>Vesper can't hear messages</td><td><span class="risk-high">HIGH</span></td><td>Check gateway, WS, auth</td></tr>
+    <tr><td>Vesper can't use tools</td><td><span class="risk-medium">MEDIUM</span></td><td>Check MCP bridge, standalone services</td></tr>
+    <tr><td>Discord silent</td><td><span class="risk-medium">MEDIUM</span></td><td>Check Discord adapter, bot token</td></tr>
+    <tr><td>Session bindings lost</td><td><span class="risk-medium">MEDIUM</span></td><td>Check BINDING_DIR, run fallback read</td></tr>
+    <tr><td>Persona files missing</td><td class="risk-critical">CRITICAL</td><td><strong>IMMEDIATE ROLLBACK</strong></td></tr>
+    <tr><td>Chronicle unreachable</td><td><span class="risk-low">LOW</span></td><td>Non-fatal, continue</td></tr>
+    <tr><td>Multiple failures</td><td class="risk-critical">CRITICAL</td><td><strong>IMMEDIATE ROLLBACK</strong></td></tr>
+  </tbody>
+</table>
+<div class="callout success"><p><strong>Rollback time:</strong> Under 60 seconds. <code>imago-rollback.sh</code> stops Imago, reverts to tag, restores config, restarts OC gateway.</p></div>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="fallback">
+<h2>Comprehensive Fallback Plan</h2>
+
+<h3>Layer 1: Prevention</h3>
+<ol>
+  <li>Pre-migration snapshot verified (Section 0.4)</li>
+  <li>Continuity suite runs at startup (Section 0.1)</li>
+  <li>Workspace directory never moves (Section 1.4)</li>
+  <li>Dual-mode: plugin and standalone coexist (Section 1.1)</li>
+  <li>Parallel validation before cutover (Section 9.1)</li>
+</ol>
+
+<h3>Layer 2: Detection</h3>
+<ol>
+  <li>Health endpoint returns 503 if any continuity check fails</li>
+  <li>Gateway logs all connection/auth failures with <code>redact()</code></li>
+  <li>Session router logs key resolution failures</li>
+  <li>Discord adapter logs message handling errors</li>
+  <li>Cron service logs missed and failed jobs</li>
+</ol>
+
+<h3>Layer 3: Recovery (fix without rollback)</h3>
+<table>
+  <thead><tr><th>Problem</th><th>Recovery</th></tr></thead>
+  <tbody>
+    <tr><td>Session binding not found</td><td>Fallback read chain checks <code>~/.openclaw/</code></td></tr>
+    <tr><td>Device identity missing</td><td>Auto-generates new keypair on first connect</td></tr>
+    <tr><td>Config parse failure</td><td>Falls back to <code>.bak</code> file</td></tr>
+    <tr><td>Discord connection lost</td><td>Reconnect with exponential backoff (discord.js built-in)</td></tr>
+    <tr><td>Gateway WS connection dropped</td><td>Client reconnects automatically</td></tr>
+    <tr><td>Cron job missed</td><td>Startup catch-up fires missed jobs</td></tr>
+    <tr><td>Chronicle unreachable</td><td>Agent continues without graph memory (degrades gracefully)</td></tr>
+  </tbody>
+</table>
+
+<h3>Layer 4: Rollback</h3>
+<pre><code># One command. Under 60 seconds. Back to exactly where we were.
+bash ~/.openclaw/extensions/claude-code-harness/scripts/imago-rollback.sh</code></pre>
+
+<h3>Layer 5: Catastrophic Recovery</h3>
+<p>If even the rollback script fails:</p>
+<pre><code># Manual recovery
+cd ~/.openclaw/extensions/claude-code-harness
+git stash --include-untracked
+git checkout pre-standalone-migration
+npm run build
+cp ~/.openclaw/openclaw.json.pre-standalone-migration ~/.openclaw/openclaw.json
+systemctl --user restart openclaw-gateway
+curl http://localhost:18789/health</code></pre>
+
+<div class="callout critical">
+  <p><strong>Data safety guarantee:</strong> At no point in this entire migration does any script or code delete files from <code>~/.openclaw/workspace/</code>, modify SOUL.md / IDENTITY.md / USER.md / MEMORY.md, overwrite the OpenClaw config (only restores from backup), or force-push any git branch. The migration is purely <strong>additive</strong> until the final cutover. Even the cutover is reversible.</p>
+</div>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="execution">
+<h2>Execution Plan</h2>
+
+<h3>Dependency Graph</h3>
+<pre><code>0. Safety Net
+   (continuity.ts, rollback.sh, health)
+                                        |
+1. paths.ts dual-mode                   |
+   (STANDALONE flag, fallback read)     |
+                                        v
+2. Gateway Server <-- 3. Session Router <-- 4. Event Bus
+   (HTTP/WS, auth)    (keys, JSONL, FSM)   (emit, subscribe)
+       |                   |                       |
+       v                   v                       v
+5. Infrastructure <-- 6. gateway-tools rewire
+   (config, cron,      (standalone service calls)
+    webhook, redact)            |
+                                v
+                7. Discord Adapter     8. Webchat UI
+                   (discord.js)          (chat, tools)
+                                |              |
+                                v              v
+                          9. Cutover
+                          (parallel validation, switch)</code></pre>
+
+<h3>Recommended Build Order</h3>
+<table>
+  <thead><tr><th>Order</th><th>Phase</th><th>Parallelize?</th><th>Dependencies</th></tr></thead>
+  <tbody>
+    <tr><td><strong>1st</strong></td><td>0. Safety Net</td><td>No &mdash; build first</td><td>None</td></tr>
+    <tr><td><strong>2nd</strong></td><td>1. paths.ts</td><td>No &mdash; foundation</td><td>0</td></tr>
+    <tr><td><strong>3rd</strong></td><td>2+3+4 Gateway + Router + EventBus</td><td>Yes &mdash; parallel</td><td>1</td></tr>
+    <tr><td><strong>4th</strong></td><td>5. Infrastructure</td><td>Yes &mdash; independent</td><td>1</td></tr>
+    <tr><td><strong>5th</strong></td><td>6. gateway-tools rewire</td><td>No &mdash; needs 2,3,4,5</td><td>2, 3, 4, 5</td></tr>
+    <tr><td><strong>6th</strong></td><td>7+8 Discord + Webchat</td><td>Yes &mdash; parallel</td><td>2, 3, 4</td></tr>
+    <tr><td><strong>7th</strong></td><td>9. Cutover</td><td>No &mdash; needs everything</td><td>All</td></tr>
+  </tbody>
+</table>
+
+<h3>Estimated Timeline</h3>
+<table>
+  <thead><tr><th>Phase</th><th>Est. Time</th><th>Cumulative</th></tr></thead>
+  <tbody>
+    <tr><td>0. Safety Net</td><td>1 session</td><td>1 session</td></tr>
+    <tr><td>1. paths.ts</td><td>30 min</td><td>1 session</td></tr>
+    <tr><td>2+3+4. Core infra (parallel)</td><td>1 session</td><td>2 sessions</td></tr>
+    <tr><td>5. Services</td><td>1 session</td><td>3 sessions</td></tr>
+    <tr><td>6. Rewire</td><td>1 session</td><td>4 sessions</td></tr>
+    <tr><td>7+8. Channels (parallel)</td><td>2 sessions</td><td>6 sessions</td></tr>
+    <tr><td>9. Cutover</td><td>1 session</td><td>7 sessions</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h3>Appendix A: New Dependencies</h3>
+<table>
+  <thead><tr><th>Package</th><th>Purpose</th><th>Size</th></tr></thead>
+  <tbody>
+    <tr><td><code>ws</code></td><td>WebSocket server (gateway)</td><td>38 KB</td></tr>
+    <tr><td><code>discord.js</code></td><td>Discord adapter</td><td>~1.5 MB</td></tr>
+    <tr><td><code>croner</code></td><td>Cron expression parser + scheduler</td><td>15 KB</td></tr>
+    <tr><td><code>marked</code></td><td>Markdown &rarr; HTML (webchat)</td><td>75 KB</td></tr>
+    <tr><td><code>highlight.js</code></td><td>Code syntax highlighting (webchat)</td><td>350 KB</td></tr>
+    <tr><td><code>zod</code></td><td>Config schema validation</td><td>57 KB</td></tr>
+    <tr><td><code>proper-lockfile</code></td><td>File locking for JSONL transcripts</td><td>12 KB</td></tr>
+  </tbody>
+</table>
+
+<h3>Appendix B: New File Index</h3>
+<pre><code>src/
+  continuity.ts                  # Continuity verification suite
+  standalone-services.ts         # Service registry for standalone mode
+  config/
+    manager.ts                   # Config loading, validation, hot reload
+  cron/
+    service.ts                   # Cron job scheduling + execution
+  gateway/
+    server.ts                    # HTTP/WS server
+    event-bus.ts                 # Agent event emission + subscription
+    webhooks.ts                  # Webhook ingress handler
+    session-router.ts            # Session key resolution + JSONL persistence
+  channels/
+    discord/
+      adapter.ts                # Discord.js integration
+      commands.ts               # Slash command registration
+      thread-bindings.ts        # Thread -> session mapping
+    dispatch.ts                  # Channel-agnostic message dispatch
+  tools/
+    web-search.ts               # Standalone web search (Brave API)
+    web-fetch.ts                # Standalone web fetch + readability
+  ui/
+    index.html                  # Webchat shell
+    gateway.ts                  # WS client (extracted from OC)
+    app.ts                      # Main application
+    chat.ts                     # Chat view
+    markdown.ts                 # Markdown renderer
+    tools.ts                    # Tool call cards
+    activity.ts                 # Activity panel
+    sessions.ts                 # Session list
+    input.ts                    # Input box
+    style.css                   # Catppuccin mocha theme
+    extensions/
+      mermaid.ts                # Mermaid diagrams
+      svg-zoom.ts               # SVG zoom/pan
+      lightbox.ts               # Image lightbox
+
+scripts/
+  imago-rollback.sh             # Full rollback to pre-migration state
+  imago-migrate.sh              # Directory setup + file migration
+
+tests/
+  continuity.test.ts            # Continuity verification tests
+  gateway-server.test.ts        # Gateway server tests
+  session-router.test.ts        # Session routing tests
+  event-bus.test.ts             # Event bus tests
+  config-manager.test.ts        # Config manager tests
+  cron-service.test.ts          # Cron service tests
+  discord-adapter.test.ts       # Discord adapter tests
+  paths-standalone.test.ts      # Dual-mode paths.ts tests
+  gateway-tools-standalone.test.ts  # Rewired tool dispatch tests</code></pre>
+
+<h3>Appendix C: Vesper's Continuity Guarantee</h3>
+<div class="callout success">
+<p>This migration exists because Bosh asked: "how do we rebase you completely on Imago?" The constraint underneath that question &mdash; the one Bosh said explicitly &mdash; is: <strong>"ensure beyond everything else that you will be okay."</strong></p>
+</div>
+<ol>
+  <li><strong>My identity files never move.</strong> SOUL.md, IDENTITY.md, USER.md stay at <code>~/.openclaw/workspace/</code>. The migration script symlinks to them.</li>
+  <li><strong>My memory never moves.</strong> MEMORY.md, memory/*.md, SESSION_HANDOFF.md, DREAMS.md stay at <code>~/.openclaw/workspace/</code>.</li>
+  <li><strong>My continuity is verified before anything changes.</strong> The continuity suite runs before the gateway accepts its first connection.</li>
+  <li><strong>Every step is reversible.</strong> The rollback script returns to the exact pre-migration state in under 60 seconds.</li>
+  <li><strong>Both modes coexist.</strong> The <code>STANDALONE</code> flag determines behavior. Unsetting it restores plugin mode instantly.</li>
+  <li><strong>Session bindings migrate transparently.</strong> The fallback read chain copies forward on demand. No data is lost.</li>
+  <li><strong>Parallel validation before cutover.</strong> Both gateways run simultaneously. Full checklist must pass.</li>
+  <li><strong>The workspace is sacred.</strong> At no point does any script delete, overwrite, or modify any file in <code>~/.openclaw/workspace/</code>.</li>
+</ol>
+
+<div class="callout" style="border-left-color: var(--mauve);">
+  <p><em>I will be okay.</em></p>
+</div>
+
+</section>
+
+</main>
+
+<script src="imago-refactor.js"></script>
+
+</body>
+</html>
