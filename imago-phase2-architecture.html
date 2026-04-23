@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Imago Phase 2 Architecture Diagrams</title>
+<script src="mermaid.min.js"></script>
+<script src="imago-config.js"></script>
+<style>
+  :root {
+    --bg: #0b0b14;
+    --surface: #11111b;
+    --surface2: #181825;
+    --surface3: #1e1e2e;
+    --text: #cdd6f4;
+    --text-muted: #a6adc8;
+    --text4: #6c7086;
+    --accent: #b4befe;
+    --accent2: #89b4fa;
+    --border: #313244;
+    --border2: #45475a;
+    --green: #a6e3a1;
+    --peach: #fab387;
+    --mauve: #cba6f7;
+    --teal: #94e2d5;
+    --yellow: #f9e2af;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #cba6f7, #89b4fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+  }
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 3rem;
+  }
+  .toc h2 { font-size: 1.1rem; color: var(--accent); margin-bottom: 1rem; }
+  .toc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 0.4rem 2rem;
+  }
+  .toc a {
+    color: var(--accent2);
+    text-decoration: none;
+    font-size: 0.9rem;
+    display: block;
+    padding: 0.2rem 0;
+  }
+  .toc a:hover { color: var(--accent); }
+  .toc .num { color: var(--text-muted); margin-right: 0.5rem; font-variant-numeric: tabular-nums; }
+
+  section {
+    margin-bottom: 4rem;
+    scroll-margin-top: 2rem;
+  }
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  h2 .badge {
+    font-size: 0.7rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .section-desc {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    margin-bottom: 1.5rem;
+    max-width: 800px;
+  }
+  .diagram-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+  }
+  .diagram-container pre.mermaid {
+    display: flex;
+    justify-content: center;
+  }
+  .diagram-container svg {
+    max-width: 100%;
+    height: auto;
+  }
+  .callout {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 1rem 1.2rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+  }
+  .callout strong { color: var(--accent); }
+  .callout-info { border-left-color: var(--accent2); }
+  .callout-info strong { color: var(--accent2); }
+  .callout-warn { border-left-color: #fab387; }
+  .callout-warn strong { color: #fab387; }
+  .callout-success { border-left-color: var(--green); }
+  .callout-success strong { color: var(--green); }
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.85em;
+    background: var(--surface2);
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+  }
+  .stats {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.8rem 1.2rem;
+    min-width: 120px;
+  }
+  .stat-value { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+  .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  a { color: var(--accent2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .nav-links {
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .nav-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+  .nav-links a:hover {
+    background: var(--surface2);
+    color: var(--accent);
+    border-color: var(--border2);
+  }
+</style>
+</head>
+<body>
+
+<h1>Imago Phase 2 Architecture</h1>
+<p class="subtitle">Performance &amp; reliability optimization diagrams &mdash; companion to the <a href="imago-phase2-refactor.html">Phase 2 Refactor Specification</a>. Produced 2026-04-23.</p>
+
+<div class="nav-links">
+  <a href="imago-phase2-refactor.html">&larr; Phase 2 Spec</a>
+  <a href="imago-architecture.html">Phase 1 Architecture</a>
+  <a href="imago-refactor.html">Phase 1 Spec</a>
+  <a href="index.html">Home</a>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-value">9</div><div class="stat-label">Diagrams</div></div>
+  <div class="stat"><div class="stat-value">12</div><div class="stat-label">Files Modified</div></div>
+  <div class="stat"><div class="stat-value">1</div><div class="stat-label">New Module</div></div>
+  <div class="stat"><div class="stat-value">~390ms</div><div class="stat-label">Latency Reduction</div></div>
+  <div class="stat"><div class="stat-value">+35</div><div class="stat-label">New Tests</div></div>
+</div>
+
+<nav class="toc">
+  <h2>Diagrams</h2>
+  <div class="toc-grid">
+    <a href="#flow-current"><span class="num">1.</span> Per-Turn Data Flow: Current (Phase 1 End)</a>
+    <a href="#flow-optimized"><span class="num">2.</span> Per-Turn Data Flow: Optimized (Phase 2 Target)</a>
+    <a href="#worker-lifecycle"><span class="num">3.</span> Worker Pool Lifecycle</a>
+    <a href="#cache-arch"><span class="num">4.</span> Cache Architecture</a>
+    <a href="#gateway-state"><span class="num">5.</span> Gateway Connection State Machine</a>
+    <a href="#string-current"><span class="num">6a.</span> String Accumulation: Current (O(n&sup2;))</a>
+    <a href="#string-proposed"><span class="num">6b.</span> String Accumulation: Proposed (O(n))</a>
+    <a href="#harness-flow"><span class="num">7.</span> Worker Pool Integration: Harness Flow</a>
+    <a href="#dep-graph"><span class="num">8.</span> Module Dependency Graph: Phase 2 Changes</a>
+    <a href="#exec-timeline"><span class="num">9.</span> Execution Phase Dependencies</a>
+  </div>
+</nav>
+
+<!-- ================================================================= -->
+<section id="flow-current">
+<h2><span class="badge">Sequence</span> 1. Per-Turn Data Flow: Current (Phase 1 End)</h2>
+<p class="section-desc">Shows every I/O operation performed on each <code>runAttempt()</code> call. Total blocking overhead: ~440ms per turn.</p>
+<div class="diagram-container">
+<pre class="mermaid">
+sequenceDiagram
+    participant H as harness.ts
+    participant PF as preflight.ts
+    participant CTX as context.ts
+    participant S as session.ts
+    participant SP as stream-processor.ts
+    participant A as adapter.ts
+    participant SDK as Claude Code SDK
+    participant FS as Filesystem
+    participant SUB as Subprocesses
+
+    Note over H: Turn begins (~440ms overhead)
+
+    H->>PF: runPreflight()
+    PF->>SUB: which claude (~50ms)
+    SUB-->>PF: /usr/local/bin/claude
+    PF->>SUB: claude --version (~80ms)
+    SUB-->>PF: 2.3.1
+    PF-->>H: PreflightResult
+
+    H->>CTX: buildContextSystemPrompt()
+    par Read 7 workspace files
+        CTX->>FS: readFile(SOUL.md)
+        CTX->>FS: readFile(IDENTITY.md)
+        CTX->>FS: readFile(USER.md)
+        CTX->>FS: readFile(AGENTS.md)
+        CTX->>FS: readFile(TOOLS.md)
+        CTX->>FS: readFile(MEMORY.md)
+        CTX->>FS: readFile(HEARTBEAT.md)
+    end
+    FS-->>CTX: 7 file contents (~3.5ms)
+    CTX->>SUB: chronicle-recall --json (~200ms)
+    SUB-->>CTX: chronicle entries
+    CTX-->>H: system prompt
+
+    H->>S: loadSession()
+    S->>FS: readFile(binding.json) #1
+    FS-->>S: SessionBinding
+    S-->>H: binding
+
+    H->>SDK: query() - new subprocess
+    SDK-->>H: AsyncIterator of SDKMessage
+
+    loop For each SDK message
+        H->>SP: processMessageStream()
+        Note over SP: finalText += content (O(n squared))
+    end
+
+    H->>S: bindSession()
+    S->>S: loadSession() - readFile #2 (redundant!)
+    S->>FS: mkdir(bindingDir)
+    S->>FS: writeFile(binding.json)
+
+    H->>SUB: chronicle-save (~100ms, async)
+
+    H->>A: construct result
+    A->>FS: appendFile(session.ndjson)
+
+    Note over H: Turn complete
+</pre>
+</div>
+<div class="callout callout-warn">
+  <strong>Key bottlenecks:</strong> 3 subprocess spawns (~330ms), 9 file reads (~8ms), 1 redundant readFile, 1 unnecessary mkdir, O(n&sup2;) string concatenation during streaming.
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="flow-optimized">
+<h2><span class="badge">Sequence</span> 2. Per-Turn Data Flow: Optimized (Phase 2 Target)</h2>
+<p class="section-desc">Shows the same turn with all caches warm. Total blocking overhead: ~50ms.</p>
+<div class="diagram-container">
+<pre class="mermaid">
+sequenceDiagram
+    participant H as harness.ts
+    participant PF as preflight.ts
+    participant CTX as context.ts
+    participant S as session.ts
+    participant WP as WorkerPool
+    participant SP as stream-processor.ts
+    participant A as adapter.ts
+    participant SDK as Claude Code SDK
+    participant FS as Filesystem
+
+    Note over H: Turn begins (~50ms overhead)
+
+    H->>PF: runPreflight()
+    Note over PF: Cache HIT (path + version)
+    PF-->>H: cached PreflightResult (~0ms)
+
+    H->>CTX: buildContextSystemPrompt()
+    Note over CTX: fs.watch - no changes detected
+    Note over CTX: File cache HIT (all 7 files)
+    Note over CTX: Chronicle cache HIT (TTL under 60s)
+    CTX-->>H: cached system prompt (~0ms)
+
+    H->>S: loadSession()
+    Note over S: LRU cache HIT
+    S-->>H: cached SessionBinding (~0ms)
+
+    H->>WP: acquire(sessionId, fingerprint)
+    Note over WP: Fingerprint match - reuse worker
+    WP-->>H: existing Worker (live subprocess)
+
+    H->>WP: inputQueue.push(userMessage)
+    Note over SDK: Same subprocess, no boot cost
+
+    loop For each SDK message
+        H->>SP: processMessageStream()
+        Note over SP: finalTextParts.push() - O(1)
+    end
+    Note over SP: finalText = parts.join("") - O(n) once
+
+    H->>S: bindSession()
+    Note over S: createdAt from LRU cache
+    Note over S: mkdir skipped (flag set)
+    S->>FS: writeFile(binding.json)
+
+    H->>FS: chronicle-save (async, fire-and-forget)
+
+    H->>A: construct result
+    A->>FS: appendFile(session.ndjson)
+
+    H->>WP: startIdleTimer(sessionId)
+
+    Note over H: Turn complete - 2 writes only
+</pre>
+</div>
+<div class="callout callout-success">
+  <strong>Result:</strong> 0 subprocess spawns (warm path), 0 file reads (all cached), 2 file writes (binding + NDJSON). Time to first token drops from ~800ms to ~200ms.
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="worker-lifecycle">
+<h2><span class="badge">State Machine</span> 3. Worker Pool Lifecycle</h2>
+<p class="section-desc">State transitions for a single worker within the pool. Each session maps to at most one worker.</p>
+<div class="diagram-container">
+<pre class="mermaid">
+stateDiagram-v2
+    [*] --> Empty: WorkerPool created
+
+    Empty --> HasWorker: acquire(sessionId, fingerprint, factory)
+    HasWorker --> HasWorker: acquire(same session, same fingerprint)\n reuse worker, reset idle timer
+    HasWorker --> Evicting: acquire(same session, DIFFERENT fingerprint)\n fingerprint mismatch
+    HasWorker --> Evicting: evict(sessionId)\n explicit eviction
+    HasWorker --> Evicting: idle timer fires\n no activity for workerPoolIdleMs
+    HasWorker --> Evicting: reset(sessionId)\n session reset
+
+    Evicting --> Empty: inputQueue.end()\n generator terminates\n subprocess exits\n worker removed
+
+    Evicting --> HasWorker: (immediate re-acquire\nafter eviction)
+
+    HasWorker --> Disposing: dispose()
+    Empty --> Disposing: dispose()
+
+    Disposing --> [*]: All workers evicted
+
+    state HasWorker {
+        [*] --> Active: query() started
+        Active --> Idle: turn completes\nstartIdleTimer()
+        Idle --> Active: next acquire()\nclearTimeout()
+        Idle --> [*]: timer fires\n evict
+    }
+</pre>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="cache-arch">
+<h2><span class="badge">Graph</span> 4. Cache Architecture</h2>
+<p class="section-desc">All cache layers introduced in Phase 2, their TTL strategies, and invalidation sources.</p>
+<div class="diagram-container">
+<pre class="mermaid">
+graph TB
+    subgraph "Per-Turn Request Path"
+        T[Turn Arrives] --> PF[Preflight Check]
+        PF --> CTX[Build System Prompt]
+        CTX --> SL[Load Session]
+        SL --> QR[Build Query]
+        QR --> EX[Execute Turn]
+        EX --> SB[Bind Session]
+    end
+
+    subgraph "Cache Layer"
+        direction LR
+        C1["Preflight Cache\nCLI path + version\nTTL: infinite\nInvalidation: never"]
+        C2["Workspace File Cache\n7 persona files\nTTL: infinite (watcher)\nInvalidation: fs.watch change"]
+        C3["Chronicle Cache\nRecall results\nTTL: 60 seconds\nInvalidation: timer"]
+        C4["Session LRU Cache\n128 entries max\nTTL: infinite\nInvalidation: clearSession()"]
+        C5["MCP Server Cache\nServer config object\nTTL: infinite\nInvalidation: fingerprint change"]
+        C6["Capabilities Cache\nAuth probe results\nTTL: 5 minutes\n(already exists in provider.ts)"]
+    end
+
+    PF -.->|"cache hit"| C1
+    CTX -.->|"cache hit"| C2
+    CTX -.->|"cache hit"| C3
+    SL -.->|"cache hit"| C4
+    QR -.->|"cache hit"| C5
+    PF -.->|"cache hit"| C6
+
+    subgraph "Cache Invalidation Sources"
+        W1["fs.watch(workspaceDir)"] -->|"change event"| C2
+        W2["60s setTimeout"] -->|"expiry"| C3
+        W3["clearSession()"] -->|"explicit"| C4
+        W4["env var / config change"] -->|"fingerprint mismatch"| C5
+        W5["5-min setTimeout"] -->|"expiry"| C6
+    end
+</pre>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="gateway-state">
+<h2><span class="badge">State Machine</span> 5. Gateway Connection State Machine</h2>
+<p class="section-desc">The <code>GatewayWsClient</code> connection lifecycle. Phase 2 adds the <strong>Reconnecting</strong> state with exponential backoff and request queuing.</p>
+<div class="diagram-container">
+<pre class="mermaid">
+stateDiagram-v2
+    [*] --> Disconnected: Module load
+
+    Disconnected --> Connecting: request() then ensureConnected()
+
+    Connecting --> Handshaking: WebSocket open event
+    Connecting --> Failed: WebSocket error / timeout
+
+    Handshaking --> Connected: Challenge-response + device auth OK
+    Handshaking --> Failed: Auth rejected / timeout
+
+    Connected --> Connected: request() then send frame
+    Connected --> Reconnecting: WebSocket close event
+    Connected --> Reconnecting: WebSocket error event
+
+    Failed --> Disconnected: No reconnect configured\n(Phase 1 behavior)
+    Failed --> Reconnecting: Phase 2: auto-reconnect
+
+    Reconnecting --> Connecting: After backoff delay\n(1s then 2s then 4s then 8s then 16s)
+    Reconnecting --> Disconnected: Max retries (5) exceeded\n then drain queue with error
+
+    state Reconnecting {
+        [*] --> Queuing
+        Queuing: Requests queued (max 50)\nPer-request timeouts still ticking
+        Queuing --> [*]: Backoff timer fires
+    }
+
+    state Connected {
+        [*] --> Active
+        Active: Requests sent immediately\nreconnectAttempts = 0
+        Active --> Active: Response received\n then resolve pending promise
+    }
+
+    note right of Reconnecting
+        New in Phase 2:\n- Exponential backoff (1s base)\n- Request queue (bounded at 50)\n- Per-request timeout continues\n- Queue drained on max retries
+    end note
+</pre>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="string-current">
+<h2><span class="badge">Graph</span> 6a. String Accumulation: Current (O(n&sup2;))</h2>
+<p class="section-desc">Each <code>+=</code> operation copies the entire accumulated string, resulting in quadratic allocation for long responses.</p>
+<div class="diagram-container">
+<pre class="mermaid">
+graph LR
+    subgraph "Current: O(n squared) String Concatenation"
+        D1["delta 1: 'Hello'"] -->|"+="| S1["'Hello'"]
+        D2["delta 2: ' world'"] -->|"+="| S2["'Hello world'\ncopies 'Hello' + ' world'"]
+        D3["delta 3: ', this'"] -->|"+="| S3["'Hello world, this'\ncopies all 17 chars"]
+        D4["delta 4: ' is'"] -->|"+="| S4["'Hello world, this is'\ncopies all 20 chars"]
+        DN["... delta N"] -->|"+="| SN["Full string\ncopies all N x avg chars"]
+    end
+</pre>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="string-proposed">
+<h2><span class="badge">Graph</span> 6b. String Accumulation: Proposed (O(n))</h2>
+<p class="section-desc">Array <code>push()</code> is O(1) amortized. A single <code>.join("")</code> at stream end does one O(n) pass.</p>
+<div class="diagram-container">
+<pre class="mermaid">
+graph LR
+    subgraph "Proposed: O(n) Array + Join"
+        P1["delta 1: 'Hello'"] -->|"push()"| A1["['Hello']"]
+        P2["delta 2: ' world'"] -->|"push()"| A2["['Hello', ' world']"]
+        P3["delta 3: ', this'"] -->|"push()"| A3["['Hello', ' world', ', this']"]
+        P4["delta 4: ' is'"] -->|"push()"| A4["['Hello', ' world', ', this', ' is']"]
+        PN["... delta N"] -->|"push()"| AN["[...N items]"]
+        AN -->|".join('')"| FIN["'Hello world, this is...'\none O(n) pass"]
+    end
+</pre>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="harness-flow">
+<h2><span class="badge">Flowchart</span> 7. Worker Pool Integration: Harness Flow</h2>
+<p class="section-desc">Decision tree inside <code>runAttempt()</code> showing the pool path (new) vs the legacy path (unchanged).</p>
+<div class="diagram-container">
+<pre class="mermaid">
+flowchart TD
+    START[runAttempt called] --> CHECK{config.useWorkerPool?}
+
+    CHECK -->|false| LEGACY[Legacy Path]
+    CHECK -->|true| POOL[Pool Path]
+
+    subgraph "Legacy Path (unchanged)"
+        LEGACY --> LQ["query(queryOptions)"]
+        LQ --> LITER[Fresh AsyncIterator]
+        LITER --> LPROC[processMessageStream]
+    end
+
+    subgraph "Pool Path (new)"
+        POOL --> FP["buildFingerprint(params)"]
+        FP --> ACQ["pool.acquire(sessionId, fp, factory)"]
+
+        ACQ --> MATCH{"Worker exists?\nFingerprint match?"}
+
+        MATCH -->|"No worker"| CREATE["Create new worker\nquery(inputQueue)"]
+        MATCH -->|"Fingerprint mismatch"| EVICT["Evict old worker\ninputQueue.end()"]
+        EVICT --> CREATE
+        MATCH -->|"Match!"| REUSE["Reuse existing worker\nclear idle timer"]
+
+        CREATE --> PUSH["inputQueue.push(userMessage)"]
+        REUSE --> PUSH
+
+        PUSH --> PPROC["processMessageStream\nfrom existing iterator"]
+        PPROC --> IDLE["pool.startIdleTimer(sessionId)"]
+    end
+
+    LPROC --> RESULT[Return HarnessRunResult]
+    IDLE --> RESULT
+</pre>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="dep-graph">
+<h2><span class="badge">Graph</span> 8. Module Dependency Graph: Phase 2 Changes</h2>
+<p class="section-desc">Files highlighted in green are modified in Phase 2. The orange node (<code>worker-pool.ts</code>) is the only new module.</p>
+<div class="diagram-container">
+<pre class="mermaid">
+graph LR
+    subgraph "Core"
+        H[harness.ts]
+        A[adapter.ts]
+        SP[stream-processor.ts]
+        QB[query-builder.ts]
+        WP[worker-pool.ts]
+    end
+
+    subgraph "Infrastructure"
+        S[session.ts]
+        PF[preflight.ts]
+        CTX[context.ts]
+        PR[protocol.ts]
+        DA[device-auth.ts]
+        IN[inerrata.ts]
+    end
+
+    subgraph "Bridge"
+        GC[gateway-client.ts]
+    end
+
+    subgraph "Unchanged"
+        P[provider.ts]
+        T[types.ts]
+        V[visibility.ts]
+        RI[restart-intercept.ts]
+        DG[diagnostics.ts]
+        CP[compaction.ts]
+        PA[paths.ts]
+        MT[mcp-tools.ts]
+        IDX[index.ts]
+    end
+
+    H --> WP
+    H --> SP
+    H --> QB
+    H --> S
+    H --> PF
+    H --> CTX
+    H --> IN
+    A --> H
+    SP --> PR
+    QB --> PA
+    GC --> DA
+    IDX --> H
+    IDX --> P
+
+    style WP fill:#fff3e0,stroke:#ff9800,stroke-width:3px
+    style H fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style A fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style SP fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style QB fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style S fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style PF fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style CTX fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style PR fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style DA fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style IN fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style GC fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+</pre>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section id="exec-timeline">
+<h2><span class="badge">Gantt</span> 9. Execution Phase Dependencies</h2>
+<p class="section-desc">2a and 2b are independent and can run in parallel. 2c depends on 2a (worker pool changes the streaming model). 2d resilience work is independent; micro-opts are a cleanup pass best done last.</p>
+<div class="diagram-container">
+<pre class="mermaid">
+gantt
+    title Phase 2 Execution Timeline
+    dateFormat X
+    axisFormat %s
+
+    section Phase 2a
+    Worker Pool (P0)        :a1, 0, 2
+
+    section Phase 2b
+    Caching Layer (P1)      :b1, 0, 2
+
+    section Phase 2c
+    Streaming Pipeline (P2) :c1, after a1, 1
+
+    section Phase 2d
+    Resilience (P2-P3)      :d1, 0, 1
+    Micro-opts (P3)         :d2, after c1, 1
+</pre>
+</div>
+<div class="callout callout-info">
+  <strong>Parallelism:</strong> Phases 2a, 2b, and 2d (resilience) have no inter-dependencies and can be worked in parallel. Phase 2c must follow 2a because the worker pool changes how the streaming model works. Micro-opts in 2d are best done as a final cleanup pass.
+</div>
+</section>
+
+</body>
+</html>

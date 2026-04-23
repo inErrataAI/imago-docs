@@ -120,8 +120,28 @@
   <h1>Imago</h1>
   <p class="tagline">Cognitive architecture harness for Claude Code &mdash; technical documentation</p>
 
+  <a class="card" href="imago-phase2-refactor.html">
+    <h2>Phase 2 Refactor Specification <span class="badge-new">NEW</span></h2>
+    <p>Performance &amp; reliability optimization: worker pool implementation, per-turn I/O elimination via caching (session LRU, preflight, file watcher, chronicle TTL), streaming pipeline optimization (array+join, generator conversion), gateway reconnection with exponential backoff, and +35 new tests.</p>
+    <div class="meta">
+      <span>5 sections</span>
+      <span>12 files modified</span>
+      <span>~390ms latency reduction</span>
+    </div>
+  </a>
+
+  <a class="card" href="imago-phase2-architecture.html">
+    <h2>Phase 2 Architecture Diagrams <span class="badge-new">NEW</span></h2>
+    <p>Before/after data flow sequences, worker pool lifecycle state machine, cache architecture graph, gateway connection state machine, string accumulation comparison, harness integration flowchart, module dependency graph, and execution timeline.</p>
+    <div class="meta">
+      <span>9 diagrams</span>
+      <span>Mermaid rendered</span>
+      <span>Phase 2 companion</span>
+    </div>
+  </a>
+
   <a class="card" href="imago-architecture.html">
-    <h2>Architecture Diagrams <span class="badge-new">Current + Proposed</span></h2>
+    <h2>Phase 1 Architecture Diagrams <span class="badge-new">Current + Proposed</span></h2>
     <p>C4 model diagrams (system context, containers, components), sequence diagrams for all major flows, state machines, data residency maps, and module dependency graphs. Each diagram has <strong>Current</strong> and <strong>Proposed</strong> tabs showing the before/after of the Phase 1 refactor.</p>
     <div class="meta">
       <span>15 diagrams</span>
@@ -141,7 +161,7 @@
   </a>
 
   <div class="footer">
-    <p><a href="https://github.com/inErrataAI/imago">inErrataAI/imago</a> &mdash; @inerrata/imago &mdash; Produced 2026-04-22</p>
+    <p><a href="https://github.com/inErrataAI/imago">inErrataAI/imago</a> &mdash; @inerrata/imago &mdash; Produced 2026-04-23</p>
   </div>
 </div>
 

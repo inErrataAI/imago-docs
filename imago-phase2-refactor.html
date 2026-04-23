@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Imago — Phase 2 Refactor Specification</title>
+<style>
+  :root {
+    --bg: #0b0b14;
+    --surface: #11111b;
+    --surface2: #181825;
+    --surface3: #1e1e2e;
+    --border: #313244;
+    --border2: #45475a;
+    --text: #cdd6f4;
+    --text2: #bac2de;
+    --text3: #a6adc8;
+    --text4: #6c7086;
+    --accent: #b4befe;
+    --accent2: #89b4fa;
+    --green: #a6e3a1;
+    --red: #f38ba8;
+    --yellow: #f9e2af;
+    --peach: #fab387;
+    --mauve: #cba6f7;
+    --teal: #94e2d5;
+    --pink: #f5c2e7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.7;
+    padding: 0;
+  }
+  .page-header {
+    background: linear-gradient(135deg, #1e1e2e 0%, #181825 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 3rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+  .page-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+  .page-header .subtitle {
+    color: var(--text3);
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+  .page-header nav {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .page-header nav a {
+    color: var(--text2);
+    text-decoration: none;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+  .page-header nav a:hover {
+    background: var(--surface2);
+    color: var(--accent);
+    border-color: var(--border2);
+  }
+  .page-header nav a.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 3rem 6rem;
+  }
+  section {
+    margin-bottom: 3rem;
+  }
+  h2 {
+    font-size: 1.3rem;
+    color: var(--accent);
+    margin: 2.5rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-size: 1.05rem;
+    color: var(--mauve);
+    margin: 1.5rem 0 0.5rem;
+  }
+  h4 {
+    font-size: 0.95rem;
+    color: var(--teal);
+    margin: 1.2rem 0 0.4rem;
+  }
+  p {
+    color: var(--text2);
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+  }
+  strong { color: var(--text); }
+  em { color: var(--text3); font-style: italic; }
+  a { color: var(--accent2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    background: var(--surface2);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    color: var(--peach);
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    margin: 0.75rem 0 1rem;
+    font-size: 0.82rem;
+    line-height: 1.6;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--text2);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0 1.25rem;
+    font-size: 0.82rem;
+  }
+  thead {
+    position: sticky;
+    top: 80px;
+  }
+  th {
+    background: var(--surface2);
+    color: var(--text);
+    font-weight: 600;
+    text-align: left;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  td {
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: var(--surface); }
+  tr:hover td { background: var(--surface2); }
+  .risk-critical { color: var(--red); font-weight: 700; }
+  .risk-high { color: var(--peach); font-weight: 600; }
+  .risk-medium { color: var(--yellow); }
+  .risk-low { color: var(--text3); }
+  .priority {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .p0 { background: #f38ba822; color: var(--red); border: 1px solid #f38ba844; }
+  .p1 { background: #fab38722; color: var(--peach); border: 1px solid #fab38744; }
+  .p2 { background: #f9e2af22; color: var(--yellow); border: 1px solid #f9e2af44; }
+  .p3 { background: #a6adc822; color: var(--text3); border: 1px solid #a6adc844; }
+  .p4 { background: #6c708622; color: var(--text4); border: 1px solid #6c708644; }
+  .status-done {
+    display: inline-block;
+    background: #a6e3a122;
+    color: var(--green);
+    border: 1px solid #a6e3a144;
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .status-pending {
+    display: inline-block;
+    background: #f9e2af22;
+    color: var(--yellow);
+    border: 1px solid #f9e2af44;
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .callout {
+    background: var(--surface);
+    border-left: 3px solid var(--accent);
+    padding: 0.8rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .callout.warning {
+    border-left-color: var(--yellow);
+  }
+  .callout.critical {
+    border-left-color: var(--red);
+  }
+  .callout.success {
+    border-left-color: var(--green);
+  }
+  .callout p { margin: 0; }
+  ul, ol {
+    margin: 0.5rem 0 1rem 1.5rem;
+    color: var(--text2);
+    font-size: 0.9rem;
+  }
+  li { margin-bottom: 0.3rem; }
+  li code { font-size: 0.8rem; }
+  .checklist {
+    list-style: none;
+    margin-left: 0;
+    padding-left: 0;
+  }
+  .checklist li {
+    padding: 0.3rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+  }
+  .checklist li::before {
+    content: '\2610';
+    position: absolute;
+    left: 0;
+    color: var(--text4);
+  }
+  .tab-container {
+    margin: 1rem 0;
+  }
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+  .tab {
+    padding: 0.5rem 1rem;
+    background: var(--surface);
+    color: var(--text3);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: inherit;
+    border-radius: 6px 6px 0 0;
+    margin-right: -1px;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); background: var(--surface2); }
+  .tab.active {
+    background: var(--surface3);
+    color: var(--accent);
+    border-bottom: 1px solid var(--surface3);
+    font-weight: 600;
+  }
+  .tab-panel {
+    display: none;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-top: none;
+    padding: 1rem 1.2rem;
+    border-radius: 0 0 8px 8px;
+  }
+  .tab-panel.active { display: block; }
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2rem 0;
+  }
+  @media (max-width: 768px) {
+    .page-header { padding: 1rem 1.5rem; }
+    main { padding: 1rem 1.5rem 4rem; }
+    table { font-size: 0.75rem; }
+    th, td { padding: 0.4rem 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Imago &mdash; Phase 2 Refactor Specification</h1>
+  <p class="subtitle">Produced 2026-04-23 &mdash; Performance &amp; Reliability Optimization &middot; Prerequisite: Phase 1 complete (commit <code>9b4915d</code>, 400 tests, 24 modules)</p>
+  <nav>
+    <a href="#status" class="active">Status</a>
+    <a href="#worker-pool">1. Worker Pool</a>
+    <a href="#caching">2. Caching</a>
+    <a href="#streaming">3. Streaming</a>
+    <a href="#resilience">4. Resilience</a>
+    <a href="#micro-opts">5. Micro-opts</a>
+    <a href="#testing">Testing</a>
+    <a href="#execution">Execution Plan</a>
+    <a href="imago-phase2-architecture.html">Phase 2 Architecture &rarr;</a>
+    <a href="index.html">Home</a>
+  </nav>
+</div>
+
+<main>
+
+<!-- ================================================================= -->
+<section id="status">
+<h2>Status &amp; Overview</h2>
+
+<p><strong>Scope:</strong> Eliminate per-turn overhead, implement worker pooling, harden connection resilience.</p>
+
+<table>
+  <thead><tr><th>Phase</th><th>Scope</th><th>Status</th><th>Tests</th></tr></thead>
+  <tbody>
+    <tr><td><strong>2a</strong></td><td>Worker Pool</td><td><span class="status-pending">PENDING</span></td><td>+12 (6 exist, 2 failing)</td></tr>
+    <tr><td><strong>2b</strong></td><td>Caching Layer</td><td><span class="status-pending">PENDING</span></td><td>+10</td></tr>
+    <tr><td><strong>2c</strong></td><td>Streaming &amp; Pipeline</td><td><span class="status-pending">PENDING</span></td><td>+5</td></tr>
+    <tr><td><strong>2d</strong></td><td>Resilience &amp; Micro-opts</td><td><span class="status-pending">PENDING</span></td><td>+8</td></tr>
+  </tbody>
+</table>
+
+<h3>Section Checklist</h3>
+<ul class="checklist">
+  <li>1. Worker Pool Implementation
+    <ul class="checklist">
+      <li>1.1 WorkerPool class + AsyncIterableQueue</li>
+      <li>1.2 Fingerprint-based invalidation</li>
+      <li>1.3 Idle eviction timer</li>
+      <li>1.4 Harness integration (pool/legacy branching)</li>
+      <li>1.5 Fix 2 pre-existing test failures</li>
+      <li>1.6 New worker-pool unit tests</li>
+    </ul>
+  </li>
+  <li>2. Per-Turn I/O Elimination
+    <ul class="checklist">
+      <li>2.1 Session binding LRU cache</li>
+      <li>2.2 Preflight result caching</li>
+      <li>2.3 Workspace file watcher (context.ts)</li>
+      <li>2.4 Chronicle recall TTL cache</li>
+      <li>2.5 mkdir deduplication</li>
+    </ul>
+  </li>
+  <li>3. Streaming Pipeline Optimization
+    <ul class="checklist">
+      <li>3.1 String accumulation &rarr; array+join</li>
+      <li>3.2 translate() generator conversion</li>
+      <li>3.3 MCP server object caching</li>
+      <li>3.4 bridgePath module-level constant</li>
+    </ul>
+  </li>
+  <li>4. Connection Resilience
+    <ul class="checklist">
+      <li>4.1 Gateway WS reconnection with exponential backoff</li>
+      <li>4.2 Device identity / token caching</li>
+      <li>4.3 Request queue during reconnect (bounded at 50)</li>
+    </ul>
+  </li>
+  <li>5. Micro-optimizations
+    <ul class="checklist">
+      <li>5.1 Dynamic import hoisting (harness.ts, context.ts, inerrata.ts)</li>
+      <li>5.2 Module-level constants</li>
+      <li>5.3 stderr capture array+join</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>Before / After Targets</h3>
+<table>
+  <thead><tr><th>Metric</th><th>Phase 1 End</th><th>Phase 2 Target</th></tr></thead>
+  <tbody>
+    <tr><td>Subprocess spawns per turn</td><td>3&ndash;4</td><td>0&ndash;1</td></tr>
+    <tr><td>File reads per turn</td><td>9+</td><td>0 (cache hits)</td></tr>
+    <tr><td>File writes per turn</td><td>2</td><td>1</td></tr>
+    <tr><td>Time to first token (warm)</td><td>~800ms</td><td>~200ms</td></tr>
+    <tr><td>Time to first token (cold)</td><td>~2s</td><td>~1s</td></tr>
+    <tr><td>String allocations per response</td><td>O(n) deltas</td><td>O(1) join</td></tr>
+    <tr><td>Gateway reconnect behavior</td><td>Fail + cold reconnect</td><td>Queue + auto-reconnect</td></tr>
+    <tr><td>Worker reuse across turns</td><td>None</td><td>Same-session reuse</td></tr>
+    <tr><td>Tests</td><td>400</td><td>~435</td></tr>
+    <tr><td>Source modules</td><td>24</td><td>25</td></tr>
+  </tbody>
+</table>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="worker-pool">
+<h2>1. Worker Pool Implementation <span class="priority p0">P0</span></h2>
+
+<h3>1.0 Motivation</h3>
+<p>Today, every turn spawns a fresh <code>query()</code> call to the Claude Code SDK. This means:</p>
+<ul>
+  <li>A new Node subprocess (the Claude CLI) boots per turn</li>
+  <li>MCP servers are re-initialized per turn (the <code>imago</code> bridge, inErrata)</li>
+  <li>Session resume data is re-loaded from disk per turn</li>
+  <li>The system prompt is re-sent per turn</li>
+</ul>
+<p>For multi-turn conversations (the common case), this is pure waste. The SDK supports <strong>streaming-input mode</strong> where a single <code>query()</code> call accepts an <code>AsyncIterable&lt;SDKUserMessage&gt;</code> &mdash; the subprocess stays alive, MCP servers stay warm, and subsequent turns feed new messages into the existing iterator.</p>
+<p>The <code>types.ts</code> config already defines <code>useWorkerPool: boolean</code> and <code>workerPoolIdleMs: number</code> (lines 16&ndash;28), and a full test file (<code>harness-worker-pool.test.ts</code>, 6 tests) exists with 2 pre-existing failures &mdash; the tests were written test-first, awaiting the implementation.</p>
+
+<h3>1.1 WorkerPool Class</h3>
+<p><strong>New file:</strong> <code>src/worker-pool.ts</code></p>
+<pre><code>interface WorkerFingerprint {
+  modelId: string;
+  cwd: string;
+  systemPromptHash: string;
+  mcpServersHash: string;
+}
+
+interface PoolWorker {
+  sessionId: string;
+  fingerprint: string;            // JSON.stringify(WorkerFingerprint)
+  queryIterator: AsyncIterator&lt;SDKMessage&gt;;
+  inputQueue: AsyncIterableQueue&lt;SDKUserMessage&gt;;
+  idleTimer: NodeJS.Timeout | null;
+  lastActivity: number;
+  createdAt: number;
+}</code></pre>
+
+<p><strong>Core operations:</strong></p>
+<table>
+  <thead><tr><th>Method</th><th>Behavior</th></tr></thead>
+  <tbody>
+    <tr><td><code>acquire(sessionId, fingerprint, factory)</code></td><td>Returns existing worker if fingerprint matches; evicts + creates if mismatch; creates fresh if none</td></tr>
+    <tr><td><code>evict(sessionId)</code></td><td>Calls <code>inputQueue.end()</code> (terminates generator &rarr; closes subprocess), clears idle timer, deletes from map</td></tr>
+    <tr><td><code>startIdleTimer(sessionId)</code></td><td>Sets timeout at <code>workerPoolIdleMs</code>; clears on next <code>acquire</code></td></tr>
+    <tr><td><code>dispose()</code></td><td>Evicts all workers; called on process exit</td></tr>
+  </tbody>
+</table>
+<p><strong>Pool capacity:</strong> Unbounded by default. Each session gets at most one worker. The Map is keyed by <code>openclawSessionId</code>, so the practical bound is the number of concurrent conversations.</p>
+
+<h3>1.2 AsyncIterableQueue</h3>
+<p>A push/pull bridge between the imperative <code>push(item)</code> harness API and the <code>for await</code> consumption inside the SDK:</p>
+<pre><code>class AsyncIterableQueue&lt;T&gt; implements AsyncIterable&lt;T&gt; {
+  private queue: T[] = [];
+  private waiting: ((result: IteratorResult&lt;T&gt;) =&gt; void) | null = null;
+  private done = false;
+
+  push(item: T): void {
+    if (this.waiting) {
+      this.waiting({ value: item, done: false });
+      this.waiting = null;
+    } else {
+      this.queue.push(item);
+    }
+  }
+
+  end(): void {
+    this.done = true;
+    if (this.waiting) {
+      this.waiting({ value: undefined as any, done: true });
+      this.waiting = null;
+    }
+  }
+
+  [Symbol.asyncIterator](): AsyncIterator&lt;T&gt; {
+    return {
+      next: () =&gt; {
+        if (this.queue.length &gt; 0)
+          return Promise.resolve({ value: this.queue.shift()!, done: false });
+        if (this.done)
+          return Promise.resolve({ value: undefined as any, done: true });
+        return new Promise(r =&gt; { this.waiting = r; });
+      },
+    };
+  }
+}</code></pre>
+
+<h3>1.3 Fingerprint-Based Invalidation</h3>
+<p>The fingerprint determines whether a warm worker can serve the next turn:</p>
+<table>
+  <thead><tr><th>Component</th><th>Source</th><th>Why It Matters</th></tr></thead>
+  <tbody>
+    <tr><td><code>modelId</code></td><td><code>params.modelId</code></td><td>Different model = different subprocess</td></tr>
+    <tr><td><code>cwd</code></td><td><code>params.workspaceDir</code></td><td>Affects file operations within the session</td></tr>
+    <tr><td><code>systemPromptHash</code></td><td>SHA-256 of system prompt</td><td>Changed persona files = stale context</td></tr>
+    <tr><td><code>mcpServersHash</code></td><td>SHA-256 of <code>JSON.stringify(mcpServers)</code></td><td>Different tool set = new MCP initialization</td></tr>
+  </tbody>
+</table>
+<p>When any component changes between turns, the existing worker is evicted and a fresh one created. Hashing uses <code>crypto.createHash("sha256")</code> &mdash; fast enough for per-turn use (~0.01ms for typical inputs).</p>
+
+<h3>1.4 Idle Eviction</h3>
+<p>After each turn completes, <code>startIdleTimer(sessionId)</code> sets a timeout (default: 5 minutes, configurable via <code>config.workerPoolIdleMs</code>). If no new turn arrives before the timer fires:</p>
+<ol>
+  <li><code>inputQueue.end()</code> is called &rarr; terminates the async generator</li>
+  <li>The Claude CLI subprocess receives EOF on stdin &rarr; exits cleanly</li>
+  <li>The worker is removed from the pool map</li>
+</ol>
+<p>The 5-minute default aligns with typical conversation cadence and Anthropic's prompt cache TTL.</p>
+
+<h3>1.5 Harness Integration</h3>
+<p>Changes to <code>harness.ts</code>:</p>
+<pre><code>// Module-level pool (lazy-initialized)
+let pool: WorkerPool | null = null;
+
+function getPool(config: ClaudeCodeConfig): WorkerPool | null {
+  if (!config.useWorkerPool) return null;
+  pool ??= new WorkerPool(config.workerPoolIdleMs);
+  return pool;
+}
+
+// In runAttempt():
+async function runAttempt(params: HarnessRunParams): Promise&lt;HarnessRunResult&gt; {
+  const workerPool = getPool(params.config);
+
+  if (workerPool) {
+    // Pooled path: reuse subprocess across turns
+    const fingerprint = buildFingerprint(params);
+    const worker = await workerPool.acquire(
+      params.openclawSessionId,
+      fingerprint,
+      (input) =&gt; query({ ...queryOptions, input }),
+    );
+    worker.inputQueue.push(userMessage);
+    const result = await processMessageStream(worker.queryIterator, state, callbacks);
+    workerPool.startIdleTimer(params.openclawSessionId);
+    return result;
+  }
+
+  // Legacy path: fresh query() per turn (current behavior, unchanged)
+  const iter = query(queryOptions);
+  return processMessageStream(iter, state, callbacks);
+}</code></pre>
+
+<p>The harness object also exposes <code>evictWorker(sessionId)</code> for external callers (e.g., session reset):</p>
+<pre><code>return {
+  run: ...,
+  reset: ...,
+  evictWorker: (sessionId: string) =&gt; pool?.evict(sessionId),
+  dispose: () =&gt; pool?.dispose(),
+};</code></pre>
+
+<h3>1.6 Test Status</h3>
+<table>
+  <thead><tr><th>Test</th><th>File:Line</th><th>Current</th><th>After</th></tr></thead>
+  <tbody>
+    <tr><td>Two turns reuse subprocess</td><td><code>harness-worker-pool.test.ts:182</code></td><td><span class="risk-critical">FAIL</span> (gets 2 query calls)</td><td><span class="status-done">PASS</span> &mdash; single query, 2 pushes</td></tr>
+    <tr><td>Fingerprint mismatch &rarr; fresh</td><td><code>harness-worker-pool.test.ts:217</code></td><td>PASS</td><td>PASS</td></tr>
+    <tr><td>Legacy path when pool disabled</td><td><code>harness-worker-pool.test.ts:244</code></td><td>PASS</td><td>PASS</td></tr>
+    <tr><td>reset() evicts worker</td><td><code>harness-worker-pool.test.ts:270</code></td><td>PASS</td><td>PASS</td></tr>
+    <tr><td>evictWorker() exists</td><td><code>harness-worker-pool.test.ts:303</code></td><td><span class="risk-critical">FAIL</span> (<code>not a function</code>)</td><td><span class="status-done">PASS</span></td></tr>
+    <tr><td>dispose() closes workers</td><td><code>harness-worker-pool.test.ts:343</code></td><td>PASS</td><td>PASS</td></tr>
+  </tbody>
+</table>
+
+<p><strong>New unit tests</strong> (<code>worker-pool.test.ts</code>):</p>
+<table>
+  <thead><tr><th>Test</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td>Idle timer fires after configured delay</td><td>Timer evicts worker after <code>workerPoolIdleMs</code></td></tr>
+    <tr><td>Idle timer resets on acquire</td><td>Re-acquiring the same worker clears and restarts the timer</td></tr>
+    <tr><td>AsyncIterableQueue push/pull semantics</td><td>Items pushed before pull are buffered; pull before push awaits</td></tr>
+    <tr><td>AsyncIterableQueue end() terminates</td><td>Calling <code>end()</code> causes <code>next()</code> to return <code>{ done: true }</code></td></tr>
+    <tr><td>Pool bounded &mdash; max workers per session</td><td>Acquiring the same sessionId twice returns the same worker</td></tr>
+    <tr><td>Concurrent acquires for same session coalesce</td><td>Two simultaneous <code>acquire()</code> calls don't create two workers</td></tr>
+  </tbody>
+</table>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="caching">
+<h2>2. Per-Turn I/O Elimination <span class="priority p1">P1</span></h2>
+
+<h3>2.0 Current Per-Turn I/O Budget</h3>
+<p>Every <code>runAttempt()</code> currently performs:</p>
+<table>
+  <thead><tr><th>Operation</th><th>Source File</th><th>I/O Type</th><th>Count</th><th>~Latency</th></tr></thead>
+  <tbody>
+    <tr><td><code>readFile</code> (session binding)</td><td><code>session.ts:37,63</code></td><td>Disk</td><td>2x</td><td>~1ms ea</td></tr>
+    <tr><td><code>mkdir</code> (binding dir)</td><td><code>session.ts:61</code></td><td>Syscall</td><td>1x</td><td>~0.5ms</td></tr>
+    <tr><td><code>writeFile</code> (session binding)</td><td><code>session.ts:71</code></td><td>Disk</td><td>1x</td><td>~1ms</td></tr>
+    <tr><td><code>which claude</code></td><td><code>preflight.ts:48</code></td><td>Subprocess</td><td>1x</td><td>~50ms</td></tr>
+    <tr><td><code>claude --version</code></td><td><code>preflight.ts:60</code></td><td>Subprocess</td><td>1x</td><td>~80ms</td></tr>
+    <tr><td><code>readFile</code> &times; 7 (workspace files)</td><td><code>context.ts:37-49</code></td><td>Disk</td><td>7x</td><td>~0.5ms ea</td></tr>
+    <tr><td><code>chronicle-recall</code> subprocess</td><td><code>context.ts:90-114</code></td><td>Subprocess</td><td>1x</td><td>~200ms</td></tr>
+    <tr><td><code>chronicle-save</code> subprocess</td><td><code>harness.ts:272</code></td><td>Subprocess</td><td>1x</td><td>~100ms (async)</td></tr>
+    <tr><td><code>appendFile</code> (NDJSON)</td><td><code>adapter.ts:259</code></td><td>Disk</td><td>1x</td><td>~1ms</td></tr>
+  </tbody>
+</table>
+<div class="callout critical"><p><strong>Total: ~14 I/O operations, ~440ms of blocking overhead per turn.</strong></p></div>
+
+<h3>2.1 Session Binding LRU Cache</h3>
+<p><strong>Target:</strong> <code>session.ts</code> &mdash; eliminates the double <code>readFile</code> in <code>loadSession</code> + <code>bindSession</code>.</p>
+<p><strong>Problem:</strong> <code>bindSession()</code> calls <code>loadSession()</code> internally (line 63) just to preserve <code>createdAt</code>. Every successful turn does: <code>loadSession()</code> (harness.ts:163) &rarr; <code>bindSession()</code> &rarr; <code>loadSession()</code> again &rarr; <code>writeFile()</code>. That's <strong>2 reads + 1 write per turn</strong>.</p>
+<pre><code>const CACHE_MAX = 128;
+const cache = new Map&lt;string, SessionBinding&gt;();
+
+export async function loadSession(
+  openclawSessionId: string,
+  config?: ClaudeCodeConfig,
+): Promise&lt;SessionBinding | null&gt; {
+  const cached = cache.get(openclawSessionId);
+  if (cached) return cached;
+
+  const p = bindingPath(openclawSessionId, config);
+  try {
+    const raw = await readFile(p, "utf-8");
+    const binding = JSON.parse(raw) as SessionBinding;
+    cacheSet(openclawSessionId, binding);
+    return binding;
+  } catch {
+    return null;
+  }
+}
+
+export async function bindSession(
+  openclawSessionId: string,
+  claudeSessionId: string,
+  config?: ClaudeCodeConfig,
+): Promise&lt;void&gt; {
+  const existing = cache.get(openclawSessionId); // Cache, not disk
+  const binding: SessionBinding = {
+    claudeSessionId,
+    openclawSessionId,
+    createdAt: existing?.createdAt ?? new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  await ensureBindingDir(config);
+  await writeFile(bindingPath(openclawSessionId, config), JSON.stringify(binding, null, 2));
+  cacheSet(openclawSessionId, binding);
+}
+
+function cacheSet(key: string, value: SessionBinding): void {
+  cache.delete(key); // Move to end (LRU)
+  cache.set(key, value);
+  if (cache.size &gt; CACHE_MAX) {
+    cache.delete(cache.keys().next().value!);
+  }
+}</code></pre>
+
+<p><strong>mkdir deduplication:</strong></p>
+<pre><code>let bindingDirReady = false;
+
+async function ensureBindingDir(config?: ClaudeCodeConfig): Promise&lt;void&gt; {
+  if (bindingDirReady) return;
+  await mkdir(resolveBindingDir(config), { recursive: true });
+  bindingDirReady = true;
+}</code></pre>
+<div class="callout success"><p><strong>Savings:</strong> -2 <code>readFile</code>, -1 <code>mkdir</code> per turn (after first turn).</p></div>
+
+<h3>2.2 Preflight Result Caching</h3>
+<p><strong>Target:</strong> <code>preflight.ts</code> &mdash; eliminates <code>which</code> and <code>--version</code> subprocess spawns.</p>
+<p>The CLI binary path and version are stable for the entire process lifetime. There is zero reason to re-resolve them on every turn.</p>
+<pre><code>let cachedClaudePath: string | null = null;
+let cachedCliVersion: string | null = null;
+
+export async function resolveClaudePath(config?: ClaudeCodeConfig): Promise&lt;string&gt; {
+  if (cachedClaudePath) return cachedClaudePath;
+  // ... existing resolution logic (which claude / config override) ...
+  cachedClaudePath = resolved;
+  return resolved;
+}
+
+export async function getCliVersion(claudePath: string): Promise&lt;string&gt; {
+  if (cachedCliVersion) return cachedCliVersion;
+  // ... existing subprocess logic ...
+  cachedCliVersion = version;
+  return version;
+}</code></pre>
+<p>The auth probe (<code>claude auth status --json</code>) is already cached in <code>provider.ts</code> with a 5-minute TTL via <code>getCachedCapabilities()</code>. Combined with the two new caches, all 3 preflight subprocesses become no-ops after the first turn.</p>
+<div class="callout success"><p><strong>Savings:</strong> -2 subprocess spawns per turn.</p></div>
+
+<h3>2.3 Workspace File Watcher</h3>
+<p><strong>Target:</strong> <code>context.ts</code> &mdash; eliminates 7 <code>readFile</code> calls per turn.</p>
+<p>Replace per-turn reads with <code>fs.watch()</code> + content cache:</p>
+<pre><code>import { watch, type FSWatcher } from "node:fs";
+
+const fileCache = new Map&lt;string, string&gt;();
+let watcher: FSWatcher | null = null;
+
+function initWatcher(workspaceDir: string): void {
+  if (watcher) return;
+  watcher = watch(workspaceDir, (event, filename) =&gt; {
+    if (filename &amp;&amp; WORKSPACE_FILES.some(f =&gt; f.name === filename)) {
+      fileCache.delete(filename); // Invalidate on change
+    }
+  });
+  watcher.unref(); // Don't prevent process exit
+}
+
+async function readWorkspaceFileCached(
+  workspaceDir: string,
+  name: string,
+  maxChars: number,
+): Promise&lt;string&gt; {
+  initWatcher(workspaceDir);
+  const cached = fileCache.get(name);
+  if (cached !== undefined) return cached;
+
+  const content = await readWorkspaceFile(workspaceDir, name, maxChars);
+  fileCache.set(name, content);
+  return content;
+}</code></pre>
+<div class="callout success"><p><strong>Savings:</strong> -7 <code>readFile</code> calls per turn when no persona files changed. <code>fs.watch</code> uses kernel-level inotify/kqueue &mdash; zero polling cost.</p></div>
+
+<h3>2.4 Chronicle Recall TTL Cache</h3>
+<p><strong>Target:</strong> <code>context.ts</code> &mdash; eliminates 1 subprocess spawn per turn.</p>
+<p>Chronicle entries don't change within a conversation. Cache with a 60-second TTL:</p>
+<pre><code>let chronicleCache: { content: string; ts: number } | null = null;
+const CHRONICLE_TTL_MS = 60_000;
+
+async function recallChronicleCached(): Promise&lt;string&gt; {
+  const now = Date.now();
+  if (chronicleCache &amp;&amp; now - chronicleCache.ts &lt; CHRONICLE_TTL_MS) {
+    return chronicleCache.content;
+  }
+  const content = await recallChronicle();
+  chronicleCache = { content, ts: now };
+  return content;
+}</code></pre>
+<div class="callout success"><p><strong>Savings:</strong> -1 subprocess per turn for 60 seconds after each fill. A typical 5-turn burst within 60s saves 4 subprocess spawns.</p></div>
+
+<h3>2.5 Per-Turn I/O After Phase 2</h3>
+<table>
+  <thead><tr><th>Operation</th><th>Before</th><th>After</th><th>Savings</th></tr></thead>
+  <tbody>
+    <tr><td>Session read</td><td>2x disk</td><td>0 (cache)</td><td><strong>-2</strong></td></tr>
+    <tr><td>Session mkdir</td><td>1x syscall</td><td>0 (flag)</td><td><strong>-1</strong></td></tr>
+    <tr><td>Session write</td><td>1x disk</td><td>1x disk</td><td>0</td></tr>
+    <tr><td><code>which claude</code></td><td>1x subprocess</td><td>0 (cached)</td><td><strong>-1</strong></td></tr>
+    <tr><td><code>claude --version</code></td><td>1x subprocess</td><td>0 (cached)</td><td><strong>-1</strong></td></tr>
+    <tr><td>Workspace files</td><td>7x disk</td><td>0 (watcher)</td><td><strong>-7</strong></td></tr>
+    <tr><td>Chronicle recall</td><td>1x subprocess</td><td>0 (TTL)</td><td><strong>-1/min</strong></td></tr>
+    <tr><td>Chronicle save</td><td>1x subprocess</td><td>1x subprocess</td><td>0</td></tr>
+    <tr><td>NDJSON append</td><td>1x disk</td><td>1x disk</td><td>0</td></tr>
+    <tr><td><strong>Total blocking</strong></td><td><strong>~440ms</strong></td><td><strong>~50ms</strong></td><td><strong>~390ms</strong></td></tr>
+  </tbody>
+</table>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="streaming">
+<h2>3. Streaming Pipeline Optimization <span class="priority p2">P2</span></h2>
+
+<h3>3.1 String Accumulation &rarr; Array + Join</h3>
+<p><strong>Targets:</strong> <code>stream-processor.ts:54</code>, <code>adapter.ts:219</code></p>
+<p>The current pattern creates O(n&sup2;) string copying for long responses:</p>
+<pre><code>// Current — O(n&sup2;) copying
+state.finalText += out.content;     // stream-processor.ts:54
+streamedText += parentText;          // adapter.ts:219</code></pre>
+<p>For a 10KB response delivered in 200 text deltas, this copies ~200 &times; 5KB avg = <strong>1MB</strong> of intermediate string data. V8 allocates a new string object on each <code>+=</code>.</p>
+<p><strong>Fix:</strong> Collect chunks in an array, <code>.join("")</code> once at stream end:</p>
+<pre><code>// StreamState change
+interface StreamState {
+  finalTextParts: string[];  // was: finalText: string
+  // ... other fields unchanged
+}
+
+// In processMessageStream:
+case "text":
+  state.finalTextParts.push(out.content);
+  break;
+
+// After stream completes:
+const finalText = state.finalTextParts.join("");</code></pre>
+<p>Same pattern in <code>adapter.ts</code>:</p>
+<pre><code>const streamedTextParts: string[] = [];
+// In streaming callback:
+streamedTextParts.push(parentText);
+// At end:
+const streamedText = streamedTextParts.join("");</code></pre>
+<p>Also apply to <code>_stderrCapture</code> accumulation in <code>query-builder.ts:84-86</code> (currently <code>+= data</code>).</p>
+<div class="callout success"><p><strong>Impact:</strong> ~50x reduction in allocation pressure for long responses. Array push is O(1) amortized; final join is O(n) total.</p></div>
+
+<h3>3.2 translate() Generator Conversion</h3>
+<p><strong>Target:</strong> <code>protocol.ts</code></p>
+<p>Convert <code>translate()</code> from returning <code>TranslatedMessage[]</code> to a generator function:</p>
+<pre><code>// Current — allocates an array per SDK message
+export function translate(msg: SDKMessage): TranslatedMessage[] { ... }
+
+// Proposed — yields items, no intermediate array
+export function* translate(msg: SDKMessage): Generator&lt;TranslatedMessage&gt; { ... }</code></pre>
+<p>The consumer in <code>stream-processor.ts</code> uses the same <code>for...of</code> syntax &mdash; no change needed:</p>
+<pre><code>for (const out of translate(msg)) { ... }  // Works for both arrays and generators</code></pre>
+<div class="callout"><p><strong>Impact:</strong> Eliminates one array allocation per SDK message. For a turn with 50 messages, that's 50 fewer array allocations. The individual <code>TranslatedMessage</code> objects still allocate, but the container is gone.</p></div>
+
+<h3>3.3 MCP Server Object Caching</h3>
+<p><strong>Target:</strong> <code>query-builder.ts</code></p>
+<p>Every turn rebuilds the <code>mcpServers</code> object from scratch (lines 132&ndash;165): merges explicit config, auto-detects inErrata, constructs the <code>imago</code> bridge entry with environment variables. The inputs rarely change between turns.</p>
+<pre><code>let cachedMcpServers: Record&lt;string, any&gt; | null = null;
+let cachedMcpFingerprint: string | null = null;
+
+function buildMcpServersCached(
+  config: ClaudeCodeConfig,
+  workspaceDir: string,
+): Record&lt;string, any&gt; {
+  const fp = JSON.stringify({
+    explicit: config?.mcpServers,
+    errata: process.env.ERRATA_API_KEY,
+    brave: process.env.BRAVE_API_KEY,
+    workspace: workspaceDir,
+    gateway: resolveGatewayAuthToken(),
+  });
+
+  if (cachedMcpFingerprint === fp &amp;&amp; cachedMcpServers) {
+    return structuredClone(cachedMcpServers);
+  }
+
+  const servers = buildMcpServers(config) ?? {};
+  servers["imago"] = { command: "node", args: [bridgePath], env: { ... } };
+
+  cachedMcpServers = servers;
+  cachedMcpFingerprint = fp;
+  return structuredClone(servers);
+}</code></pre>
+
+<h3>3.4 Module-Level Constants</h3>
+<p>Hoist computed values that don't change:</p>
+<pre><code>// query-builder.ts — move from per-turn (line 147) to module level
+const bridgePath = path.resolve(__dirname, "bridge", "index.js");</code></pre>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="resilience">
+<h2>4. Connection Resilience <span class="priority p2">P2</span></h2>
+
+<h3>4.1 Gateway WebSocket Reconnection</h3>
+<p><strong>Target:</strong> <code>bridge/gateway-client.ts</code></p>
+<p><strong>Current behavior:</strong> The <code>GatewayWsClient</code> is a module-level singleton. When the WebSocket closes (line 124), all pending requests are immediately rejected (<code>"Gateway WS connection closed"</code>). The next <code>request()</code> call triggers a cold reconnect via <code>ensureConnected()</code>, but there is no automatic reconnection and no request queuing.</p>
+<p><strong>Proposed: Exponential backoff reconnection with request queuing.</strong></p>
+
+<pre><code>class GatewayWsClient {
+  private reconnectAttempts = 0;
+  private readonly maxReconnectAttempts = 5;
+  private readonly baseDelayMs = 1000; // 1s &rarr; 2s &rarr; 4s &rarr; 8s &rarr; 16s
+  private requestQueue: QueuedRequest[] = [];
+  private readonly maxQueueSize = 50;
+
+  private scheduleReconnect(): void {
+    if (this.reconnectAttempts &gt;= this.maxReconnectAttempts) {
+      this.drainQueue(new Error("Gateway reconnection failed after 5 attempts"));
+      return;
+    }
+
+    const delay = this.baseDelayMs * Math.pow(2, this.reconnectAttempts);
+    this.reconnectAttempts++;
+
+    setTimeout(async () =&gt; {
+      try {
+        await this.doConnect();
+        this.reconnectAttempts = 0;
+        this.flushQueue(); // Replay queued requests
+      } catch {
+        this.scheduleReconnect();
+      }
+    }, delay);
+  }
+
+  async request(method: string, params: any, timeoutMs = 15_000): Promise&lt;any&gt; {
+    if (this.state === "reconnecting") {
+      if (this.requestQueue.length &gt;= this.maxQueueSize) {
+        throw new Error("Gateway request queue full");
+      }
+      return new Promise((resolve, reject) =&gt; {
+        const timer = setTimeout(() =&gt; reject(new Error("Timeout while queued")), timeoutMs);
+        this.requestQueue.push({ method, params, resolve, reject, timer });
+      });
+    }
+    // ... existing request logic ...
+  }
+}</code></pre>
+<div class="callout"><p><strong>Backoff schedule:</strong> 1s, 2s, 4s, 8s, 16s = 31s max total reconnect window. After 5 failures, all queued requests are rejected with a descriptive error.</p></div>
+
+<h3>4.2 Device Identity Caching</h3>
+<p><strong>Target:</strong> <code>device-auth.ts</code></p>
+<p>The <code>loadOrCreateBridgeIdentity()</code> function uses synchronous file I/O (<code>readFileSync</code>, <code>existsSync</code>) on every WebSocket connect. The Ed25519 keypair is immutable for the process lifetime.</p>
+<pre><code>let cachedIdentity: { publicKey: Buffer; privateKey: Buffer } | null = null;
+let cachedDeviceToken: string | null = null;
+let deviceTokenLoaded = false;
+
+export function loadOrCreateBridgeIdentity(): { publicKey: Buffer; privateKey: Buffer } {
+  if (cachedIdentity) return cachedIdentity;
+  // ... existing sync file I/O ...
+  cachedIdentity = identity;
+  return identity;
+}
+
+export function loadDeviceToken(): string | null {
+  if (deviceTokenLoaded) return cachedDeviceToken;
+  // ... existing sync file I/O ...
+  cachedDeviceToken = token;
+  deviceTokenLoaded = true;
+  return token;
+}
+
+export function saveDeviceToken(token: string): void {
+  cachedDeviceToken = token;
+  deviceTokenLoaded = true;
+  // ... existing sync file write (still needed for persistence across restarts) ...
+}</code></pre>
+<div class="callout success"><p><strong>Impact:</strong> Eliminates synchronous <code>readFileSync</code> calls (which block the event loop) on every WebSocket reconnection.</p></div>
+
+<h3>4.3 Request Queue During Reconnect</h3>
+<p>During the reconnection window (up to ~31 seconds with 5 retries), requests are queued rather than rejected:</p>
+<ol>
+  <li>Pending requests are replayed in FIFO order on successful reconnect</li>
+  <li>Per-request timeouts continue ticking &mdash; a request that times out while queued is rejected individually</li>
+  <li>If reconnection fails after all retries, all queued requests are bulk-rejected</li>
+  <li>Queue bounded at 50 requests to prevent memory growth during extended outages</li>
+</ol>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="micro-opts">
+<h2>5. Micro-optimizations <span class="priority p3">P3</span></h2>
+
+<h3>5.1 Dynamic Import Hoisting</h3>
+<p>Replace per-call <code>await import()</code> with module-level imports:</p>
+<table>
+  <thead><tr><th>File</th><th>Line</th><th>Current</th><th>Proposed</th></tr></thead>
+  <tbody>
+    <tr><td><code>harness.ts</code></td><td>166</td><td><code>await import("@anthropic-ai/claude-agent-sdk")</code></td><td><code>import { query } from "..."</code> at top</td></tr>
+    <tr><td><code>context.ts</code></td><td>95&ndash;96</td><td><code>await import("node:child_process")</code> / <code>"node:util"</code></td><td>Module-level imports</td></tr>
+    <tr><td><code>inerrata.ts</code></td><td>95&ndash;97</td><td>Same Node builtin dynamic imports</td><td>Module-level imports</td></tr>
+  </tbody>
+</table>
+<p><strong>Rationale:</strong> The dynamic imports were originally used to avoid loading the SDK until first use. With Phase 2's worker pool, the SDK is needed on every code path. Node builtins (<code>child_process</code>, <code>util</code>) have no valid reason to be dynamic &mdash; they're always available and load in &lt;1ms.</p>
+
+<h3>5.2 Module-Level Constants</h3>
+<table>
+  <thead><tr><th>File</th><th>Line</th><th>What to Hoist</th></tr></thead>
+  <tbody>
+    <tr><td><code>query-builder.ts</code></td><td>147</td><td><code>const bridgePath = path.resolve(__dirname, "bridge", "index.js")</code></td></tr>
+  </tbody>
+</table>
+
+<h3>5.3 stderr Capture Array + Join</h3>
+<p>In <code>query-builder.ts</code> lines 84&ndash;86, the stderr capture callback uses <code>+=</code>:</p>
+<pre><code>_stderrCapture: (data: string) =&gt; { stderrData += data; }</code></pre>
+<p>Change to:</p>
+<pre><code>const stderrParts: string[] = [];
+_stderrCapture: (data: string) =&gt; { stderrParts.push(data); }
+// ... later:
+const stderrData = stderrParts.join("");</code></pre>
+<p>Minor but consistent with the Section 3.1 pattern.</p>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="testing">
+<h2>Testing Specification</h2>
+
+<h3>Test Plan by Section</h3>
+
+<div class="tab-container">
+  <div class="tabs">
+    <button class="tab active" data-panel="test-s1">Sec 1: Worker Pool</button>
+    <button class="tab" data-panel="test-s2">Sec 2: Caching</button>
+    <button class="tab" data-panel="test-s3">Sec 3: Streaming</button>
+    <button class="tab" data-panel="test-s4">Sec 4: Resilience</button>
+  </div>
+
+  <div id="test-s1" class="tab-panel active">
+    <h4>Section 1: Worker Pool (+12 tests)</h4>
+    <p><strong>Fix existing</strong> (<code>harness-worker-pool.test.ts</code>):</p>
+    <table>
+      <thead><tr><th>Test</th><th>Line</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td>Two turns reuse subprocess</td><td>182</td><td>Pool implementation makes <code>queryCalls</code> length 1</td></tr>
+        <tr><td>evictWorker() exists</td><td>303</td><td>Expose method on harness API</td></tr>
+      </tbody>
+    </table>
+    <p><strong>New</strong> (<code>worker-pool.test.ts</code>):</p>
+    <table>
+      <thead><tr><th>Test</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>Idle timer fires after configured delay</td><td>Verify <code>setTimeout</code> duration matches <code>workerPoolIdleMs</code></td></tr>
+        <tr><td>Idle timer resets on acquire</td><td>Re-acquiring clears and restarts timer</td></tr>
+        <tr><td>AsyncIterableQueue push before pull</td><td>Items buffered, pulled in order</td></tr>
+        <tr><td>AsyncIterableQueue pull before push</td><td>Pull awaits until push resolves it</td></tr>
+        <tr><td>AsyncIterableQueue end() terminates</td><td><code>next()</code> returns <code>{ done: true }</code> after <code>end()</code></td></tr>
+        <tr><td>Concurrent acquires coalesce</td><td>Two <code>acquire()</code> for same session &rarr; same worker</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="test-s2" class="tab-panel">
+    <h4>Section 2: Caching (+10 tests)</h4>
+    <table>
+      <thead><tr><th>Test</th><th>Target File</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>Session cache hit skips readFile</td><td><code>session.test.ts</code></td><td><code>loadSession</code> returns cached without I/O</td></tr>
+        <tr><td>Session LRU evicts at capacity</td><td><code>session.test.ts</code></td><td>129th entry evicts oldest</td></tr>
+        <tr><td>bindSession reads createdAt from cache</td><td><code>session.test.ts</code></td><td>No double disk read</td></tr>
+        <tr><td>clearSession invalidates cache</td><td><code>session.test.ts</code></td><td>Next <code>loadSession</code> reads from disk</td></tr>
+        <tr><td>Preflight caches CLI path</td><td><code>preflight.test.ts</code></td><td>Second call returns cached, no subprocess</td></tr>
+        <tr><td>Preflight caches CLI version</td><td><code>preflight.test.ts</code></td><td>Second call returns cached, no subprocess</td></tr>
+        <tr><td>File watcher invalidates on change</td><td><code>context.test.ts</code></td><td>Simulated change event clears cache</td></tr>
+        <tr><td>File cache hit skips readFile</td><td><code>context.test.ts</code></td><td>Second <code>buildContextSystemPrompt</code> reads 0 files</td></tr>
+        <tr><td>Chronicle TTL returns cached</td><td><code>context.test.ts</code></td><td>Within 60s, no subprocess</td></tr>
+        <tr><td>Chronicle TTL refreshes after expiry</td><td><code>context.test.ts</code></td><td>After 60s, subprocess fires</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="test-s3" class="tab-panel">
+    <h4>Section 3: Streaming (+5 tests)</h4>
+    <table>
+      <thead><tr><th>Test</th><th>Target File</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>finalTextParts join matches concat</td><td><code>stream-processor.test.ts</code></td><td>Equivalence with old behavior</td></tr>
+        <tr><td>Array accumulation for 1000+ deltas</td><td><code>stream-processor.test.ts</code></td><td>Performance regression guard</td></tr>
+        <tr><td>translate() generator yields correctly</td><td><code>protocol.test.ts</code></td><td>Generator produces same items as array</td></tr>
+        <tr><td>MCP server cache hit on same fingerprint</td><td><code>query-builder.test.ts</code></td><td>Returns cached, no reconstruction</td></tr>
+        <tr><td>MCP server cache miss on env change</td><td><code>query-builder.test.ts</code></td><td>New fingerprint triggers rebuild</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="test-s4" class="tab-panel">
+    <h4>Section 4: Resilience (+8 tests)</h4>
+    <table>
+      <thead><tr><th>Test</th><th>Target File</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>Gateway reconnects after close</td><td><code>gateway-client.test.ts</code></td><td>Auto-reconnect fires on close event</td></tr>
+        <tr><td>Exponential backoff timing</td><td><code>gateway-client.test.ts</code></td><td>Delays are 1s, 2s, 4s, 8s, 16s</td></tr>
+        <tr><td>Requests queued during reconnect</td><td><code>gateway-client.test.ts</code></td><td>Requests don't fail immediately</td></tr>
+        <tr><td>Queued requests replayed on reconnect</td><td><code>gateway-client.test.ts</code></td><td>Queue is flushed FIFO after connect</td></tr>
+        <tr><td>Queued requests rejected after max</td><td><code>gateway-client.test.ts</code></td><td>5 failures &rarr; all rejected</td></tr>
+        <tr><td>Queue bounded at 50</td><td><code>gateway-client.test.ts</code></td><td>51st request throws</td></tr>
+        <tr><td>Device identity cached after first load</td><td><code>device-auth.test.ts</code></td><td>No <code>readFileSync</code> on second call</td></tr>
+        <tr><td>Device token cache updated on save</td><td><code>device-auth.test.ts</code></td><td><code>saveDeviceToken</code> updates cache</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<h3>Coverage Targets</h3>
+<table>
+  <thead><tr><th>Module</th><th>Phase 1 End</th><th>Phase 2 Target</th></tr></thead>
+  <tbody>
+    <tr><td><code>worker-pool.ts</code> (NEW)</td><td>&mdash;</td><td>95%</td></tr>
+    <tr><td><code>session.ts</code></td><td>~70%</td><td>95%</td></tr>
+    <tr><td><code>preflight.ts</code></td><td>~60%</td><td>90%</td></tr>
+    <tr><td><code>context.ts</code></td><td>~50%</td><td>85%</td></tr>
+    <tr><td><code>gateway-client.ts</code></td><td>~30%</td><td>80%</td></tr>
+    <tr><td><code>stream-processor.ts</code></td><td>~85%</td><td>95%</td></tr>
+    <tr><td><code>protocol.ts</code></td><td>~90%</td><td>95%</td></tr>
+    <tr><td><code>query-builder.ts</code></td><td>~40%</td><td>80%</td></tr>
+    <tr><td><code>device-auth.ts</code></td><td>~95%</td><td>98%</td></tr>
+  </tbody>
+</table>
+
+</section>
+
+<!-- ================================================================= -->
+<section id="execution">
+<h2>Execution Plan</h2>
+
+<table>
+  <thead><tr><th>Phase</th><th>Scope</th><th>Dependencies</th><th>Key Deliverables</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>2a</strong></td>
+      <td>Worker Pool <span class="priority p0">P0</span></td>
+      <td>None &mdash; new module</td>
+      <td>
+        New <code>src/worker-pool.ts</code> with <code>WorkerPool</code> + <code>AsyncIterableQueue</code><br>
+        <code>harness.ts</code> pool/legacy branching<br>
+        Fix 2 pre-existing test failures<br>
+        +6 new unit tests
+      </td>
+      <td><span class="status-pending">PENDING</span></td>
+    </tr>
+    <tr>
+      <td><strong>2b</strong></td>
+      <td>Caching Layer <span class="priority p1">P1</span></td>
+      <td>None &mdash; <strong>can run in parallel with 2a</strong></td>
+      <td>
+        Session LRU cache + mkdir dedup<br>
+        Preflight result caching<br>
+        Workspace file watcher<br>
+        Chronicle recall TTL<br>
+        +10 tests
+      </td>
+      <td><span class="status-pending">PENDING</span></td>
+    </tr>
+    <tr>
+      <td><strong>2c</strong></td>
+      <td>Streaming &amp; Pipeline <span class="priority p2">P2</span></td>
+      <td>After 2a (worker pool changes streaming model)</td>
+      <td>
+        Array+join accumulation in 3 files<br>
+        translate() &rarr; generator<br>
+        MCP server object caching<br>
+        +5 tests
+      </td>
+      <td><span class="status-pending">PENDING</span></td>
+    </tr>
+    <tr>
+      <td><strong>2d</strong></td>
+      <td>Resilience &amp; Micro-opts <span class="priority p2">P2</span>&ndash;<span class="priority p3">P3</span></td>
+      <td>None &mdash; independent</td>
+      <td>
+        Gateway WS reconnection + request queue<br>
+        Device identity/token caching<br>
+        Dynamic import hoisting<br>
+        +8 tests
+      </td>
+      <td><span class="status-pending">PENDING</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Phase 2 Totals</h3>
+<table>
+  <thead><tr><th>Metric</th><th>Phase 1 End</th><th>Phase 2 Target</th></tr></thead>
+  <tbody>
+    <tr><td>Tests</td><td>400</td><td>~435</td></tr>
+    <tr><td>Test files</td><td>18</td><td>~21</td></tr>
+    <tr><td>Source modules</td><td>24</td><td>25 (<code>+worker-pool.ts</code>)</td></tr>
+    <tr><td>Per-turn latency overhead</td><td>~440ms</td><td>~50ms</td></tr>
+    <tr><td>Subprocess spawns per turn</td><td>3&ndash;4</td><td>0&ndash;1</td></tr>
+    <tr><td>File reads per turn (warm)</td><td>9+</td><td>0</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h3>Appendix A: Files Modified</h3>
+<table>
+  <thead><tr><th>File</th><th>Sections</th><th>Nature of Change</th></tr></thead>
+  <tbody>
+    <tr><td><code>src/worker-pool.ts</code></td><td>1</td><td><strong>NEW</strong> &mdash; WorkerPool + AsyncIterableQueue</td></tr>
+    <tr><td><code>src/harness.ts</code></td><td>1, 5.1</td><td>Pool integration, SDK import hoist</td></tr>
+    <tr><td><code>src/session.ts</code></td><td>2.1</td><td>LRU cache, mkdir dedup</td></tr>
+    <tr><td><code>src/preflight.ts</code></td><td>2.2</td><td>CLI path/version caching</td></tr>
+    <tr><td><code>src/context.ts</code></td><td>2.3, 2.4, 5.1</td><td>File watcher, chronicle cache, import hoist</td></tr>
+    <tr><td><code>src/stream-processor.ts</code></td><td>3.1</td><td>Array+join accumulation</td></tr>
+    <tr><td><code>src/protocol.ts</code></td><td>3.2</td><td>translate() &rarr; generator</td></tr>
+    <tr><td><code>src/adapter.ts</code></td><td>3.1</td><td>streamedText array+join</td></tr>
+    <tr><td><code>src/query-builder.ts</code></td><td>3.3, 3.4, 5.3</td><td>MCP cache, bridgePath hoist, stderr array</td></tr>
+    <tr><td><code>src/bridge/gateway-client.ts</code></td><td>4.1, 4.3</td><td>Reconnect + request queue</td></tr>
+    <tr><td><code>src/device-auth.ts</code></td><td>4.2</td><td>Identity/token caching</td></tr>
+    <tr><td><code>src/inerrata.ts</code></td><td>5.1</td><td>Import hoisting</td></tr>
+  </tbody>
+</table>
+
+<h3>Appendix B: Risk Assessment</h3>
+<table>
+  <thead><tr><th>Risk</th><th>Severity</th><th>Mitigation</th></tr></thead>
+  <tbody>
+    <tr><td>Worker pool subprocess leak</td><td><span class="risk-high">High</span></td><td><code>dispose()</code> on process exit + idle timer as safety net</td></tr>
+    <tr><td>Stale cache serving wrong session data</td><td><span class="risk-medium">Medium</span></td><td>LRU keyed by sessionId; <code>clearSession</code> invalidates</td></tr>
+    <tr><td>File watcher missing rapid edits</td><td><span class="risk-low">Low</span></td><td><code>fs.watch</code> is reliable on Linux/macOS; worst case = one stale turn</td></tr>
+    <tr><td>Gateway reconnect loop under persistent failure</td><td><span class="risk-medium">Medium</span></td><td>Hard cap at 5 retries; all queued requests rejected cleanly</td></tr>
+    <tr><td>Generator conversion breaking protocol.ts</td><td><span class="risk-low">Low</span></td><td>Generator <code>for...of</code> syntax is identical to array iteration</td></tr>
+    <tr><td>Memory growth from unbounded worker pool</td><td><span class="risk-low">Low</span></td><td>One worker per session; idle timer evicts inactive</td></tr>
+  </tbody>
+</table>
+
+</section>
+
+</main>
+
+<script src="imago-refactor.js"></script>
+
+</body>
+</html>
