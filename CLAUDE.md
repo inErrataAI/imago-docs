@@ -98,10 +98,48 @@ mermaid.initialize({
     fontSize: '14px',
     fontFamily: 'Inter, sans-serif'
   },
-  flowchart: { nodeSpacing: 30, rankSpacing: 50, padding: 15, useMaxWidth: true },
-  sequence: { actorMargin: 80, width: 180, messageMargin: 50, useMaxWidth: true, wrap: true }
+  flowchart: { nodeSpacing: 50, rankSpacing: 70, padding: 20, useMaxWidth: false },
+  sequence: { actorMargin: 100, width: 180, messageMargin: 60, useMaxWidth: false, wrap: true }
 });
 ```
+
+**Critical: `useMaxWidth` must be `false`.** When `true`, Mermaid constrains SVGs to the container width, causing node overlap in complex diagrams. With `false`, diagrams render at natural size and the `.mermaid-wrap` container's `overflow-x: auto` handles horizontal scrolling.
+
+**Critical: Do NOT add per-diagram `%%{init}` overrides.** Use the global config only. Per-diagram overrides fragment the configuration and make debugging harder.
+
+### Mermaid rendering — MUST serialize (race condition)
+
+**`mermaid.run()` calls MUST be serialized.** Concurrent calls corrupt Mermaid's internal state, causing SVGs to render in wrong DOM containers (e.g., Section 4's diagram appears inside Section 3, Section 3 shows blank).
+
+This applies to any page with multiple `<pre class="mermaid">` blocks. Use a Promise-based render queue:
+
+```js
+var renderQueue = Promise.resolve();
+
+function renderMermaidIn(container) {
+  // ... early returns for already-rendered panels ...
+  renderQueue = renderQueue.then(function() {
+    return mermaid.run({ nodes: unprocessed }).then(/* mark done */).catch(/* mark done */);
+  });
+}
+```
+
+**Never** call `mermaid.run()` directly in a `forEach` loop. Every call must chain onto `renderQueue`. This applies to:
+- DOMContentLoaded initial render
+- Tab switching (`switchTab`)
+- Global toggle (`setAllTabs`)
+- Hash-based tab restore (`applyHash`)
+
+**Never** use `setTimeout` to "wait" for Mermaid renders. Chain with `renderQueue.then()` instead.
+
+### CSS for Mermaid SVGs
+
+```css
+.mermaid-wrap { overflow-x: auto; }
+.mermaid svg { height: auto; }
+```
+
+**Do NOT set `max-width: 100%` on `.mermaid svg`.** This double-constrains with `useMaxWidth` and causes node overlap.
 
 ## HTML Structure Conventions
 
