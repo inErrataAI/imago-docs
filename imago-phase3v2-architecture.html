@@ -250,7 +250,7 @@
     overflow-x: auto;
   }
   .mermaid-wrap .mermaid { display: flex; justify-content: center; }
-  .mermaid svg { max-width: 100%; height: auto; }
+  .mermaid svg { height: auto; }
 
   /* Tables */
   .tab-panel table {
@@ -484,7 +484,6 @@ graph TB
     <h3>Turn Lifecycle &mdash; Plugin Mode</h3>
     <p>A single turn in the current plugin architecture. Note the extra hops through OC's gateway for both inbound messages and outbound tool calls.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
-%%{init: {'sequence': {'actorMargin': 80, 'width': 180, 'messageMargin': 50}}}%%
 sequenceDiagram
   participant U as User
   participant GW as OC Gateway
@@ -519,7 +518,6 @@ sequenceDiagram
     <h3>Turn Lifecycle &mdash; Standalone Mode</h3>
     <p>A single turn in the standalone architecture. Direct channel access, internal service calls, event-driven flow.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
-%%{init: {'sequence': {'actorMargin': 80, 'width': 180, 'messageMargin': 50}}}%%
 sequenceDiagram
   participant U as User
   participant GW as Gateway
@@ -585,6 +583,7 @@ graph TB
   MCPTools --> Bridge
   Bridge -->|WS RPC| GW
   Harness --> CC
+  Harness -.-> Portable
   Paths -.->|couples to| OCFS
 
   style Paths stroke:#f38ba8,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
@@ -632,6 +631,8 @@ graph TB
     Others["OpenAI / Ollama"]
   end
 
+  Discord -->|route| Server
+  Webchat -->|route| Server
   ACP -->|route| Server
   Auth -->|emit| Events
   Sessions -->|dispatch| Claude
@@ -729,18 +730,14 @@ graph TB
     <p>Imago connects <strong>as a client</strong> to OC's gateway over WebSocket on port <code>18789</code>. All tool calls from the Claude Code subprocess route through this bridge.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
 graph LR
-  MCP["MCP Server"] -->|tool call| Bridge["MCP Bridge"]
-  Bridge -->|WS| GW["OC Gateway"]
-  GW --> Services["OC Services"]
-  Services -->|result| GW
-  GW -->|WS| Bridge
-  Bridge -->|result| MCP
+  MCP["MCP Server"] <-->|"tool_call / result"| Bridge["MCP Bridge"]
+  Bridge <-->|WebSocket| GW["OC Gateway"]
+  GW <-->|dispatch| Services["OC Services"]
 
   style MCP fill:#1e1e2e,stroke:#fab387,stroke-width:2px,color:#cdd6f4
   style Bridge fill:#1e1e2e,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4
   style GW fill:#1e1e2e,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
   style Services fill:#1e1e2e,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
-  style Result fill:#1e1e2e,stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
     </pre></div>
     <p><strong>Pain points:</strong></p>
     <ul>
@@ -1540,16 +1537,16 @@ pie title Current LOC Distribution
       fontFamily: 'Inter, sans-serif'
     },
     flowchart: {
-      nodeSpacing: 30,
-      rankSpacing: 50,
-      padding: 15,
-      useMaxWidth: true
+      nodeSpacing: 50,
+      rankSpacing: 70,
+      padding: 20,
+      useMaxWidth: false
     },
     sequence: {
-      actorMargin: 80,
+      actorMargin: 100,
       width: 180,
-      messageMargin: 50,
-      useMaxWidth: true,
+      messageMargin: 60,
+      useMaxWidth: false,
       wrap: true
     }
   });
