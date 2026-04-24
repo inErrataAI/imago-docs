@@ -120,23 +120,43 @@
   <h1>Imago</h1>
   <p class="tagline">Cognitive architecture harness for Claude Code &mdash; technical documentation</p>
 
-  <a class="card" href="imago-phase3-standalone.html">
-    <h2>Phase 3 Standalone Migration Specification <span class="badge-new">NEW</span></h2>
-    <p>Decouple Imago from OpenClaw: standalone gateway server (HTTP/WS), session router with composite keys, event bus with streaming broadcast, config manager, cron service, Discord adapter (multi-guild), webchat UI extraction, and parallel-validation cutover with 5-layer safety net.</p>
+  <a class="card" href="imago-phase3v2-standalone.html">
+    <h2>Phase 3 v2 Standalone Platform Migration <span class="badge-new">LATEST</span></h2>
+    <p>Clean break from OpenClaw: five-interface architecture (Provider, Channel, MediaProcessor, Tool, Hook), Runtime coordinator with service registry, Tailscale networking foundation, multi-provider support, pluggable channels (Discord, Webchat, ACP), full session management, and parallel-validation cutover. Supersedes v1.</p>
     <div class="meta">
-      <span>10 sections</span>
-      <span>~5,900 new LOC</span>
-      <span>~206 new tests</span>
+      <span>9 sections</span>
+      <span>~9,100 new LOC</span>
+      <span>~352 new tests</span>
     </div>
   </a>
 
-  <a class="card" href="imago-phase3-architecture.html">
-    <h2>Phase 3 Architecture Diagrams <span class="badge-new">NEW</span></h2>
-    <p>C4 context (plugin vs standalone), paths.ts dependency map, full connection chain sequence, gateway component diagram, session routing flowchart, event bus emit-to-render, migration safety layers, cutover sequence, and module dependency graph with standalone/plugin mode tabs.</p>
+  <a class="card" href="imago-phase3v2-architecture.html">
+    <h2>Phase 3 v2 Architecture Diagrams <span class="badge-new">Current + Proposed</span></h2>
+    <p>11 interactive diagrams with Current/Proposed tabs: system overview (plugin&rarr;platform inversion), control flow sequences, Runtime coordinator, gateway &amp; Tailscale networking, session management, provider system, channel system, tools &amp; media, module layout, dependency graph, and migration path. Global toggle for all tabs.</p>
+    <div class="meta">
+      <span>11 sections &times; 2 views</span>
+      <span>19 Mermaid diagrams</span>
+      <span>Phase 3 v2 companion</span>
+    </div>
+  </a>
+
+  <a class="card" href="imago-phase3-standalone.html" style="opacity: 0.5; border-style: dashed;">
+    <h2>Phase 3 v1 Specification <span style="font-size:0.65rem;background:#f38ba822;color:#f38ba8;border:1px solid #f38ba844;padding:0.1rem 0.4rem;border-radius:3px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">SUPERSEDED</span></h2>
+    <p>Original dual-mode migration plan (plugin + standalone). Retained for historical reference &mdash; replaced by v2 above.</p>
+    <div class="meta">
+      <span>10 sections</span>
+      <span>~5,900 LOC</span>
+      <span>Historical</span>
+    </div>
+  </a>
+
+  <a class="card" href="imago-phase3-architecture.html" style="opacity: 0.5; border-style: dashed;">
+    <h2>Phase 3 v1 Architecture Diagrams <span style="font-size:0.65rem;background:#f38ba822;color:#f38ba8;border:1px solid #f38ba844;padding:0.1rem 0.4rem;border-radius:3px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">SUPERSEDED</span></h2>
+    <p>Original architecture diagrams for the dual-mode plan. Retained for historical reference &mdash; replaced by v2 above.</p>
     <div class="meta">
       <span>9 diagrams</span>
       <span>Mermaid rendered</span>
-      <span>Phase 3 companion</span>
+      <span>Historical</span>
     </div>
   </a>
 

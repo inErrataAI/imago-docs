@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Imago Phase 3 v2 — Standalone Architecture</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0b0b14;
+    --bg-card: #11111b;
+    --bg-card-hover: #181825;
+    --bg-code: #0b0b14;
+    --text: #cdd6f4;
+    --text-muted: #a6adc8;
+    --text-dim: #6c7086;
+    --border: #313244;
+    --border-light: #45475a;
+    --blue: #89b4fa;
+    --green: #a6e3a1;
+    --orange: #fab387;
+    --red: #f38ba8;
+    --accent: #b4befe;
+    --tab-inactive: #11111b;
+    --tab-active: #1e1e2e;
+    --tab-border-active: #b4befe;
+    --tab-border-inactive: #313244;
+    --max-width: 1200px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 0;
+  }
+
+  /* Header */
+  .page-header {
+    background: linear-gradient(135deg, #1e1e2e 0%, #181825 50%, #11111b 100%);
+    border-bottom: 2px solid var(--blue);
+    padding: 2.5rem 1.5rem 2rem;
+    text-align: center;
+  }
+  .page-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+    letter-spacing: -0.02em;
+  }
+  .page-header .subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+    font-weight: 400;
+  }
+  .page-header .badge {
+    display: inline-block;
+    margin-top: 0.8rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .badge-phase { background: rgba(137,180,250,0.15); color: var(--blue); border: 1px solid rgba(137,180,250,0.3); }
+
+  /* Global toggle bar */
+  .global-toggle-bar {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .global-toggle-bar label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .global-btn {
+    padding: 0.35rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--tab-inactive);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .global-btn:hover { background: var(--tab-active); color: var(--text); border-color: var(--border-light); }
+  .global-btn.active { background: var(--blue); color: #11111b; border-color: var(--blue); }
+
+  /* Main container */
+  .container {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+
+  /* Table of contents */
+  .toc {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
+  }
+  .toc h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .toc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.4rem 2rem;
+  }
+  .toc a {
+    color: var(--blue);
+    text-decoration: none;
+    font-size: 0.9rem;
+    padding: 0.25rem 0;
+    display: block;
+    transition: color 0.15s ease;
+  }
+  .toc a:hover { color: #b4befe; }
+  .toc a .toc-num { color: var(--text-dim); margin-right: 0.4rem; font-weight: 600; font-size: 0.8rem; }
+
+  /* Section cards */
+  .section-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+  .section-card > .section-heading {
+    padding: 1.25rem 1.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-heading h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .section-heading h2 .sec-num {
+    color: var(--blue);
+    margin-right: 0.5rem;
+  }
+
+  /* Tabs */
+  .tab-bar {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding: 0 1rem;
+    background: rgba(0,0,0,0.15);
+  }
+  .tab-btn {
+    padding: 0.65rem 1.25rem;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.15s ease;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    color: var(--blue);
+    border-bottom-color: var(--blue);
+  }
+  .tab-btn .tab-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin-right: 0.4rem;
+    vertical-align: middle;
+  }
+  .tab-dot-current { background: var(--orange); }
+  .tab-dot-proposed { background: var(--green); }
+
+  /* Tab panels */
+  .tab-panel {
+    display: none;
+    padding: 1.5rem;
+    animation: fadeIn 0.2s ease;
+  }
+  .tab-panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Content typography */
+  .tab-panel h3 { font-size: 1rem; font-weight: 700; color: var(--text); margin: 1.25rem 0 0.5rem; }
+  .tab-panel h3:first-child { margin-top: 0; }
+  .tab-panel p { margin-bottom: 0.75rem; color: var(--text); }
+  .tab-panel ul, .tab-panel ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+  .tab-panel li { margin-bottom: 0.3rem; }
+  .tab-panel code {
+    background: var(--bg-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+    color: var(--text-muted);
+  }
+  .tab-panel pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    margin: 0.75rem 0;
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+  .tab-panel pre code {
+    background: none;
+    padding: 0;
+    color: var(--text-muted);
+  }
+
+  /* Mermaid containers */
+  .mermaid-wrap {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 0.75rem 0;
+    overflow-x: auto;
+  }
+  .mermaid-wrap .mermaid { display: flex; justify-content: center; }
+  .mermaid svg { max-width: 100%; height: auto; }
+
+  /* Tables */
+  .tab-panel table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0;
+    font-size: 0.85rem;
+  }
+  .tab-panel th {
+    background: rgba(137,180,250,0.1);
+    color: var(--blue);
+    font-weight: 700;
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 2px solid var(--border);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .tab-panel td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid rgba(49,50,68,0.6);
+    vertical-align: top;
+  }
+  .tab-panel tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* Tag badges */
+  .tag {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .tag-portable { background: rgba(166,227,161,0.15); color: var(--green); }
+  .tag-rearch { background: rgba(250,179,135,0.15); color: var(--orange); }
+  .tag-delete { background: rgba(243,139,168,0.15); color: var(--red); }
+  .tag-new { background: rgba(137,180,250,0.15); color: var(--blue); }
+
+  /* Info/Note boxes */
+  .note {
+    background: rgba(137,180,250,0.06);
+    border-left: 3px solid var(--blue);
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.9rem;
+  }
+  .note-warn {
+    background: rgba(250,179,135,0.06);
+    border-left-color: var(--orange);
+  }
+
+  /* Interface signatures */
+  .interface-block {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin: 0.75rem 0;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    overflow-x: auto;
+  }
+  .interface-block .kw { color: #c586c0; }
+  .interface-block .type { color: #4ec9b0; }
+  .interface-block .prop { color: #9cdcfe; }
+  .interface-block .str { color: #ce9178; }
+  .interface-block .comment { color: #6a9955; }
+  .interface-block .paren { color: #6c7086; }
+
+  /* Footer */
+  .page-footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem 1.5rem;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    margin-top: 2rem;
+  }
+  .page-footer a { color: var(--blue); text-decoration: none; }
+  .page-footer a:hover { text-decoration: underline; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .page-header h1 { font-size: 1.5rem; }
+    .container { padding: 1rem; }
+    .toc-grid { grid-template-columns: 1fr; }
+    .tab-panel { padding: 1rem; }
+    .global-toggle-bar { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Imago Standalone Architecture</h1>
+  <div class="subtitle">Phase 3 v2 — Plugin to Platform Migration</div>
+  <span class="badge badge-phase">Phase 3 &middot; Inversion of Control</span>
+</header>
+
+<div class="global-toggle-bar">
+  <label>View:</label>
+  <button class="global-btn active" id="global-current" onclick="setAllTabs('current')">Show All Current</button>
+  <button class="global-btn" id="global-proposed" onclick="setAllTabs('proposed')">Show All Proposed</button>
+</div>
+
+<div class="container">
+
+<!-- TABLE OF CONTENTS -->
+<nav class="toc" id="toc">
+  <h2>Contents</h2>
+  <div class="toc-grid">
+    <a href="#system-overview"><span class="toc-num">1.</span> System Overview</a>
+    <a href="#control-flow"><span class="toc-num">2.</span> Control Flow</a>
+    <a href="#core-architecture"><span class="toc-num">3.</span> Core Architecture</a>
+    <a href="#gateway-networking"><span class="toc-num">4.</span> Gateway &amp; Networking</a>
+    <a href="#session-management"><span class="toc-num">5.</span> Session Management</a>
+    <a href="#provider-system"><span class="toc-num">6.</span> Provider System</a>
+    <a href="#channel-system"><span class="toc-num">7.</span> Channel System</a>
+    <a href="#tools-media"><span class="toc-num">8.</span> Tools &amp; Media</a>
+    <a href="#module-layout"><span class="toc-num">9.</span> Module Layout</a>
+    <a href="#dependency-graph"><span class="toc-num">10.</span> Dependency Graph</a>
+    <a href="#migration-path"><span class="toc-num">11.</span> Migration Path</a>
+  </div>
+</nav>
+
+<!-- ============================================================ -->
+<!-- SECTION 1: SYSTEM OVERVIEW -->
+<!-- ============================================================ -->
+<div class="section-card" id="system-overview">
+  <div class="section-heading">
+    <h2><span class="sec-num">1.</span> System Overview</h2>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab(this, 'system-overview-current')">
+      <span class="tab-dot tab-dot-current"></span>Current
+    </button>
+    <button class="tab-btn" onclick="switchTab(this, 'system-overview-proposed')">
+      <span class="tab-dot tab-dot-proposed"></span>Proposed
+    </button>
+  </div>
+  <div class="tab-panel active" id="system-overview-current" data-tab="current">
+    <h3>Imago as OpenClaw Plugin</h3>
+    <p>Imago operates as a <strong>leaf node</strong> inside the OpenClaw ecosystem. All messages flow through OC's gateway and session system before reaching Imago. Imago has no direct access to channels, no control over session lifecycle, and no independent networking.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+C4Context
+  title Imago as OpenClaw Plugin (Current)
+
+  Person(user, "User", "Discord / Webchat")
+  System_Boundary(oc, "OpenClaw Platform") {
+    System(gateway, "OC Gateway", "HTTP+WS Server")
+    System(session, "OC Session Manager", "Session lifecycle")
+    System(imago, "Imago Plugin", "AgentHarness impl")
+  }
+  System_Ext(claude, "Claude Code SDK", "Anthropic subprocess")
+
+  Rel(user, gateway, "Messages", "Discord/HTTP")
+  Rel(gateway, session, "Routes to session")
+  Rel(session, imago, "Dispatches via AgentHarness")
+  Rel(imago, claude, "Spawns subprocess")
+  Rel(imago, gateway, "Tool calls via WS", "WebSocket RPC")
+
+  UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+    </pre></div>
+    <div class="note">Imago is a <strong>plugin</strong> &mdash; it implements OC's <code>AgentHarness</code> interface and has no independent existence. If OC stops, Imago stops.</div>
+  </div>
+  <div class="tab-panel" id="system-overview-proposed" data-tab="proposed">
+    <h3>Imago as Standalone Platform</h3>
+    <p>Imago becomes the <strong>root process</strong>. It owns its own gateway, sessions, providers, and channel connections. OpenClaw is no longer in the picture. This is the fundamental inversion: from leaf node to root.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+C4Context
+  title Imago as Standalone Platform (Proposed)
+
+  Person(user, "User", "Discord / Webchat / IRC")
+  Person(agent, "Other Agent", "ACP peer")
+
+  System_Boundary(imago, "Imago Platform") {
+    System(channels, "Channels", "Discord, Webchat, ACP, IRC")
+    System(gateway, "Imago Gateway", "HTTP+WS, Tailscale, Auth")
+    System(runtime, "Runtime", "Events, Config, Hooks, Cron")
+    System(sessions, "Session Manager", "Store, Router, Lock")
+    System(providers, "Provider Registry", "Multi-model")
+  }
+
+  System_Ext(claude, "Claude Code SDK", "Anthropic")
+  System_Ext(openai, "OpenAI API", "Compatible models")
+  System_Ext(ollama, "Ollama", "Local models")
+
+  Rel(user, channels, "Messages")
+  Rel(agent, channels, "ACP messages")
+  Rel(channels, gateway, "Routed")
+  Rel(gateway, runtime, "Coordinated")
+  Rel(runtime, sessions, "Manages")
+  Rel(sessions, providers, "Executes via")
+  Rel(providers, claude, "Primary")
+  Rel(providers, openai, "Secondary")
+  Rel(providers, ollama, "Local")
+
+  UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+    </pre></div>
+    <div class="note">Imago <strong>is</strong> the platform. Channels connect to it directly. Providers are pluggable. No intermediary framework.</div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: CONTROL FLOW -->
+<!-- ============================================================ -->
+<div class="section-card" id="control-flow">
+  <div class="section-heading">
+    <h2><span class="sec-num">2.</span> Control Flow</h2>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab(this, 'control-flow-current')">
+      <span class="tab-dot tab-dot-current"></span>Current
+    </button>
+    <button class="tab-btn" onclick="switchTab(this, 'control-flow-proposed')">
+      <span class="tab-dot tab-dot-proposed"></span>Proposed
+    </button>
+  </div>
+  <div class="tab-panel active" id="control-flow-current" data-tab="current">
+    <h3>Turn Lifecycle &mdash; Plugin Mode</h3>
+    <p>A single turn in the current plugin architecture. Note the extra hops through OC's gateway for both inbound messages and outbound tool calls.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+sequenceDiagram
+  participant U as User (Discord)
+  participant OG as OC Gateway
+  participant OS as OC Session
+  participant AH as Imago (AgentHarness)
+  participant CC as Claude Code Subprocess
+
+  U->>OG: Message via Discord bot
+  OG->>OS: Route to session
+  OS->>AH: dispatch(EmbeddedRunAttemptParams)
+  AH->>CC: spawn subprocess with prompt
+  loop Tool Calls
+    CC->>AH: tool_call (stdout stream)
+    AH->>OG: WS RPC tool request
+    OG-->>AH: WS RPC tool response
+    AH->>CC: tool_result (stdin)
+  end
+  CC->>AH: final response (stream end)
+  AH->>OS: TurnResult
+  OS->>OG: Response
+  OG->>U: Discord reply
+    </pre></div>
+    <p>Key characteristics:</p>
+    <ul>
+      <li>Every tool call traverses the WebSocket bridge to OC's gateway and back</li>
+      <li>OC controls session creation, routing, and lifecycle</li>
+      <li>Imago has no direct channel access &mdash; messages arrive pre-processed</li>
+      <li><code>EmbeddedRunAttemptParams</code> is OC's interface; Imago must conform</li>
+    </ul>
+  </div>
+  <div class="tab-panel" id="control-flow-proposed" data-tab="proposed">
+    <h3>Turn Lifecycle &mdash; Standalone Mode</h3>
+    <p>A single turn in the standalone architecture. Direct channel access, internal service calls, event-driven flow.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+sequenceDiagram
+  participant U as User (Discord)
+  participant CH as Discord Channel
+  participant GW as Imago Gateway
+  participant RT as Runtime (Events)
+  participant SS as Session Manager
+  participant PR as Provider (Claude Code)
+  participant CC as Claude Code SDK
+
+  U->>CH: Discord message
+  CH->>GW: channel.onMessage event
+  GW->>RT: runtime.emit('message')
+  RT->>SS: session.route(compositeKey)
+  SS->>PR: provider.execute(turnRequest)
+  PR->>CC: SDK call with tools
+  loop Tool Calls
+    CC->>PR: tool_call event
+    PR->>RT: runtime.executeTool(name, args)
+    RT-->>PR: tool result (direct, no network hop)
+    PR->>CC: tool_result
+  end
+  CC->>PR: turn complete
+  PR->>RT: runtime.emit('turn:complete', events)
+  RT->>SS: session.persist(turnData)
+  RT->>GW: response events
+  GW->>CH: channel.send(response)
+  CH->>U: Discord reply
+    </pre></div>
+    <p>Key changes:</p>
+    <ul>
+      <li><strong>No WS bridge for tools</strong> &mdash; tool calls resolve internally via the Runtime</li>
+      <li><strong>Event-driven</strong> &mdash; the Runtime event bus coordinates all components</li>
+      <li><strong>Direct channel access</strong> &mdash; Imago owns the Discord connection</li>
+      <li><strong>Provider abstraction</strong> &mdash; the session dispatches to any provider, not just Claude Code</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: CORE ARCHITECTURE -->
+<!-- ============================================================ -->
+<div class="section-card" id="core-architecture">
+  <div class="section-heading">
+    <h2><span class="sec-num">3.</span> Core Architecture</h2>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab(this, 'core-architecture-current')">
+      <span class="tab-dot tab-dot-current"></span>Current
+    </button>
+    <button class="tab-btn" onclick="switchTab(this, 'core-architecture-proposed')">
+      <span class="tab-dot tab-dot-proposed"></span>Proposed
+    </button>
+  </div>
+  <div class="tab-panel active" id="core-architecture-current" data-tab="current">
+    <h3>Plugin Architecture</h3>
+    <p>Imago implements OC's <code>AgentHarness</code> interface and registers as a plugin. The codebase is a flat directory of ~30 files in <code>src/</code>.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+graph TB
+  subgraph OpenClaw["OpenClaw Platform"]
+    PluginSystem["Plugin System"]
+    Gateway["OC Gateway"]
+    SessionMgr["OC Session Manager"]
+  end
+
+  subgraph Imago["Imago Plugin (src/)"]
+    Harness["harness.ts<br/>AgentHarness impl"]
+    Session["session.ts<br/>185 LOC sidecar"]
+    MCPTools["mcp-tools.ts<br/>485 LOC"]
+    Bridge["bridge/gateway-tools.ts<br/>231 LOC"]
+    Config["config.ts"]
+    Paths["paths.ts<br/>OC coupling chokepoint"]
+    Memory["memory.ts"]
+    Canvas["canvas.ts"]
+    Cron["cron.ts"]
+    Events["events.ts"]
+    Nodes["nodes.ts"]
+    Prompt["prompt.ts"]
+  end
+
+  PluginSystem -->|registers| Harness
+  Harness -->|uses| Session
+  Harness -->|spawns| CC["Claude Code Subprocess"]
+  MCPTools -->|delegates via| Bridge
+  Bridge -->|WS RPC| Gateway
+  Paths -->|couples to| OpenClaw
+  Config -->|reads from| Paths
+
+  style Paths fill:#f38ba8,color:#11111b,stroke:#f38ba8
+  style Bridge fill:#fab387,color:#11111b,stroke:#fab387
+  style Harness fill:#89b4fa,color:#11111b,stroke:#89b4fa
+    </pre></div>
+    <div class="note note-warn"><code>paths.ts</code> is the primary coupling chokepoint &mdash; it hardcodes paths into OC's directory structure. Nearly every module imports it.</div>
+    <p><strong>Module categories:</strong></p>
+    <ul>
+      <li><span class="tag tag-portable">Portable</span> 11 modules (2,319 LOC) &mdash; no OC imports, can move directly</li>
+      <li><span class="tag tag-rearch">Re-architect</span> 19 modules (2,137 LOC) &mdash; coupled to OC, need refactoring</li>
+      <li><span class="tag tag-delete">Delete</span> 4 modules (1,444 LOC) &mdash; OC shims, replaced by new infrastructure</li>
+    </ul>
+  </div>
+  <div class="tab-panel" id="core-architecture-proposed" data-tab="proposed">
+    <h3>Runtime Coordinator Architecture</h3>
+    <p>The Runtime is the central coordinator. It owns the event bus, configuration, hooks, cron, and session management. Everything registers with the Runtime.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+graph TB
+  subgraph Runtime["RUNTIME"]
+    Events["Events (EventEmitter)"]
+    Config["Config (layered)"]
+    Hooks["Hooks (lifecycle)"]
+    Cron["Cron (scheduling)"]
+    Sessions["Session Manager"]
+  end
+
+  subgraph Gateway["GATEWAY"]
+    HTTP["HTTP + WS Server"]
+    Auth["Auth Pipeline"]
+    TS["Tailscale (DNS, TLS)"]
+    RPC["RPC Handler"]
+  end
+
+  subgraph Providers["PROVIDERS"]
+    PI["Provider Interface"]
+    ClaudeCode["Claude Code"]
+    OpenAI["OpenAI-compat"]
+    Ollama["Ollama"]
+    Google["Google"]
+  end
+
+  subgraph Channels["CHANNELS"]
+    CI["Channel Interface"]
+    Discord["Discord"]
+    Webchat["Webchat"]
+    ACP["ACP"]
+    IRC["IRC"]
+  end
+
+  subgraph Services["REGISTERED SERVICES"]
+    Tools["Tools: canvas, web_search, memory, inerrata, ..."]
+    Media["Media: vision, tts, image_gen, ..."]
+    HookImpl["Hooks: nodes/flows, compaction, security, ..."]
+    Skills["Skills: meta-registration bundles"]
+  end
+
+  Channels --> Gateway
+  Gateway --> Runtime
+  Runtime --> Providers
+  Runtime --> Sessions
+  Services -.->|register with| Runtime
+
+  style Runtime fill:#89b4fa,color:#11111b,stroke:#89b4fa
+  style Gateway fill:#94e2d5,color:#11111b,stroke:#94e2d5
+  style Providers fill:#f9e2af,color:#11111b,stroke:#f9e2af
+  style Channels fill:#f38ba8,color:#11111b,stroke:#f38ba8
+    </pre></div>
+
+    <h3>Five Core Interfaces</h3>
+    <p>All extensibility is through five interfaces. No "Platform" abstraction &mdash; that grouping was dissolved.</p>
+
+    <div class="interface-block">
+<span class="comment">// 1. Provider &mdash; model execution backend</span>
+<span class="kw">interface</span> <span class="type">Provider</span> <span class="paren">{</span>
+  <span class="prop">id</span>: <span class="type">string</span>;
+  <span class="prop">models</span>: <span class="type">string</span>[];
+  <span class="prop">execute</span>(request: <span class="type">TurnRequest</span>): <span class="type">AsyncIterable</span>&lt;<span class="type">TurnEvent</span>&gt;;
+  <span class="prop">supportsModel</span>(modelId: <span class="type">string</span>): <span class="type">boolean</span>;
+<span class="paren">}</span>
+
+<span class="comment">// 2. Channel &mdash; communication transport</span>
+<span class="kw">interface</span> <span class="type">Channel</span> <span class="paren">{</span>
+  <span class="prop">id</span>: <span class="type">string</span>;
+  <span class="prop">connect</span>(): <span class="type">Promise</span>&lt;<span class="type">void</span>&gt;;
+  <span class="prop">disconnect</span>(): <span class="type">Promise</span>&lt;<span class="type">void</span>&gt;;
+  <span class="prop">send</span>(target: <span class="type">string</span>, message: <span class="type">OutboundMessage</span>): <span class="type">Promise</span>&lt;<span class="type">void</span>&gt;;
+  <span class="prop">onMessage</span>(handler: (msg: <span class="type">InboundMessage</span>) =&gt; <span class="type">void</span>): <span class="type">void</span>;
+<span class="paren">}</span>
+
+<span class="comment">// 3. MediaProcessor &mdash; non-text content</span>
+<span class="kw">interface</span> <span class="type">MediaProcessor</span> <span class="paren">{</span>
+  <span class="prop">type</span>: <span class="str">'vision'</span> | <span class="str">'tts'</span> | <span class="str">'image-gen'</span> | <span class="str">'audio'</span> | <span class="str">'video-gen'</span> | <span class="str">'music-gen'</span>;
+  <span class="prop">process</span>(input: <span class="type">MediaInput</span>): <span class="type">Promise</span>&lt;<span class="type">MediaOutput</span>&gt;;
+  <span class="prop">capabilities</span>(): <span class="type">MediaCapability</span>[];
+<span class="paren">}</span>
+
+<span class="comment">// 4. Tool &mdash; agent-callable capability</span>
+<span class="kw">interface</span> <span class="type">Tool</span> <span class="paren">{</span>
+  <span class="prop">name</span>: <span class="type">string</span>;
+  <span class="prop">description</span>: <span class="type">string</span>;
+  <span class="prop">schema</span>: <span class="type">JSONSchema</span>;
+  <span class="prop">execute</span>(args: <span class="type">Record</span>&lt;<span class="type">string</span>, <span class="type">unknown</span>&gt;, ctx: <span class="type">ToolContext</span>): <span class="type">Promise</span>&lt;<span class="type">ToolResult</span>&gt;;
+<span class="paren">}</span>
+
+<span class="comment">// 5. Hook &mdash; lifecycle extension point</span>
+<span class="kw">interface</span> <span class="type">Hook</span> <span class="paren">{</span>
+  <span class="prop">event</span>: <span class="type">string</span>;
+  <span class="prop">priority</span>?: <span class="type">number</span>;
+  <span class="prop">handler</span>(ctx: <span class="type">HookContext</span>): <span class="type">Promise</span>&lt;<span class="type">void</span> | <span class="type">HookResult</span>&gt;;
+<span class="paren">}</span>
+    </div>
+
+    <div class="note">
+      <strong>What happened to the old groupings?</strong><br>
+      <strong>ACP</strong> &rarr; becomes a Channel. <strong>Canvas</strong> &rarr; becomes a Tool. <strong>Nodes</strong> &rarr; becomes Hooks + Config. <strong>Skills</strong> &rarr; become a meta-registration pattern (a skill is just a bundle that registers Tools + Hooks + Config).
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: GATEWAY & NETWORKING -->
+<!-- ============================================================ -->
+<div class="section-card" id="gateway-networking">
+  <div class="section-heading">
+    <h2><span class="sec-num">4.</span> Gateway &amp; Networking</h2>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab(this, 'gateway-networking-current')">
+      <span class="tab-dot tab-dot-current"></span>Current
+    </button>
+    <button class="tab-btn" onclick="switchTab(this, 'gateway-networking-proposed')">
+      <span class="tab-dot tab-dot-proposed"></span>Proposed
+    </button>
+  </div>
+  <div class="tab-panel active" id="gateway-networking-current" data-tab="current">
+    <h3>WebSocket Client to OC Gateway</h3>
+    <p>Imago connects <strong>as a client</strong> to OC's gateway over WebSocket on port <code>18789</code>. All tool calls from the Claude Code subprocess route through this bridge.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+graph LR
+  subgraph Claude["Claude Code Subprocess"]
+    MCP["MCP Server"]
+  end
+
+  subgraph Imago["Imago Plugin"]
+    Bridge["MCP Bridge<br/>(gateway-tools.ts)"]
+    WS["WS Client"]
+  end
+
+  subgraph OC["OpenClaw"]
+    GW["OC Gateway<br/>:18789"]
+    Dispatch["Tool Dispatcher"]
+    Services["OC Services"]
+  end
+
+  MCP -->|tool call| Bridge
+  Bridge -->|WS message| WS
+  WS -->|WebSocket| GW
+  GW --> Dispatch
+  Dispatch --> Services
+  Services -->|result| Dispatch
+  Dispatch -->|WS response| GW
+  GW -->|WebSocket| WS
+  WS -->|result| Bridge
+  Bridge -->|tool result| MCP
+
+  style Bridge fill:#fab387,color:#11111b
+  style GW fill:#89b4fa,color:#11111b
+    </pre></div>
+    <p><strong>Pain points:</strong></p>
+    <ul>
+      <li>Every tool call has network latency (localhost WS round-trip)</li>
+      <li>OC handles all auth &mdash; Imago has no auth awareness</li>
+      <li><code>gateway-tools.ts</code> (231 LOC) is a serialization shim &mdash; pure overhead</li>
+      <li>If OC gateway restarts, Imago loses tool access until reconnect</li>
+    </ul>
+  </div>
+  <div class="tab-panel" id="gateway-networking-proposed" data-tab="proposed">
+    <h3>Imago IS the Gateway</h3>
+    <p>Imago runs its own HTTP+WS server. Tailscale provides the networking foundation: MagicDNS for service discovery, whois for identity, automatic TLS certificates, and Funnel for public endpoints.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+graph TB
+  subgraph Network["Tailscale Network"]
+    DNS["MagicDNS<br/>(imago.tail1234.ts.net)"]
+    Whois["Whois Identity"]
+    TLS["Auto TLS Certs"]
+    Funnel["Funnel (Public)"]
+  end
+
+  subgraph Gateway["Imago Gateway"]
+    HTTP["HTTP Server"]
+    WSS["WebSocket Server"]
+    AuthPipe["Auth Pipeline"]
+    RPC["RPC Handler"]
+  end
+
+  subgraph Auth["Auth Pipeline"]
+    DevAuth["Device Auth<br/>(Ed25519)"]
+    TSWhois["Tailscale Whois"]
+    Bearer["Bearer Token"]
+  end
+
+  subgraph Internal["Internal Services"]
+    Tools["Tool Registry"]
+    Media["Media Processors"]
+    Sessions["Session Manager"]
+  end
+
+  DNS --> Gateway
+  TLS --> Gateway
+  Funnel --> HTTP
+
+  HTTP --> AuthPipe
+  WSS --> AuthPipe
+  AuthPipe --> DevAuth
+  AuthPipe --> TSWhois
+  AuthPipe --> Bearer
+
+  RPC --> Tools
+  RPC --> Media
+  RPC --> Sessions
+
+  style Gateway fill:#89b4fa,color:#11111b,stroke:#89b4fa
+  style Network fill:#94e2d5,color:#11111b,stroke:#94e2d5
+    </pre></div>
+    <p><strong>Key changes:</strong></p>
+    <ul>
+      <li><strong>No WS bridge</strong> &mdash; <code>gateway-tools.ts</code> is deleted; tools call internal services directly (no network hop)</li>
+      <li><strong>Tailscale-first networking</strong> &mdash; MagicDNS, auto-TLS, identity via whois, Funnel for public access</li>
+      <li><strong>Auth pipeline</strong> &mdash; three-layer auth: device identity (Ed25519 keys), Tailscale whois, bearer tokens</li>
+      <li><strong>RPC handler</strong> &mdash; internal RPC for inter-service calls; external RPC for ACP and other agents</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5: SESSION MANAGEMENT -->
+<!-- ============================================================ -->
+<div class="section-card" id="session-management">
+  <div class="section-heading">
+    <h2><span class="sec-num">5.</span> Session Management</h2>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab(this, 'session-management-current')">
+      <span class="tab-dot tab-dot-current"></span>Current
+    </button>
+    <button class="tab-btn" onclick="switchTab(this, 'session-management-proposed')">
+      <span class="tab-dot tab-dot-proposed"></span>Proposed
+    </button>
+  </div>
+  <div class="tab-panel active" id="session-management-current" data-tab="current">
+    <h3>Thin Session Sidecar</h3>
+    <p>OC manages all session lifecycle. Imago has a thin sidecar (<code>session.ts</code>, 185 LOC) that maps OC session IDs to Claude Code session IDs via binding files on disk.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+graph LR
+  subgraph OC["OpenClaw"]
+    OCSession["OC Session Manager<br/>(full lifecycle)"]
+    OCID["Session ID: oc-abc-123"]
+  end
+
+  subgraph Imago["Imago (session.ts, 185 LOC)"]
+    Binding["Binding File<br/>oc-abc-123 → cc-xyz-789"]
+    CCID["Claude Code Session ID"]
+  end
+
+  subgraph CC["Claude Code"]
+    Subprocess["Subprocess<br/>with --session-id"]
+  end
+
+  OCSession -->|provides ID| OCID
+  OCID -->|mapped by| Binding
+  Binding -->|resolves to| CCID
+  CCID -->|passed to| Subprocess
+
+  style OCSession fill:#89b4fa,color:#11111b
+  style Binding fill:#fab387,color:#11111b
+    </pre></div>
+    <p><strong>Limitations:</strong></p>
+    <ul>
+      <li>No session lifecycle management &mdash; OC owns create/destroy</li>
+      <li>No session routing logic &mdash; OC decides which session gets which message</li>
+      <li>No write locking &mdash; concurrent turns can corrupt state</li>
+      <li>No maintenance (pruning, rotation, disk budgets)</li>
+      <li>Binding files are fragile &mdash; manual mapping with no error recovery</li>
+    </ul>
+  </div>
+  <div class="tab-panel" id="session-management-proposed" data-tab="proposed">
+    <h3>Full Session Management</h3>
+    <p>Imago owns the complete session lifecycle with four sub-systems: Store, Router, Lock, and Maintenance.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+graph TB
+  subgraph SessionMgr["Session Manager"]
+    Store["Store<br/>CRUD, metadata, JSONL persistence"]
+    Router["Router<br/>message → session routing"]
+    Lock["Lock<br/>write locking, queue"]
+    Maint["Maintenance<br/>pruning, rotation, disk budgets"]
+  end
+
+  subgraph Routing["Composite Key Routing"]
+    Key["agent:main:discord:channel:12345"]
+    Lookup["Key → Session lookup"]
+    Create["Auto-create if missing"]
+  end
+
+  subgraph Lifecycle["Session Lifecycle FSM"]
+    Idle(("idle"))
+    Running(("running"))
+    Compacting(("compacting"))
+    Done(("done"))
+
+    Idle -->|message arrives| Running
+    Running -->|turn complete| Idle
+    Running -->|token limit| Compacting
+    Compacting -->|compact done| Idle
+    Idle -->|pruned| Done
+  end
+
+  Router --> Routing
+  Store --> Lifecycle
+
+  style SessionMgr fill:#89b4fa,color:#11111b,stroke:#89b4fa
+  style Lifecycle fill:#11111b,color:#cdd6f4,stroke:#89b4fa
+    </pre></div>
+
+    <p><strong>Session Store:</strong> CRUD operations, metadata tracking (last active, turn count, token usage), JSONL persistence for turn history, session bindings to provider session IDs.</p>
+
+    <p><strong>Session Router:</strong> Routes inbound messages to sessions using composite keys like <code>agent:main:discord:channel:&lt;id&gt;</code>. Supports auto-creation, group routing, and DM routing.</p>
+
+    <p><strong>Session Lock:</strong> Write-locking prevents concurrent turns. Messages arriving during an active turn are queued. Timeout-based lock release prevents deadlocks.</p>
+
+    <p><strong>Session Maintenance:</strong> Periodic pruning of stale sessions, log rotation, disk budget enforcement, compaction triggers based on token thresholds.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6: PROVIDER SYSTEM -->
+<!-- ============================================================ -->
+<div class="section-card" id="provider-system">
+  <div class="section-heading">
+    <h2><span class="sec-num">6.</span> Provider System</h2>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab(this, 'provider-system-current')">
+      <span class="tab-dot tab-dot-current"></span>Current
+    </button>
+    <button class="tab-btn" onclick="switchTab(this, 'provider-system-proposed')">
+      <span class="tab-dot tab-dot-proposed"></span>Proposed
+    </button>
+  </div>
+  <div class="tab-panel active" id="provider-system-current" data-tab="current">
+    <h3>Single Provider, No Abstraction</h3>
+    <p>Imago implements OC's <code>AgentHarness</code> interface and calls the Claude Code SDK directly. There is no provider abstraction &mdash; the SDK is hardwired.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+graph LR
+  OC["OC Session"] -->|AgentHarness.dispatch| Imago["Imago Plugin"]
+  Imago -->|direct SDK call| CC["Claude Code SDK"]
+  CC -->|subprocess| Claude["Claude API"]
+
+  style Imago fill:#89b4fa,color:#11111b
+  style CC fill:#f9e2af,color:#11111b
+    </pre></div>
+    <p><strong>Characteristics:</strong></p>
+    <ul>
+      <li><code>AgentHarness</code> is OC's interface &mdash; Imago conforms to it</li>
+      <li>Only one model backend: Claude via Claude Code SDK</li>
+      <li>No model routing &mdash; every request goes to Claude</li>
+      <li>No provider discovery or hot-swapping</li>
+      <li>Subprocess management is manual (spawn, monitor, restart)</li>
+    </ul>
+  </div>
+  <div class="tab-panel" id="provider-system-proposed" data-tab="proposed">
+    <h3>Multi-Provider Registry</h3>
+    <p>Providers register with the Runtime. Each provider implements the <code>Provider</code> interface and declares which models it supports. The Runtime routes model requests to the appropriate provider.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+graph TB
+  subgraph Runtime["Runtime"]
+    Registry["Provider Registry"]
+    ModelRouter["Model Router"]
+  end
+
+  subgraph Providers["Provider Implementations"]
+    CC["Claude Code Provider<br/>claude-opus-4-6, claude-sonnet-4, ..."]
+    OAI["OpenAI-Compatible<br/>gpt-4o, deepseek, ..."]
+    Goog["Google Provider<br/>gemini-2.5-pro, ..."]
+    OL["Ollama Provider<br/>llama3, mistral, ..."]
+  end
+
+  subgraph CC_Detail["Claude Code Provider Detail"]
+    Harness["Harness (orchestrator)"]
+    Pool["Worker Pool"]
+    Protocol["Protocol Handler"]
+    Stream["Stream Processor"]
+    Query["Query Builder"]
+    MCPBridge["MCP Bridge (internal)"]
+  end
+
+  Registry --> ModelRouter
+  ModelRouter --> CC
+  ModelRouter --> OAI
+  ModelRouter --> Goog
+  ModelRouter --> OL
+
+  CC --> CC_Detail
+
+  style Runtime fill:#89b4fa,color:#11111b,stroke:#89b4fa
+  style CC fill:#f9e2af,color:#11111b,stroke:#f9e2af
+    </pre></div>
+
+    <p><strong>Provider discovery:</strong></p>
+    <pre><code>// Register a provider
+runtime.registerProvider(claudeCodeProvider);
+
+// Route to provider by model ID
+const provider = runtime.getProvider('claude-opus-4-6');
+const events = provider.execute(turnRequest);
+
+// Stream turn events
+for await (const event of events) {
+  // TurnEvent: 'text', 'tool_call', 'tool_result', 'error', 'done'
+  runtime.emit('turn:event', event);
+}</code></pre>
+
+    <p><strong>Claude Code provider</strong> remains the primary implementation, with its internal structure refactored from flat files into a clean sub-module: harness (orchestrator), worker pool (subprocess management), protocol handler (Claude Code protocol), stream processor (event stream parsing), query builder (prompt assembly), and MCP bridge (internal tool routing).</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 7: CHANNEL SYSTEM -->
+<!-- ============================================================ -->
+<div class="section-card" id="channel-system">
+  <div class="section-heading">
+    <h2><span class="sec-num">7.</span> Channel System</h2>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab(this, 'channel-system-current')">
+      <span class="tab-dot tab-dot-current"></span>Current
+    </button>
+    <button class="tab-btn" onclick="switchTab(this, 'channel-system-proposed')">
+      <span class="tab-dot tab-dot-proposed"></span>Proposed
+    </button>
+  </div>
+  <div class="tab-panel active" id="channel-system-current" data-tab="current">
+    <h3>No Direct Channel Access</h3>
+    <p>OC provides Discord and webchat. Imago receives messages through OC's <code>EmbeddedRunAttemptParams</code> interface &mdash; pre-processed, pre-routed, with no channel metadata.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+graph LR
+  Discord["Discord Bot<br/>(OC-owned)"]
+  Webchat["Webchat<br/>(OC-owned)"]
+  OC["OC Gateway"]
+  Imago["Imago Plugin"]
+
+  Discord -->|message| OC
+  Webchat -->|message| OC
+  OC -->|EmbeddedRunAttemptParams| Imago
+
+  style Discord fill:#5865F2,color:#fff
+  style OC fill:#89b4fa,color:#11111b
+  style Imago fill:#fab387,color:#11111b
+    </pre></div>
+    <p><strong>Limitations:</strong></p>
+    <ul>
+      <li>Cannot add new channels without OC changes</li>
+      <li>No channel metadata (guild info, user roles, message context)</li>
+      <li>Cannot send proactive messages (only respond to OC dispatches)</li>
+      <li>No multi-guild support or group routing</li>
+      <li>ACP (inter-agent communication) requires OC mediation</li>
+    </ul>
+  </div>
+  <div class="tab-panel" id="channel-system-proposed" data-tab="proposed">
+    <h3>Channel Interface &amp; Implementations</h3>
+    <p>Channels are first-class citizens. Each channel implements the <code>Channel</code> interface and registers with the Runtime. Adding a new transport is implementing one interface.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+graph TB
+  subgraph Channels["Channel Implementations"]
+    Discord["Discord Channel<br/>discord.js, multi-guild,<br/>group routing, reactions"]
+    Webchat["Webchat Channel<br/>WS-based, auth via gateway"]
+    ACP["ACP Channel<br/>Agent Communication Protocol,<br/>inter-agent messaging"]
+    IRC["IRC Channel<br/>future transport"]
+  end
+
+  subgraph Interface["Channel Interface"]
+    Connect["connect()"]
+    Disconnect["disconnect()"]
+    Send["send(target, message)"]
+    OnMessage["onMessage(handler)"]
+  end
+
+  subgraph Gateway["Gateway"]
+    Router["Message Router"]
+    Auth["Auth Pipeline"]
+  end
+
+  Discord --> Interface
+  Webchat --> Interface
+  ACP --> Interface
+  IRC --> Interface
+
+  Interface --> Gateway
+
+  style Discord fill:#5865F2,color:#fff,stroke:#5865F2
+  style ACP fill:#a6e3a1,color:#11111b,stroke:#a6e3a1
+  style Webchat fill:#94e2d5,color:#11111b,stroke:#94e2d5
+  style IRC fill:#f9e2af,color:#11111b,stroke:#f9e2af
+    </pre></div>
+    <p><strong>Discord Channel:</strong> Full discord.js integration. Multi-guild support with per-guild configuration. Group channel routing (shared sessions). Reaction handling, thread support, attachment processing.</p>
+    <p><strong>ACP Channel:</strong> Agent Communication Protocol for inter-agent messaging. Imago can communicate with other ACP-compliant agents as peers. ACP was previously a "lateral service" &mdash; now it is simply a Channel implementation.</p>
+    <p><strong>Webchat Channel:</strong> WebSocket-based real-time chat. Authenticated through the gateway auth pipeline. Supports streaming responses.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 8: TOOLS & MEDIA -->
+<!-- ============================================================ -->
+<div class="section-card" id="tools-media">
+  <div class="section-heading">
+    <h2><span class="sec-num">8.</span> Tools &amp; Media</h2>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab(this, 'tools-media-current')">
+      <span class="tab-dot tab-dot-current"></span>Current
+    </button>
+    <button class="tab-btn" onclick="switchTab(this, 'tools-media-proposed')">
+      <span class="tab-dot tab-dot-proposed"></span>Proposed
+    </button>
+  </div>
+  <div class="tab-panel active" id="tools-media-current" data-tab="current">
+    <h3>MCP Tools with Gateway Bridge</h3>
+    <p>Tools are defined in <code>mcp-tools.ts</code> (485 LOC) as an MCP server. "Bridge" tools that need OC services delegate through <code>bridge/gateway-tools.ts</code> (231 LOC) via WebSocket RPC to the OC gateway.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+graph TB
+  subgraph MCP["MCP Server (mcp-tools.ts, 485 LOC)"]
+    Native["Native Tools<br/>memory, canvas, cron, nodes"]
+    BridgeTools["Bridge Tools<br/>web_search, image, tts, browser"]
+  end
+
+  subgraph Bridge["Bridge (gateway-tools.ts, 231 LOC)"]
+    Serialize["Serialize args"]
+    WSCall["WS RPC call"]
+    Deserialize["Deserialize result"]
+  end
+
+  subgraph OC["OC Gateway"]
+    Dispatch["Tool Dispatcher"]
+    OCServices["OC Tool Services"]
+  end
+
+  Native -->|direct impl| Result["Tool Result"]
+  BridgeTools --> Serialize
+  Serialize --> WSCall
+  WSCall -->|WebSocket| Dispatch
+  Dispatch --> OCServices
+  OCServices -->|result| Dispatch
+  Dispatch -->|WebSocket| Deserialize
+  Deserialize --> Result
+
+  style Bridge fill:#f38ba8,color:#11111b
+  style MCP fill:#fab387,color:#11111b
+    </pre></div>
+    <p><strong>No media abstraction.</strong> Media processing (vision, TTS, image generation) is handled ad-hoc through individual bridge tool calls. There is no unified interface for media capabilities.</p>
+  </div>
+  <div class="tab-panel" id="tools-media-proposed" data-tab="proposed">
+    <h3>Tool Registry &amp; Media Processors</h3>
+    <p>Tools register with the Runtime and are discoverable by agents. <code>gateway-tools.ts</code> is <strong>deleted</strong> &mdash; all tools call internal services directly. Media processing gets a proper interface.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+graph TB
+  subgraph ToolSystem["Tool Registry"]
+    Registry["Tool Registry<br/>register, discover, execute"]
+    Canvas["canvas"]
+    WebSearch["web_search"]
+    Memory["memory"]
+    Inerrata["inerrata"]
+    Browser["browser"]
+    Image["image"]
+    TTS["tts"]
+    Custom["custom..."]
+  end
+
+  subgraph MediaSystem["Media Processors"]
+    MRegistry["Media Registry"]
+    Vision["Vision Processor<br/>image analysis"]
+    AudioProc["Audio Processor<br/>speech-to-text"]
+    ImageGen["Image Generator<br/>text-to-image"]
+    TTSProc["TTS Processor<br/>text-to-speech"]
+    VideoGen["Video Generator"]
+    MusicGen["Music Generator"]
+  end
+
+  subgraph Agent["Agent (via Provider)"]
+    ToolCall["tool_call event"]
+  end
+
+  ToolCall -->|runtime.executeTool| Registry
+  Registry --> Canvas
+  Registry --> WebSearch
+  Registry --> Memory
+  Registry --> Inerrata
+  Registry --> Browser
+
+  MRegistry --> Vision
+  MRegistry --> AudioProc
+  MRegistry --> ImageGen
+  MRegistry --> TTSProc
+
+  style ToolSystem fill:#89b4fa,color:#11111b,stroke:#89b4fa
+  style MediaSystem fill:#f9e2af,color:#11111b,stroke:#f9e2af
+    </pre></div>
+    <p><strong>Tool registration:</strong></p>
+    <pre><code>// Tools register with the Runtime
+runtime.registerTool({
+  name: 'canvas',
+  description: 'Create and manage visual canvases',
+  schema: canvasSchema,
+  execute: async (args, ctx) => {
+    // Direct internal service call — no network hop
+    return canvasService.handle(args, ctx);
+  }
+});
+
+// Agents discover tools via the registry
+const tools = runtime.getTools(); // → all registered tools
+const tool = runtime.getTool('canvas'); // → specific tool</code></pre>
+    <p><strong>MediaProcessor registration:</strong> Each processor declares its capabilities. The Runtime can query available media capabilities and route processing requests to the appropriate processor.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 9: MODULE LAYOUT -->
+<!-- ============================================================ -->
+<div class="section-card" id="module-layout">
+  <div class="section-heading">
+    <h2><span class="sec-num">9.</span> Module Layout</h2>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab(this, 'module-layout-current')">
+      <span class="tab-dot tab-dot-current"></span>Current
+    </button>
+    <button class="tab-btn" onclick="switchTab(this, 'module-layout-proposed')">
+      <span class="tab-dot tab-dot-proposed"></span>Proposed
+    </button>
+  </div>
+  <div class="tab-panel active" id="module-layout-current" data-tab="current">
+    <h3>Flat Structure (~30 files in src/)</h3>
+    <table>
+      <thead>
+        <tr><th>File</th><th>LOC</th><th>Status</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>harness.ts</code></td><td>380</td><td><span class="tag tag-rearch">Re-architect</span></td><td>AgentHarness impl, OC-coupled entry point</td></tr>
+        <tr><td><code>mcp-tools.ts</code></td><td>485</td><td><span class="tag tag-rearch">Re-architect</span></td><td>MCP tool definitions, mixed native+bridge</td></tr>
+        <tr><td><code>bridge/gateway-tools.ts</code></td><td>231</td><td><span class="tag tag-delete">Delete</span></td><td>WS RPC shim to OC gateway</td></tr>
+        <tr><td><code>bridge/types.ts</code></td><td>89</td><td><span class="tag tag-delete">Delete</span></td><td>OC bridge types</td></tr>
+        <tr><td><code>paths.ts</code></td><td>124</td><td><span class="tag tag-delete">Delete</span></td><td>OC path coupling chokepoint</td></tr>
+        <tr><td><code>oc-shim.ts</code></td><td>1000</td><td><span class="tag tag-delete">Delete</span></td><td>OC compatibility shim</td></tr>
+        <tr><td><code>session.ts</code></td><td>185</td><td><span class="tag tag-rearch">Re-architect</span></td><td>Thin session ID binding sidecar</td></tr>
+        <tr><td><code>config.ts</code></td><td>210</td><td><span class="tag tag-rearch">Re-architect</span></td><td>Config, imports paths.ts</td></tr>
+        <tr><td><code>events.ts</code></td><td>95</td><td><span class="tag tag-portable">Portable</span></td><td>Event types and emitter</td></tr>
+        <tr><td><code>prompt.ts</code></td><td>340</td><td><span class="tag tag-portable">Portable</span></td><td>System prompt assembly</td></tr>
+        <tr><td><code>memory.ts</code></td><td>220</td><td><span class="tag tag-portable">Portable</span></td><td>Memory read/write/search</td></tr>
+        <tr><td><code>canvas.ts</code></td><td>175</td><td><span class="tag tag-portable">Portable</span></td><td>Canvas tool</td></tr>
+        <tr><td><code>cron.ts</code></td><td>150</td><td><span class="tag tag-portable">Portable</span></td><td>Cron scheduling</td></tr>
+        <tr><td><code>nodes.ts</code></td><td>280</td><td><span class="tag tag-rearch">Re-architect</span></td><td>Node/flow execution, partial OC coupling</td></tr>
+        <tr><td><code>subagents.ts</code></td><td>190</td><td><span class="tag tag-portable">Portable</span></td><td>Sub-agent spawning</td></tr>
+        <tr><td><code>compaction.ts</code></td><td>160</td><td><span class="tag tag-portable">Portable</span></td><td>Context compaction</td></tr>
+        <tr><td><code>vision.ts</code></td><td>120</td><td><span class="tag tag-portable">Portable</span></td><td>Image analysis</td></tr>
+        <tr><td><code>tts.ts</code></td><td>98</td><td><span class="tag tag-portable">Portable</span></td><td>Text-to-speech</td></tr>
+        <tr><td><code>image-gen.ts</code></td><td>115</td><td><span class="tag tag-portable">Portable</span></td><td>Image generation</td></tr>
+        <tr><td><code>inerrata.ts</code></td><td>196</td><td><span class="tag tag-portable">Portable</span></td><td>Inerrata integration</td></tr>
+        <tr><td><code>stream.ts</code></td><td>155</td><td><span class="tag tag-rearch">Re-architect</span></td><td>Response stream processing</td></tr>
+        <tr><td><code>protocol.ts</code></td><td>130</td><td><span class="tag tag-rearch">Re-architect</span></td><td>Claude Code protocol handling</td></tr>
+        <tr><td><code>worker.ts</code></td><td>145</td><td><span class="tag tag-rearch">Re-architect</span></td><td>Subprocess management</td></tr>
+        <tr><td><code>query.ts</code></td><td>110</td><td><span class="tag tag-rearch">Re-architect</span></td><td>Query/prompt building</td></tr>
+        <tr><td><code>acp.ts</code></td><td>205</td><td><span class="tag tag-rearch">Re-architect</span></td><td>Agent Communication Protocol</td></tr>
+        <tr><td><code>security.ts</code></td><td>88</td><td><span class="tag tag-rearch">Re-architect</span></td><td>Security/audit hooks</td></tr>
+        <tr><td><code>discord.ts</code></td><td>175</td><td><span class="tag tag-rearch">Re-architect</span></td><td>Discord-specific handling</td></tr>
+        <tr><td><code>types.ts</code></td><td>180</td><td><span class="tag tag-rearch">Re-architect</span></td><td>Core type definitions</td></tr>
+        <tr><td><code>index.ts</code></td><td>45</td><td><span class="tag tag-rearch">Re-architect</span></td><td>Plugin entry point</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top: 1rem;"><strong>Totals:</strong> <span class="tag tag-portable">Portable</span> 11 modules / 2,319 LOC &nbsp;&bull;&nbsp; <span class="tag tag-rearch">Re-architect</span> 15 modules / 2,137 LOC &nbsp;&bull;&nbsp; <span class="tag tag-delete">Delete</span> 4 modules / 1,444 LOC</p>
+  </div>
+  <div class="tab-panel" id="module-layout-proposed" data-tab="proposed">
+    <h3>Hierarchical Structure</h3>
+    <pre><code>src/
+├── core/                          # Runtime foundation
+│   ├── runtime.ts                 # Central coordinator, event bus, registry
+│   ├── events.ts                  # Event types and typed emitter
+│   ├── config.ts                  # Layered config (defaults → file → env → runtime)
+│   ├── hooks.ts                   # Hook registry and lifecycle dispatch
+│   ├── context.ts                 # Turn context and dependency injection
+│   └── subagents.ts               # Sub-agent spawning and management
+│
+├── gateway/                       # Network boundary
+│   ├── server.ts                  # HTTP + WebSocket server
+│   ├── auth.ts                    # Auth pipeline (device, Tailscale, bearer)
+│   ├── tailscale.ts               # Tailscale integration (DNS, whois, TLS)
+│   └── rpc.ts                     # RPC handler (internal + external)
+│
+├── sessions/                      # Session management
+│   ├── store.ts                   # CRUD, metadata, JSONL persistence
+│   ├── router.ts                  # Message → session routing, composite keys
+│   ├── lock.ts                    # Write locking, queue management
+│   ├── maintenance.ts             # Pruning, rotation, disk budgets
+│   └── bindings.ts                # Provider session ID bindings
+│
+├── providers/                     # Model execution
+│   ├── interface.ts               # Provider interface definition
+│   └── claude-code/               # Claude Code SDK provider
+│       ├── harness.ts             # Orchestrator (refactored from root harness.ts)
+│       ├── worker-pool.ts         # Subprocess pool management
+│       ├── protocol.ts            # Claude Code protocol handler
+│       ├── stream.ts              # Event stream processor
+│       ├── query.ts               # Prompt/query builder
+│       └── bridge/                # Internal MCP bridge
+│           └── mcp-server.ts      # MCP tool server (no WS, direct calls)
+│
+├── channels/                      # Communication transports
+│   ├── interface.ts               # Channel interface definition
+│   ├── discord/                   # Discord implementation
+│   │   ├── client.ts              # discord.js wrapper, multi-guild
+│   │   ├── routing.ts             # Group/DM routing logic
+│   │   └── media.ts               # Attachment processing
+│   └── webchat/                   # Webchat implementation
+│       └── handler.ts             # WS-based real-time chat
+│
+├── tools/                         # Tool system
+│   ├── registry.ts                # Tool registration and discovery
+│   ├── definitions/               # Tool schemas and metadata
+│   └── native/                    # Built-in tool implementations
+│       ├── canvas.ts
+│       ├── memory.ts
+│       ├── web-search.ts
+│       ├── browser.ts
+│       ├── cron.ts
+│       └── nodes.ts               # Refactored as Hook + Tool hybrid
+│
+├── media/                         # Media processing
+│   ├── interface.ts               # MediaProcessor interface
+│   └── processors/
+│       ├── vision.ts
+│       ├── tts.ts
+│       ├── image-gen.ts
+│       ├── audio.ts
+│       └── video-gen.ts
+│
+├── auth/                          # Authentication
+│   └── device.ts                  # Ed25519 device identity
+│
+└── integrations/                  # External service integrations
+    └── inerrata.ts                # Inerrata client</code></pre>
+    <div class="note">The hierarchy enforces dependency direction: <strong>channels/ &rarr; gateway/ &rarr; core/ &rarr; providers/</strong>. No reverse imports. Lateral services (tools/, media/) are injected via the Runtime registry.</div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 10: DEPENDENCY GRAPH -->
+<!-- ============================================================ -->
+<div class="section-card" id="dependency-graph">
+  <div class="section-heading">
+    <h2><span class="sec-num">10.</span> Dependency Graph</h2>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab(this, 'dependency-graph-current')">
+      <span class="tab-dot tab-dot-current"></span>Current
+    </button>
+    <button class="tab-btn" onclick="switchTab(this, 'dependency-graph-proposed')">
+      <span class="tab-dot tab-dot-proposed"></span>Proposed
+    </button>
+  </div>
+  <div class="tab-panel active" id="dependency-graph-current" data-tab="current">
+    <h3>Current Import Graph</h3>
+    <p>The current dependency graph is a tangled web. The <code>paths.ts</code> chokepoint couples nearly every module to OC's directory structure. <code>harness.ts</code> is the other hub with wide fan-out.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+graph TD
+  index["index.ts"] --> harness
+  harness["harness.ts"] --> session["session.ts"]
+  harness --> mcptools["mcp-tools.ts"]
+  harness --> config["config.ts"]
+  harness --> prompt["prompt.ts"]
+  harness --> stream["stream.ts"]
+  harness --> protocol["protocol.ts"]
+  harness --> worker["worker.ts"]
+  harness --> query["query.ts"]
+  harness --> events["events.ts"]
+  harness --> types["types.ts"]
+
+  mcptools --> bridge["bridge/gateway-tools.ts"]
+  mcptools --> memory["memory.ts"]
+  mcptools --> canvas["canvas.ts"]
+  mcptools --> cron["cron.ts"]
+  mcptools --> nodes["nodes.ts"]
+  mcptools --> vision["vision.ts"]
+  mcptools --> tts["tts.ts"]
+  mcptools --> imagegen["image-gen.ts"]
+  mcptools --> inerrata["inerrata.ts"]
+  mcptools --> subagents["subagents.ts"]
+  mcptools --> acp["acp.ts"]
+
+  bridge --> btypes["bridge/types.ts"]
+  bridge --> paths
+
+  config --> paths["paths.ts"]
+  session --> paths
+  nodes --> paths
+  discord["discord.ts"] --> paths
+  security["security.ts"] --> paths
+
+  paths -.->|"COUPLES TO OC"| OC["OpenClaw FS"]
+
+  classDef danger fill:#f38ba8,color:#11111b,stroke:#f38ba8
+  classDef warn fill:#fab387,color:#11111b,stroke:#fab387
+  classDef safe fill:#a6e3a1,color:#11111b,stroke:#a6e3a1
+  classDef hub fill:#89b4fa,color:#11111b,stroke:#89b4fa
+
+  class paths danger
+  class bridge,btypes,ocshim warn
+  class memory,canvas,cron,vision,tts,imagegen,inerrata,subagents,compaction,events,prompt safe
+  class harness,mcptools hub
+    </pre></div>
+    <div class="note note-warn"><strong>Red:</strong> OC coupling chokepoint. <strong>Orange:</strong> Bridge modules (deleted in migration). <strong>Green:</strong> Portable modules (no OC imports). <strong>Blue:</strong> Hub modules with high fan-out.</div>
+  </div>
+  <div class="tab-panel" id="dependency-graph-proposed" data-tab="proposed">
+    <h3>Clean Dependency Graph</h3>
+    <p>Strict unidirectional dependency flow. No reverse imports. Lateral services are injected via the Runtime registry, not imported directly.</p>
+    <div class="mermaid-wrap"><pre class="mermaid">
+graph TD
+  subgraph Channels["Channels Layer"]
+    discord["discord/"]
+    webchat["webchat/"]
+    acp_ch["acp/"]
+  end
+
+  subgraph Gateway["Gateway Layer"]
+    server["server.ts"]
+    auth["auth.ts"]
+    tailscale["tailscale.ts"]
+    rpc["rpc.ts"]
+  end
+
+  subgraph Core["Core Layer (Runtime)"]
+    runtime["runtime.ts"]
+    events["events.ts"]
+    config["config.ts"]
+    hooks["hooks.ts"]
+    context["context.ts"]
+  end
+
+  subgraph Sessions["Sessions"]
+    store["store.ts"]
+    router["router.ts"]
+    lock["lock.ts"]
+    maint["maintenance.ts"]
+  end
+
+  subgraph Providers["Providers Layer"]
+    iface["interface.ts"]
+    cc["claude-code/"]
+  end
+
+  subgraph Lateral["Lateral Services (injected)"]
+    tools["tools/"]
+    media["media/"]
+    integrations["integrations/"]
+  end
+
+  discord --> server
+  webchat --> server
+  acp_ch --> server
+
+  server --> auth
+  server --> rpc
+  auth --> tailscale
+
+  server --> runtime
+  rpc --> runtime
+
+  runtime --> events
+  runtime --> config
+  runtime --> hooks
+  runtime --> context
+  runtime --> store
+  runtime --> router
+  store --> lock
+  store --> maint
+
+  runtime --> iface
+  iface --> cc
+
+  tools -.->|register with| runtime
+  media -.->|register with| runtime
+  integrations -.->|register with| runtime
+
+  classDef channelStyle fill:#f38ba8,color:#11111b,stroke:#f38ba8
+  classDef gatewayStyle fill:#94e2d5,color:#11111b,stroke:#94e2d5
+  classDef coreStyle fill:#89b4fa,color:#11111b,stroke:#89b4fa
+  classDef providerStyle fill:#f9e2af,color:#11111b,stroke:#f9e2af
+  classDef lateralStyle fill:#a6e3a1,color:#11111b,stroke:#a6e3a1
+
+  class discord,webchat,acp_ch channelStyle
+  class server,auth,tailscale,rpc gatewayStyle
+  class runtime,events,config,hooks,context,store,router,lock,maint coreStyle
+  class iface,cc providerStyle
+  class tools,media,integrations lateralStyle
+    </pre></div>
+    <div class="note"><strong>Dependency rule:</strong> Channels &rarr; Gateway &rarr; Core &rarr; Providers. Never reverse. Lateral services register with Core via dependency injection &mdash; they are never directly imported by the layers above.</div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 11: MIGRATION PATH -->
+<!-- ============================================================ -->
+<div class="section-card" id="migration-path">
+  <div class="section-heading">
+    <h2><span class="sec-num">11.</span> Migration Path</h2>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab(this, 'migration-path-current')">
+      <span class="tab-dot tab-dot-current"></span>Current
+    </button>
+    <button class="tab-btn" onclick="switchTab(this, 'migration-path-proposed')">
+      <span class="tab-dot tab-dot-proposed"></span>Proposed
+    </button>
+  </div>
+  <div class="tab-panel active" id="migration-path-current" data-tab="current">
+    <h3>Current Codebase Summary</h3>
+    <div class="mermaid-wrap"><pre class="mermaid">
+pie title Current LOC Distribution
+  "Portable (11 modules)" : 2319
+  "Re-architect (15 modules)" : 2137
+  "Delete (4 modules)" : 1444
+    </pre></div>
+
+    <table>
+      <thead>
+        <tr><th>Category</th><th>Modules</th><th>LOC</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag tag-portable">Portable</span></td>
+          <td>events, prompt, memory, canvas, cron, subagents, compaction, vision, tts, image-gen, inerrata</td>
+          <td>2,319</td>
+          <td>Move to new locations, minor interface updates</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-rearch">Re-architect</span></td>
+          <td>harness, mcp-tools, session, config, nodes, stream, protocol, worker, query, acp, security, discord, types, index, + others</td>
+          <td>2,137</td>
+          <td>Refactor to remove OC coupling, split into new module structure</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-delete">Delete</span></td>
+          <td>bridge/gateway-tools, bridge/types, paths, oc-shim</td>
+          <td>1,444</td>
+          <td>Remove entirely &mdash; replaced by direct internal calls</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top: 1rem;"><strong>Total existing codebase:</strong> 5,900 LOC across ~30 files</p>
+  </div>
+  <div class="tab-panel" id="migration-path-proposed" data-tab="proposed">
+    <h3>New Infrastructure &amp; Module Mapping</h3>
+
+    <h3>New Infrastructure (~5,100 LOC)</h3>
+    <table>
+      <thead>
+        <tr><th>Module</th><th>Est. LOC</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>core/runtime.ts</code></td><td>400</td><td>Central coordinator, event bus, service registry</td></tr>
+        <tr><td><code>core/hooks.ts</code></td><td>200</td><td>Hook registry and lifecycle dispatch</td></tr>
+        <tr><td><code>core/context.ts</code></td><td>150</td><td>Turn context and DI container</td></tr>
+        <tr><td><code>gateway/server.ts</code></td><td>350</td><td>HTTP + WebSocket server</td></tr>
+        <tr><td><code>gateway/auth.ts</code></td><td>250</td><td>Auth pipeline (device, Tailscale, bearer)</td></tr>
+        <tr><td><code>gateway/tailscale.ts</code></td><td>200</td><td>Tailscale integration</td></tr>
+        <tr><td><code>gateway/rpc.ts</code></td><td>200</td><td>RPC handler</td></tr>
+        <tr><td><code>sessions/store.ts</code></td><td>300</td><td>CRUD, metadata, JSONL persistence</td></tr>
+        <tr><td><code>sessions/router.ts</code></td><td>200</td><td>Composite key routing</td></tr>
+        <tr><td><code>sessions/lock.ts</code></td><td>120</td><td>Write locking and queue</td></tr>
+        <tr><td><code>sessions/maintenance.ts</code></td><td>180</td><td>Pruning, rotation, disk budgets</td></tr>
+        <tr><td><code>sessions/bindings.ts</code></td><td>100</td><td>Provider session ID bindings</td></tr>
+        <tr><td><code>providers/interface.ts</code></td><td>80</td><td>Provider interface definition</td></tr>
+        <tr><td><code>providers/claude-code/worker-pool.ts</code></td><td>250</td><td>Subprocess pool management</td></tr>
+        <tr><td><code>channels/interface.ts</code></td><td>60</td><td>Channel interface definition</td></tr>
+        <tr><td><code>channels/discord/client.ts</code></td><td>400</td><td>discord.js wrapper, multi-guild</td></tr>
+        <tr><td><code>channels/discord/routing.ts</code></td><td>150</td><td>Group/DM routing logic</td></tr>
+        <tr><td><code>channels/webchat/handler.ts</code></td><td>200</td><td>WS-based webchat</td></tr>
+        <tr><td><code>tools/registry.ts</code></td><td>180</td><td>Tool registration and discovery</td></tr>
+        <tr><td><code>media/interface.ts</code></td><td>60</td><td>MediaProcessor interface</td></tr>
+        <tr><td><code>auth/device.ts</code></td><td>150</td><td>Ed25519 device identity</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Module Migration Map</h3>
+    <table>
+      <thead>
+        <tr><th>Current File</th><th>New Location</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>harness.ts</code></td><td><code>providers/claude-code/harness.ts</code></td><td>Refactor: remove AgentHarness, implement Provider</td></tr>
+        <tr><td><code>mcp-tools.ts</code></td><td><code>providers/claude-code/bridge/mcp-server.ts</code> + <code>tools/native/*</code></td><td>Split: MCP server stays with provider, tools register independently</td></tr>
+        <tr><td><code>bridge/gateway-tools.ts</code></td><td><em>deleted</em></td><td>Delete: no WS bridge needed</td></tr>
+        <tr><td><code>bridge/types.ts</code></td><td><em>deleted</em></td><td>Delete: OC bridge types removed</td></tr>
+        <tr><td><code>paths.ts</code></td><td><em>deleted</em></td><td>Delete: replaced by core/config.ts</td></tr>
+        <tr><td><code>oc-shim.ts</code></td><td><em>deleted</em></td><td>Delete: OC compatibility layer removed</td></tr>
+        <tr><td><code>session.ts</code></td><td><code>sessions/store.ts</code> + <code>sessions/bindings.ts</code></td><td>Expand: 185 LOC → ~400 LOC full session management</td></tr>
+        <tr><td><code>config.ts</code></td><td><code>core/config.ts</code></td><td>Refactor: remove paths.ts dependency, add layered config</td></tr>
+        <tr><td><code>events.ts</code></td><td><code>core/events.ts</code></td><td>Move: portable, add typed event map</td></tr>
+        <tr><td><code>prompt.ts</code></td><td><code>providers/claude-code/query.ts</code></td><td>Move: merge with query builder</td></tr>
+        <tr><td><code>memory.ts</code></td><td><code>tools/native/memory.ts</code></td><td>Move: register as Tool</td></tr>
+        <tr><td><code>canvas.ts</code></td><td><code>tools/native/canvas.ts</code></td><td>Move: register as Tool</td></tr>
+        <tr><td><code>cron.ts</code></td><td><code>tools/native/cron.ts</code></td><td>Move: register as Tool</td></tr>
+        <tr><td><code>nodes.ts</code></td><td><code>tools/native/nodes.ts</code> + Hook registration</td><td>Refactor: becomes Hook + Tool hybrid</td></tr>
+        <tr><td><code>subagents.ts</code></td><td><code>core/subagents.ts</code></td><td>Move: portable</td></tr>
+        <tr><td><code>compaction.ts</code></td><td>Hook registration in <code>core/hooks.ts</code></td><td>Refactor: becomes a Hook</td></tr>
+        <tr><td><code>vision.ts</code></td><td><code>media/processors/vision.ts</code></td><td>Move: implement MediaProcessor</td></tr>
+        <tr><td><code>tts.ts</code></td><td><code>media/processors/tts.ts</code></td><td>Move: implement MediaProcessor</td></tr>
+        <tr><td><code>image-gen.ts</code></td><td><code>media/processors/image-gen.ts</code></td><td>Move: implement MediaProcessor</td></tr>
+        <tr><td><code>inerrata.ts</code></td><td><code>integrations/inerrata.ts</code></td><td>Move: portable</td></tr>
+        <tr><td><code>stream.ts</code></td><td><code>providers/claude-code/stream.ts</code></td><td>Move: provider-specific</td></tr>
+        <tr><td><code>protocol.ts</code></td><td><code>providers/claude-code/protocol.ts</code></td><td>Move: provider-specific</td></tr>
+        <tr><td><code>worker.ts</code></td><td><code>providers/claude-code/worker-pool.ts</code></td><td>Refactor: single worker → pool</td></tr>
+        <tr><td><code>query.ts</code></td><td><code>providers/claude-code/query.ts</code></td><td>Move: merge with prompt.ts</td></tr>
+        <tr><td><code>acp.ts</code></td><td><code>channels/acp/</code></td><td>Refactor: becomes a Channel implementation</td></tr>
+        <tr><td><code>security.ts</code></td><td>Hook registration</td><td>Refactor: becomes a Hook</td></tr>
+        <tr><td><code>discord.ts</code></td><td><code>channels/discord/client.ts</code></td><td>Refactor: full discord.js implementation</td></tr>
+        <tr><td><code>types.ts</code></td><td>Split across module-local types</td><td>Dissolve: types move to their owning modules</td></tr>
+        <tr><td><code>index.ts</code></td><td><code>core/runtime.ts</code> (new entry point)</td><td>Replace: Runtime replaces plugin entry</td></tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      <strong>LOC summary:</strong> ~2,319 LOC moves directly. ~2,137 LOC gets refactored. ~1,444 LOC deleted. ~5,100 LOC new infrastructure. Net result: ~9,556 LOC total (up from 5,900), but with proper separation of concerns and clean dependency graph.
+    </div>
+  </div>
+</div>
+
+</div><!-- end container -->
+
+<footer class="page-footer">
+  Imago Phase 3 v2 &mdash; Standalone Architecture &nbsp;|&nbsp; Date: 2026-04-23 &nbsp;|&nbsp; Companion spec: <a href="standalone-phase-3-v2.md">standalone-phase-3-v2.md</a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  // ── Mermaid initialization ──
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: 'loose',
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#89b4fa',
+      secondaryColor: '#f9e2af',
+      tertiaryColor: '#94e2d5',
+      primaryTextColor: '#cdd6f4',
+      lineColor: '#cba6f7'
+    }
+  });
+
+  // ── Tab switching ──
+  // switchTab handles individual section tab switching.
+  // It also updates the URL hash and the global toggle state.
+  window.switchTab = function(btn, panelId) {
+    var card = btn.closest('.section-card');
+    // Deactivate all tabs and panels in this card
+    card.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    card.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    // Activate clicked tab and target panel
+    btn.classList.add('active');
+    var panel = document.getElementById(panelId);
+    panel.classList.add('active');
+    // Render any unrendered mermaid diagrams in the newly visible panel
+    renderMermaidIn(panel);
+    // Update global toggle state
+    updateGlobalToggleState();
+    // Update URL hash
+    updateHash();
+  };
+
+  // ── Global toggle ──
+  window.setAllTabs = function(which) {
+    document.querySelectorAll('.section-card').forEach(function(card) {
+      var panels = card.querySelectorAll('.tab-panel');
+      var buttons = card.querySelectorAll('.tab-btn');
+      panels.forEach(function(p) { p.classList.remove('active'); });
+      buttons.forEach(function(b) { b.classList.remove('active'); });
+      // Find the panel and button matching 'which'
+      panels.forEach(function(p) {
+        if (p.getAttribute('data-tab') === which) {
+          p.classList.add('active');
+          renderMermaidIn(p);
+        }
+      });
+      buttons.forEach(function(b) {
+        var targetId = b.getAttribute('onclick').match(/'([^']+)'/g);
+        if (targetId && targetId.length >= 2) {
+          var pid = targetId[1].replace(/'/g, '');
+          var targetPanel = document.getElementById(pid);
+          if (targetPanel && targetPanel.getAttribute('data-tab') === which) {
+            b.classList.add('active');
+          }
+        }
+      });
+    });
+    // Update global buttons
+    document.getElementById('global-current').classList.toggle('active', which === 'current');
+    document.getElementById('global-proposed').classList.toggle('active', which === 'proposed');
+    // Update hash
+    location.hash = 'view=' + which;
+  };
+
+  function updateGlobalToggleState() {
+    var allCurrent = true;
+    var allProposed = true;
+    document.querySelectorAll('.section-card').forEach(function(card) {
+      var activePanel = card.querySelector('.tab-panel.active');
+      if (activePanel) {
+        if (activePanel.getAttribute('data-tab') !== 'current') allCurrent = false;
+        if (activePanel.getAttribute('data-tab') !== 'proposed') allProposed = false;
+      }
+    });
+    document.getElementById('global-current').classList.toggle('active', allCurrent);
+    document.getElementById('global-proposed').classList.toggle('active', allProposed);
+  }
+
+  // ── Hash management ──
+  function updateHash() {
+    // Build hash from active tab states
+    var states = [];
+    document.querySelectorAll('.section-card').forEach(function(card) {
+      var sectionId = card.id;
+      var activePanel = card.querySelector('.tab-panel.active');
+      if (activePanel && sectionId) {
+        var tab = activePanel.getAttribute('data-tab');
+        if (tab === 'proposed') {
+          states.push(sectionId);
+        }
+      }
+    });
+    if (states.length === 0) {
+      // All current — no hash needed
+      if (location.hash) history.replaceState(null, '', location.pathname);
+    } else if (states.length === document.querySelectorAll('.section-card').length) {
+      // All proposed
+      history.replaceState(null, '', '#view=proposed');
+    } else {
+      history.replaceState(null, '', '#proposed=' + states.join(','));
+    }
+  }
+
+  function applyHash() {
+    var hash = location.hash.replace('#', '');
+    if (!hash) return;
+    if (hash === 'view=proposed') {
+      setAllTabs('proposed');
+      return;
+    }
+    if (hash === 'view=current') {
+      setAllTabs('current');
+      return;
+    }
+    if (hash.startsWith('proposed=')) {
+      var sections = hash.replace('proposed=', '').split(',');
+      sections.forEach(function(sectionId) {
+        var card = document.getElementById(sectionId);
+        if (!card) return;
+        var panels = card.querySelectorAll('.tab-panel');
+        var buttons = card.querySelectorAll('.tab-btn');
+        panels.forEach(function(p) { p.classList.remove('active'); });
+        buttons.forEach(function(b) { b.classList.remove('active'); });
+        panels.forEach(function(p) {
+          if (p.getAttribute('data-tab') === 'proposed') {
+            p.classList.add('active');
+            renderMermaidIn(p);
+          }
+        });
+        buttons.forEach(function(b) {
+          var targetId = b.getAttribute('onclick').match(/'([^']+)'/g);
+          if (targetId && targetId.length >= 2) {
+            var pid = targetId[1].replace(/'/g, '');
+            var targetPanel = document.getElementById(pid);
+            if (targetPanel && targetPanel.getAttribute('data-tab') === 'proposed') {
+              b.classList.add('active');
+            }
+          }
+        });
+      });
+      updateGlobalToggleState();
+      return;
+    }
+    // Handle direct section anchor (e.g., #session-management)
+    var el = document.getElementById(hash);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  // ── Mermaid rendering for hidden tabs ──
+  // Mermaid diagrams inside hidden panels won't render on page load.
+  // This function finds unprocessed mermaid blocks in a container and renders them.
+  var renderedPanels = new Set();
+
+  function renderMermaidIn(container) {
+    if (renderedPanels.has(container.id)) return;
+    var unprocessed = container.querySelectorAll('.mermaid:not([data-processed])');
+    if (unprocessed.length === 0) {
+      renderedPanels.add(container.id);
+      return;
+    }
+    // mermaid.run targets the specific nodes
+    mermaid.run({ nodes: unprocessed }).then(function() {
+      renderedPanels.add(container.id);
+    }).catch(function(err) {
+      console.warn('Mermaid render error in', container.id, err);
+      renderedPanels.add(container.id);
+    });
+  }
+
+  // ── Initial render ──
+  // Render mermaid in all currently visible panels on load
+  document.addEventListener('DOMContentLoaded', function() {
+    // Render visible panels first
+    document.querySelectorAll('.tab-panel.active').forEach(function(panel) {
+      renderMermaidIn(panel);
+    });
+    // Then apply hash state (which may switch tabs and trigger more renders)
+    setTimeout(function() {
+      applyHash();
+    }, 100);
+  });
+
+  // Handle browser back/forward
+  window.addEventListener('hashchange', applyHash);
+})();
+</script>
+</body>
+</html>
