@@ -449,7 +449,7 @@ graph TB
   User -->|messages| Channels
 
   Providers -->|primary| Claude["Claude SDK"]
-  Providers -.->|secondary| Others["OpenAI / Ollama"]
+  Providers -.->|secondary| Others["OpenAI-compatible"]
 
   style Imago fill:#11111b,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
   style User fill:#1e1e2e,stroke:#cba6f7,stroke-width:2px,color:#cdd6f4
@@ -628,7 +628,7 @@ graph TB
 
   subgraph Providers["PROVIDERS"]
     Claude["Claude Code"]
-    Others["OpenAI / Ollama"]
+    Others["OpenAI-compatible"]
   end
 
   Discord -->|route| Server
@@ -933,25 +933,19 @@ graph TB
 
   subgraph Providers["Providers"]
     CC["Claude Code"]
-    OAI["OpenAI-compat"]
-    Goog["Google"]
-    OL["Ollama"]
+    OAI["OpenAI-compatible"]
   end
 
   Registry --> Router
   Router --> CC
-  Router --> OAI
-  Router -.-> Goog
-  Router -.-> OL
+  Router -.-> OAI
 
   style Runtime fill:#11111b,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
   style Providers fill:#11111b,stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
   style Registry fill:#1e1e2e,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
   style Router fill:#1e1e2e,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
   style CC fill:#1e1e2e,stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
-  style OAI fill:#1e1e2e,stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
-  style Goog fill:#1e1e2e,stroke:#6c7086,stroke-width:2px,color:#cdd6f4
-  style OL fill:#1e1e2e,stroke:#6c7086,stroke-width:2px,color:#cdd6f4
+  style OAI fill:#1e1e2e,stroke:#6c7086,stroke-width:2px,color:#cdd6f4
     </pre></div>
 
     <p><strong>Provider discovery:</strong></p>
