@@ -400,23 +400,28 @@
     <h3>Imago as OpenClaw Plugin</h3>
     <p>Imago operates as a <strong>leaf node</strong> inside the OpenClaw ecosystem. All messages flow through OC's gateway and session system before reaching Imago. Imago has no direct access to channels, no control over session lifecycle, and no independent networking.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
-C4Context
-  title Imago as OpenClaw Plugin
+graph TB
+  User["👤 User"]
 
-  Person(user, "User", "Discord / Webchat")
-  System_Boundary(oc, "OpenClaw Platform") {
-    System(gateway, "OC Gateway", "Routes messages")
-    System(session, "Session Mgr", "Lifecycle control")
-    System(imago, "Imago Plugin", "AgentHarness impl")
-  }
-  System_Ext(claude, "Claude SDK", "Anthropic API")
+  subgraph OC["OpenClaw Platform"]
+    direction TB
+    Gateway["OC Gateway"]
+    Session["Session Mgr"]
+    Imago["Imago Plugin"]
 
-  Rel(user, gateway, "Messages")
-  Rel(gateway, session, "Routes")
-  Rel(session, imago, "Dispatches")
-  Rel(imago, claude, "Spawns")
+    Gateway -->|routes to| Session
+    Session -->|dispatches via AgentHarness| Imago
+  end
 
-  UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
+  User -->|messages| Gateway
+  Imago -->|spawns subprocess| Claude["Claude SDK"]
+
+  style OC fill:#11111b,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+  style User fill:#1e1e2e,stroke:#cba6f7,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Gateway fill:#1e1e2e,stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Session fill:#1e1e2e,stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Imago fill:#1e1e2e,stroke:#fab387,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Claude fill:#1e1e2e,stroke:#a6e3a1,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
     </pre></div>
     <div class="note">Imago is a <strong>plugin</strong> &mdash; it implements OC's <code>AgentHarness</code> interface and has no independent existence. If OC stops, Imago stops.</div>
   </div>
@@ -424,31 +429,37 @@ C4Context
     <h3>Imago as Standalone Platform</h3>
     <p>Imago becomes the <strong>root process</strong>. It owns its own gateway, sessions, providers, and channel connections. OpenClaw is no longer in the picture. This is the fundamental inversion: from leaf node to root.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
-C4Context
-  title Imago Standalone Platform
+graph TB
+  User["👤 User"]
 
-  Person(user, "User", "Discord / Webchat")
+  subgraph Imago["Imago Platform"]
+    direction TB
+    Channels["Channels"]
+    Gateway["Gateway"]
+    Runtime["Runtime"]
+    Sessions["Sessions"]
+    Providers["Providers"]
 
-  System_Boundary(imago, "Imago Platform") {
-    System(channels, "Channels", "Discord, Webchat, ACP")
-    System(gateway, "Gateway", "HTTP+WS, Auth")
-    System(runtime, "Runtime", "Events, Hooks, Cron")
-    System(sessions, "Sessions", "Store, Router, Lock")
-    System(providers, "Providers", "Multi-model")
-  }
+    Channels -->|routes to| Gateway
+    Gateway -->|coordinates| Runtime
+    Runtime -->|manages| Sessions
+    Sessions -->|dispatches to| Providers
+  end
 
-  System_Ext(claude, "Claude SDK", "Primary model")
-  System_Ext(others, "Other LLMs", "OpenAI, Ollama")
+  User -->|messages| Channels
 
-  Rel(user, channels, "Messages")
-  Rel(channels, gateway, "Routes")
-  Rel(gateway, runtime, "Coordinates")
-  Rel(runtime, sessions, "Manages")
-  Rel(sessions, providers, "Executes")
-  Rel(providers, claude, "Primary")
-  Rel(providers, others, "Secondary")
+  Providers -->|primary| Claude["Claude SDK"]
+  Providers -.->|secondary| Others["OpenAI / Ollama"]
 
-  UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
+  style Imago fill:#11111b,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+  style User fill:#1e1e2e,stroke:#cba6f7,stroke-width:2px,color:#cdd6f4
+  style Channels fill:#1e1e2e,stroke:#f38ba8,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Gateway fill:#1e1e2e,stroke:#94e2d5,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Runtime fill:#1e1e2e,stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Sessions fill:#1e1e2e,stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Providers fill:#1e1e2e,stroke:#f9e2af,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Claude fill:#1e1e2e,stroke:#a6e3a1,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Others fill:#1e1e2e,stroke:#6c7086,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
     </pre></div>
     <div class="note">Imago <strong>is</strong> the platform. Channels connect to it directly. Providers are pluggable. No intermediary framework.</div>
   </div>
