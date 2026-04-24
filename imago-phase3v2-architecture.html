@@ -401,23 +401,22 @@
     <p>Imago operates as a <strong>leaf node</strong> inside the OpenClaw ecosystem. All messages flow through OC's gateway and session system before reaching Imago. Imago has no direct access to channels, no control over session lifecycle, and no independent networking.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
 C4Context
-  title Imago as OpenClaw Plugin (Current)
+  title Imago as OpenClaw Plugin
 
   Person(user, "User", "Discord / Webchat")
   System_Boundary(oc, "OpenClaw Platform") {
-    System(gateway, "OC Gateway", "HTTP+WS Server")
-    System(session, "OC Session Manager", "Session lifecycle")
+    System(gateway, "OC Gateway", "Routes messages")
+    System(session, "Session Mgr", "Lifecycle control")
     System(imago, "Imago Plugin", "AgentHarness impl")
   }
-  System_Ext(claude, "Claude Code SDK", "Anthropic subprocess")
+  System_Ext(claude, "Claude SDK", "Anthropic API")
 
-  Rel(user, gateway, "Messages", "Discord/HTTP")
-  Rel(gateway, session, "Routes to session")
-  Rel(session, imago, "Dispatches via AgentHarness")
-  Rel(imago, claude, "Spawns subprocess")
-  Rel(imago, gateway, "Tool calls via WS", "WebSocket RPC")
+  Rel(user, gateway, "Messages")
+  Rel(gateway, session, "Routes")
+  Rel(session, imago, "Dispatches")
+  Rel(imago, claude, "Spawns")
 
-  UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+  UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
     </pre></div>
     <div class="note">Imago is a <strong>plugin</strong> &mdash; it implements OC's <code>AgentHarness</code> interface and has no independent existence. If OC stops, Imago stops.</div>
   </div>
@@ -426,34 +425,30 @@ C4Context
     <p>Imago becomes the <strong>root process</strong>. It owns its own gateway, sessions, providers, and channel connections. OpenClaw is no longer in the picture. This is the fundamental inversion: from leaf node to root.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
 C4Context
-  title Imago as Standalone Platform (Proposed)
+  title Imago Standalone Platform
 
-  Person(user, "User", "Discord / Webchat / IRC")
-  Person(agent, "Other Agent", "ACP peer")
+  Person(user, "User", "Discord / Webchat")
 
   System_Boundary(imago, "Imago Platform") {
-    System(channels, "Channels", "Discord, Webchat, ACP, IRC")
-    System(gateway, "Imago Gateway", "HTTP+WS, Tailscale, Auth")
-    System(runtime, "Runtime", "Events, Config, Hooks, Cron")
-    System(sessions, "Session Manager", "Store, Router, Lock")
-    System(providers, "Provider Registry", "Multi-model")
+    System(channels, "Channels", "Discord, Webchat, ACP")
+    System(gateway, "Gateway", "HTTP+WS, Auth")
+    System(runtime, "Runtime", "Events, Hooks, Cron")
+    System(sessions, "Sessions", "Store, Router, Lock")
+    System(providers, "Providers", "Multi-model")
   }
 
-  System_Ext(claude, "Claude Code SDK", "Anthropic")
-  System_Ext(openai, "OpenAI API", "Compatible models")
-  System_Ext(ollama, "Ollama", "Local models")
+  System_Ext(claude, "Claude SDK", "Primary model")
+  System_Ext(others, "Other LLMs", "OpenAI, Ollama")
 
   Rel(user, channels, "Messages")
-  Rel(agent, channels, "ACP messages")
-  Rel(channels, gateway, "Routed")
-  Rel(gateway, runtime, "Coordinated")
+  Rel(channels, gateway, "Routes")
+  Rel(gateway, runtime, "Coordinates")
   Rel(runtime, sessions, "Manages")
-  Rel(sessions, providers, "Executes via")
+  Rel(sessions, providers, "Executes")
   Rel(providers, claude, "Primary")
-  Rel(providers, openai, "Secondary")
-  Rel(providers, ollama, "Local")
+  Rel(providers, others, "Secondary")
 
-  UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+  UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
     </pre></div>
     <div class="note">Imago <strong>is</strong> the platform. Channels connect to it directly. Providers are pluggable. No intermediary framework.</div>
   </div>
@@ -478,27 +473,28 @@ C4Context
     <h3>Turn Lifecycle &mdash; Plugin Mode</h3>
     <p>A single turn in the current plugin architecture. Note the extra hops through OC's gateway for both inbound messages and outbound tool calls.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
+%%{init: {'sequence': {'actorMargin': 80, 'width': 180, 'messageMargin': 50}}}%%
 sequenceDiagram
-  participant U as User (Discord)
-  participant OG as OC Gateway
-  participant OS as OC Session
-  participant AH as Imago (AgentHarness)
-  participant CC as Claude Code Subprocess
+  participant U as User
+  participant GW as OC Gateway
+  participant SS as OC Session
+  participant IM as Imago
+  participant CC as Claude Code
 
-  U->>OG: Message via Discord bot
-  OG->>OS: Route to session
-  OS->>AH: dispatch(EmbeddedRunAttemptParams)
-  AH->>CC: spawn subprocess with prompt
-  loop Tool Calls
-    CC->>AH: tool_call (stdout stream)
-    AH->>OG: WS RPC tool request
-    OG-->>AH: WS RPC tool response
-    AH->>CC: tool_result (stdin)
+  U->>GW: Discord message
+  GW->>SS: Route to session
+  SS->>IM: dispatch()
+  IM->>CC: Spawn subprocess
+  loop Tool calls
+    CC->>IM: tool_call
+    IM->>GW: WS RPC request
+    GW-->>IM: WS RPC response
+    IM->>CC: tool_result
   end
-  CC->>AH: final response (stream end)
-  AH->>OS: TurnResult
-  OS->>OG: Response
-  OG->>U: Discord reply
+  CC->>IM: Final response
+  IM->>SS: TurnResult
+  SS->>GW: Response
+  GW->>U: Discord reply
     </pre></div>
     <p>Key characteristics:</p>
     <ul>
@@ -512,33 +508,26 @@ sequenceDiagram
     <h3>Turn Lifecycle &mdash; Standalone Mode</h3>
     <p>A single turn in the standalone architecture. Direct channel access, internal service calls, event-driven flow.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
+%%{init: {'sequence': {'actorMargin': 80, 'width': 180, 'messageMargin': 50}}}%%
 sequenceDiagram
-  participant U as User (Discord)
-  participant CH as Discord Channel
-  participant GW as Imago Gateway
-  participant RT as Runtime (Events)
-  participant SS as Session Manager
-  participant PR as Provider (Claude Code)
-  participant CC as Claude Code SDK
+  participant U as User
+  participant GW as Gateway
+  participant RT as Runtime
+  participant SS as Sessions
+  participant CC as Claude Code
 
-  U->>CH: Discord message
-  CH->>GW: channel.onMessage event
-  GW->>RT: runtime.emit('message')
-  RT->>SS: session.route(compositeKey)
-  SS->>PR: provider.execute(turnRequest)
-  PR->>CC: SDK call with tools
-  loop Tool Calls
-    CC->>PR: tool_call event
-    PR->>RT: runtime.executeTool(name, args)
-    RT-->>PR: tool result (direct, no network hop)
-    PR->>CC: tool_result
+  U->>GW: Discord message
+  GW->>RT: emit('message')
+  RT->>SS: route(key)
+  SS->>CC: provider.execute()
+  loop Tool calls
+    CC->>RT: tool_call (direct)
+    RT-->>CC: tool_result
   end
-  CC->>PR: turn complete
-  PR->>RT: runtime.emit('turn:complete', events)
-  RT->>SS: session.persist(turnData)
+  CC->>RT: turn complete
+  RT->>SS: persist(turnData)
   RT->>GW: response events
-  GW->>CH: channel.send(response)
-  CH->>U: Discord reply
+  GW->>U: Discord reply
     </pre></div>
     <p>Key changes:</p>
     <ul>
@@ -571,37 +560,29 @@ sequenceDiagram
     <div class="mermaid-wrap"><pre class="mermaid">
 graph TB
   subgraph OpenClaw["OpenClaw Platform"]
-    PluginSystem["Plugin System"]
-    Gateway["OC Gateway"]
-    SessionMgr["OC Session Manager"]
+    PluginSys["Plugin System"]
+    GW["OC Gateway"]
   end
 
-  subgraph Imago["Imago Plugin (src/)"]
-    Harness["harness.ts<br/>AgentHarness impl"]
-    Session["session.ts<br/>185 LOC sidecar"]
-    MCPTools["mcp-tools.ts<br/>485 LOC"]
-    Bridge["bridge/gateway-tools.ts<br/>231 LOC"]
-    Config["config.ts"]
-    Paths["paths.ts<br/>OC coupling chokepoint"]
-    Memory["memory.ts"]
-    Canvas["canvas.ts"]
-    Cron["cron.ts"]
-    Events["events.ts"]
-    Nodes["nodes.ts"]
-    Prompt["prompt.ts"]
+  subgraph Imago["Imago Plugin"]
+    Harness["harness.ts"]
+    MCPTools["mcp-tools.ts"]
+    Bridge["gateway-tools.ts"]
+    Paths["paths.ts"]
+    Portable["11 portable modules"]
   end
 
-  PluginSystem -->|registers| Harness
-  Harness -->|uses| Session
-  Harness -->|spawns| CC["Claude Code Subprocess"]
-  MCPTools -->|delegates via| Bridge
-  Bridge -->|WS RPC| Gateway
-  Paths -->|couples to| OpenClaw
-  Config -->|reads from| Paths
+  PluginSys -->|registers| Harness
+  Harness --> MCPTools
+  MCPTools --> Bridge
+  Bridge -->|WS RPC| GW
+  Paths -.->|couples to| OpenClaw
+  Harness --> CC["Claude Code"]
 
-  style Paths fill:#f38ba8,color:#11111b,stroke:#f38ba8
-  style Bridge fill:#fab387,color:#11111b,stroke:#fab387
-  style Harness fill:#89b4fa,color:#11111b,stroke:#89b4fa
+  style Paths stroke:#f38ba8,stroke-width:2px,color:#cdd6f4
+  style Bridge stroke:#fab387,stroke-width:2px,color:#cdd6f4
+  style Harness stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+  style Portable stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
     </pre></div>
     <div class="note note-warn"><code>paths.ts</code> is the primary coupling chokepoint &mdash; it hardcodes paths into OC's directory structure. Nearly every module imports it.</div>
     <p><strong>Module categories:</strong></p>
@@ -616,54 +597,39 @@ graph TB
     <p>The Runtime is the central coordinator. It owns the event bus, configuration, hooks, cron, and session management. Everything registers with the Runtime.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
 graph TB
-  subgraph Runtime["RUNTIME"]
-    Events["Events (EventEmitter)"]
-    Config["Config (layered)"]
-    Hooks["Hooks (lifecycle)"]
-    Cron["Cron (scheduling)"]
-    Sessions["Session Manager"]
-  end
-
-  subgraph Gateway["GATEWAY"]
-    HTTP["HTTP + WS Server"]
-    Auth["Auth Pipeline"]
-    TS["Tailscale (DNS, TLS)"]
-    RPC["RPC Handler"]
-  end
-
-  subgraph Providers["PROVIDERS"]
-    PI["Provider Interface"]
-    ClaudeCode["Claude Code"]
-    OpenAI["OpenAI-compat"]
-    Ollama["Ollama"]
-    Google["Google"]
-  end
-
   subgraph Channels["CHANNELS"]
-    CI["Channel Interface"]
     Discord["Discord"]
     Webchat["Webchat"]
     ACP["ACP"]
-    IRC["IRC"]
   end
 
-  subgraph Services["REGISTERED SERVICES"]
-    Tools["Tools: canvas, web_search, memory, inerrata, ..."]
-    Media["Media: vision, tts, image_gen, ..."]
-    HookImpl["Hooks: nodes/flows, compaction, security, ..."]
-    Skills["Skills: meta-registration bundles"]
+  subgraph Gateway["GATEWAY"]
+    Server["HTTP + WS"]
+    Auth["Auth"]
+  end
+
+  subgraph Runtime["RUNTIME"]
+    Events["Events"]
+    Config["Config"]
+    Hooks["Hooks"]
+    Sessions["Sessions"]
+  end
+
+  subgraph Providers["PROVIDERS"]
+    Claude["Claude Code"]
+    Others["OpenAI / Ollama"]
   end
 
   Channels --> Gateway
   Gateway --> Runtime
   Runtime --> Providers
-  Runtime --> Sessions
-  Services -.->|register with| Runtime
+  Tools["Tools"] -.->|register| Runtime
+  Media["Media"] -.->|register| Runtime
 
-  style Runtime fill:#89b4fa,color:#11111b,stroke:#89b4fa
-  style Gateway fill:#94e2d5,color:#11111b,stroke:#94e2d5
-  style Providers fill:#f9e2af,color:#11111b,stroke:#f9e2af
-  style Channels fill:#f38ba8,color:#11111b,stroke:#f38ba8
+  style Runtime stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+  style Gateway stroke:#94e2d5,stroke-width:2px,color:#cdd6f4
+  style Providers stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
+  style Channels stroke:#f38ba8,stroke-width:2px,color:#cdd6f4
     </pre></div>
 
     <h3>Five Core Interfaces</h3>
@@ -737,34 +703,15 @@ graph TB
     <p>Imago connects <strong>as a client</strong> to OC's gateway over WebSocket on port <code>18789</code>. All tool calls from the Claude Code subprocess route through this bridge.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
 graph LR
-  subgraph Claude["Claude Code Subprocess"]
-    MCP["MCP Server"]
-  end
+  MCP["MCP Server"] -->|tool call| Bridge["MCP Bridge"]
+  Bridge -->|WS| GW["OC Gateway"]
+  GW --> Services["OC Services"]
+  Services -->|result| GW
+  GW -->|WS| Bridge
+  Bridge -->|result| MCP
 
-  subgraph Imago["Imago Plugin"]
-    Bridge["MCP Bridge<br/>(gateway-tools.ts)"]
-    WS["WS Client"]
-  end
-
-  subgraph OC["OpenClaw"]
-    GW["OC Gateway<br/>:18789"]
-    Dispatch["Tool Dispatcher"]
-    Services["OC Services"]
-  end
-
-  MCP -->|tool call| Bridge
-  Bridge -->|WS message| WS
-  WS -->|WebSocket| GW
-  GW --> Dispatch
-  Dispatch --> Services
-  Services -->|result| Dispatch
-  Dispatch -->|WS response| GW
-  GW -->|WebSocket| WS
-  WS -->|result| Bridge
-  Bridge -->|tool result| MCP
-
-  style Bridge fill:#fab387,color:#11111b
-  style GW fill:#89b4fa,color:#11111b
+  style Bridge stroke:#fab387,stroke-width:2px,color:#cdd6f4
+  style GW stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
     </pre></div>
     <p><strong>Pain points:</strong></p>
     <ul>
@@ -779,48 +726,32 @@ graph LR
     <p>Imago runs its own HTTP+WS server. Tailscale provides the networking foundation: MagicDNS for service discovery, whois for identity, automatic TLS certificates, and Funnel for public endpoints.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
 graph TB
-  subgraph Network["Tailscale Network"]
-    DNS["MagicDNS<br/>(imago.tail1234.ts.net)"]
-    Whois["Whois Identity"]
-    TLS["Auto TLS Certs"]
-    Funnel["Funnel (Public)"]
+  subgraph Network["Tailscale"]
+    DNS["MagicDNS"]
+    TLS["Auto TLS"]
+    Funnel["Funnel"]
   end
 
   subgraph Gateway["Imago Gateway"]
-    HTTP["HTTP Server"]
-    WSS["WebSocket Server"]
-    AuthPipe["Auth Pipeline"]
+    HTTP["HTTP + WS"]
+    Auth["Auth Pipeline"]
     RPC["RPC Handler"]
   end
 
-  subgraph Auth["Auth Pipeline"]
-    DevAuth["Device Auth<br/>(Ed25519)"]
-    TSWhois["Tailscale Whois"]
-    Bearer["Bearer Token"]
+  subgraph Services["Internal"]
+    Tools["Tools"]
+    Sessions["Sessions"]
   end
 
-  subgraph Internal["Internal Services"]
-    Tools["Tool Registry"]
-    Media["Media Processors"]
-    Sessions["Session Manager"]
-  end
-
-  DNS --> Gateway
-  TLS --> Gateway
-  Funnel --> HTTP
-
-  HTTP --> AuthPipe
-  WSS --> AuthPipe
-  AuthPipe --> DevAuth
-  AuthPipe --> TSWhois
-  AuthPipe --> Bearer
-
+  Network --> Gateway
+  HTTP --> Auth
+  Auth --> RPC
   RPC --> Tools
-  RPC --> Media
   RPC --> Sessions
 
-  style Gateway fill:#89b4fa,color:#11111b,stroke:#89b4fa
-  style Network fill:#94e2d5,color:#11111b,stroke:#94e2d5
+  style Gateway stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+  style Network stroke:#94e2d5,stroke-width:2px,color:#cdd6f4
+  style Services stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
     </pre></div>
     <p><strong>Key changes:</strong></p>
     <ul>
@@ -852,27 +783,11 @@ graph TB
     <p>OC manages all session lifecycle. Imago has a thin sidecar (<code>session.ts</code>, 185 LOC) that maps OC session IDs to Claude Code session IDs via binding files on disk.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
 graph LR
-  subgraph OC["OpenClaw"]
-    OCSession["OC Session Manager<br/>(full lifecycle)"]
-    OCID["Session ID: oc-abc-123"]
-  end
+  OC["OC Session Mgr"] -->|provides ID| Binding["Binding File"]
+  Binding -->|resolves to| CC["Claude Code"]
 
-  subgraph Imago["Imago (session.ts, 185 LOC)"]
-    Binding["Binding File<br/>oc-abc-123 → cc-xyz-789"]
-    CCID["Claude Code Session ID"]
-  end
-
-  subgraph CC["Claude Code"]
-    Subprocess["Subprocess<br/>with --session-id"]
-  end
-
-  OCSession -->|provides ID| OCID
-  OCID -->|mapped by| Binding
-  Binding -->|resolves to| CCID
-  CCID -->|passed to| Subprocess
-
-  style OCSession fill:#89b4fa,color:#11111b
-  style Binding fill:#fab387,color:#11111b
+  style OC stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+  style Binding stroke:#fab387,stroke-width:2px,color:#cdd6f4
     </pre></div>
     <p><strong>Limitations:</strong></p>
     <ul>
@@ -889,36 +804,30 @@ graph LR
     <div class="mermaid-wrap"><pre class="mermaid">
 graph TB
   subgraph SessionMgr["Session Manager"]
-    Store["Store<br/>CRUD, metadata, JSONL persistence"]
-    Router["Router<br/>message → session routing"]
-    Lock["Lock<br/>write locking, queue"]
-    Maint["Maintenance<br/>pruning, rotation, disk budgets"]
+    Store["Store"]
+    Router["Router"]
+    Lock["Lock"]
+    Maint["Maintenance"]
   end
 
-  subgraph Routing["Composite Key Routing"]
-    Key["agent:main:discord:channel:12345"]
-    Lookup["Key → Session lookup"]
-    Create["Auto-create if missing"]
-  end
-
-  subgraph Lifecycle["Session Lifecycle FSM"]
+  subgraph Lifecycle["Lifecycle FSM"]
     Idle(("idle"))
     Running(("running"))
-    Compacting(("compacting"))
+    Compacting(("compact"))
     Done(("done"))
 
-    Idle -->|message arrives| Running
-    Running -->|turn complete| Idle
+    Idle -->|message| Running
+    Running -->|complete| Idle
     Running -->|token limit| Compacting
-    Compacting -->|compact done| Idle
+    Compacting -->|done| Idle
     Idle -->|pruned| Done
   end
 
-  Router --> Routing
+  Router --> Store
   Store --> Lifecycle
 
-  style SessionMgr fill:#89b4fa,color:#11111b,stroke:#89b4fa
-  style Lifecycle fill:#11111b,color:#cdd6f4,stroke:#89b4fa
+  style SessionMgr stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+  style Lifecycle stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
     </pre></div>
 
     <p><strong>Session Store:</strong> CRUD operations, metadata tracking (last active, turn count, token usage), JSONL persistence for turn history, session bindings to provider session IDs.</p>
@@ -951,12 +860,12 @@ graph TB
     <p>Imago implements OC's <code>AgentHarness</code> interface and calls the Claude Code SDK directly. There is no provider abstraction &mdash; the SDK is hardwired.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
 graph LR
-  OC["OC Session"] -->|AgentHarness.dispatch| Imago["Imago Plugin"]
-  Imago -->|direct SDK call| CC["Claude Code SDK"]
-  CC -->|subprocess| Claude["Claude API"]
+  OC["OC Session"] -->|dispatch| Imago["Imago Plugin"]
+  Imago -->|SDK call| CC["Claude Code"]
+  CC --> Claude["Claude API"]
 
-  style Imago fill:#89b4fa,color:#11111b
-  style CC fill:#f9e2af,color:#11111b
+  style Imago stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+  style CC stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
     </pre></div>
     <p><strong>Characteristics:</strong></p>
     <ul>
@@ -974,35 +883,24 @@ graph LR
 graph TB
   subgraph Runtime["Runtime"]
     Registry["Provider Registry"]
-    ModelRouter["Model Router"]
+    Router["Model Router"]
   end
 
-  subgraph Providers["Provider Implementations"]
-    CC["Claude Code Provider<br/>claude-opus-4-6, claude-sonnet-4, ..."]
-    OAI["OpenAI-Compatible<br/>gpt-4o, deepseek, ..."]
-    Goog["Google Provider<br/>gemini-2.5-pro, ..."]
-    OL["Ollama Provider<br/>llama3, mistral, ..."]
+  subgraph Providers["Providers"]
+    CC["Claude Code"]
+    OAI["OpenAI-compat"]
+    Goog["Google"]
+    OL["Ollama"]
   end
 
-  subgraph CC_Detail["Claude Code Provider Detail"]
-    Harness["Harness (orchestrator)"]
-    Pool["Worker Pool"]
-    Protocol["Protocol Handler"]
-    Stream["Stream Processor"]
-    Query["Query Builder"]
-    MCPBridge["MCP Bridge (internal)"]
-  end
+  Registry --> Router
+  Router --> CC
+  Router --> OAI
+  Router -.-> Goog
+  Router -.-> OL
 
-  Registry --> ModelRouter
-  ModelRouter --> CC
-  ModelRouter --> OAI
-  ModelRouter --> Goog
-  ModelRouter --> OL
-
-  CC --> CC_Detail
-
-  style Runtime fill:#89b4fa,color:#11111b,stroke:#89b4fa
-  style CC fill:#f9e2af,color:#11111b,stroke:#f9e2af
+  style Runtime stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+  style CC stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
     </pre></div>
 
     <p><strong>Provider discovery:</strong></p>
@@ -1043,18 +941,13 @@ for await (const event of events) {
     <p>OC provides Discord and webchat. Imago receives messages through OC's <code>EmbeddedRunAttemptParams</code> interface &mdash; pre-processed, pre-routed, with no channel metadata.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
 graph LR
-  Discord["Discord Bot<br/>(OC-owned)"]
-  Webchat["Webchat<br/>(OC-owned)"]
-  OC["OC Gateway"]
-  Imago["Imago Plugin"]
+  Discord["Discord"] -->|message| OC["OC Gateway"]
+  Webchat["Webchat"] -->|message| OC
+  OC -->|dispatch| Imago["Imago Plugin"]
 
-  Discord -->|message| OC
-  Webchat -->|message| OC
-  OC -->|EmbeddedRunAttemptParams| Imago
-
-  style Discord fill:#5865F2,color:#fff
-  style OC fill:#89b4fa,color:#11111b
-  style Imago fill:#fab387,color:#11111b
+  style Discord stroke:#5865F2,stroke-width:2px,color:#cdd6f4
+  style OC stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+  style Imago stroke:#fab387,stroke-width:2px,color:#cdd6f4
     </pre></div>
     <p><strong>Limitations:</strong></p>
     <ul>
@@ -1070,36 +963,27 @@ graph LR
     <p>Channels are first-class citizens. Each channel implements the <code>Channel</code> interface and registers with the Runtime. Adding a new transport is implementing one interface.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
 graph TB
-  subgraph Channels["Channel Implementations"]
-    Discord["Discord Channel<br/>discord.js, multi-guild,<br/>group routing, reactions"]
-    Webchat["Webchat Channel<br/>WS-based, auth via gateway"]
-    ACP["ACP Channel<br/>Agent Communication Protocol,<br/>inter-agent messaging"]
-    IRC["IRC Channel<br/>future transport"]
+  subgraph Channels["Channels"]
+    Discord["Discord"]
+    Webchat["Webchat"]
+    ACP["ACP"]
+    IRC["IRC"]
   end
 
-  subgraph Interface["Channel Interface"]
-    Connect["connect()"]
-    Disconnect["disconnect()"]
-    Send["send(target, message)"]
-    OnMessage["onMessage(handler)"]
-  end
-
-  subgraph Gateway["Gateway"]
-    Router["Message Router"]
-    Auth["Auth Pipeline"]
-  end
+  Interface["Channel Interface"]
+  Gateway["Gateway"]
 
   Discord --> Interface
   Webchat --> Interface
   ACP --> Interface
-  IRC --> Interface
+  IRC -.-> Interface
 
   Interface --> Gateway
 
-  style Discord fill:#5865F2,color:#fff,stroke:#5865F2
-  style ACP fill:#a6e3a1,color:#11111b,stroke:#a6e3a1
-  style Webchat fill:#94e2d5,color:#11111b,stroke:#94e2d5
-  style IRC fill:#f9e2af,color:#11111b,stroke:#f9e2af
+  style Discord stroke:#5865F2,stroke-width:2px,color:#cdd6f4
+  style ACP stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
+  style Webchat stroke:#94e2d5,stroke-width:2px,color:#cdd6f4
+  style IRC stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
     </pre></div>
     <p><strong>Discord Channel:</strong> Full discord.js integration. Multi-guild support with per-guild configuration. Group channel routing (shared sessions). Reaction handling, thread support, attachment processing.</p>
     <p><strong>ACP Channel:</strong> Agent Communication Protocol for inter-agent messaging. Imago can communicate with other ACP-compliant agents as peers. ACP was previously a "lateral service" &mdash; now it is simply a Channel implementation.</p>
@@ -1127,33 +1011,23 @@ graph TB
     <p>Tools are defined in <code>mcp-tools.ts</code> (485 LOC) as an MCP server. "Bridge" tools that need OC services delegate through <code>bridge/gateway-tools.ts</code> (231 LOC) via WebSocket RPC to the OC gateway.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
 graph TB
-  subgraph MCP["MCP Server (mcp-tools.ts, 485 LOC)"]
-    Native["Native Tools<br/>memory, canvas, cron, nodes"]
-    BridgeTools["Bridge Tools<br/>web_search, image, tts, browser"]
+  subgraph MCP["MCP Server"]
+    Native["Native Tools"]
+    BridgeTools["Bridge Tools"]
   end
 
-  subgraph Bridge["Bridge (gateway-tools.ts, 231 LOC)"]
-    Serialize["Serialize args"]
-    WSCall["WS RPC call"]
-    Deserialize["Deserialize result"]
-  end
+  Bridge["WS Bridge"]
+  OC["OC Gateway"]
+  Result["Tool Result"]
 
-  subgraph OC["OC Gateway"]
-    Dispatch["Tool Dispatcher"]
-    OCServices["OC Tool Services"]
-  end
+  Native -->|direct| Result
+  BridgeTools --> Bridge
+  Bridge -->|WebSocket| OC
+  OC -->|result| Bridge
+  Bridge --> Result
 
-  Native -->|direct impl| Result["Tool Result"]
-  BridgeTools --> Serialize
-  Serialize --> WSCall
-  WSCall -->|WebSocket| Dispatch
-  Dispatch --> OCServices
-  OCServices -->|result| Dispatch
-  Dispatch -->|WebSocket| Deserialize
-  Deserialize --> Result
-
-  style Bridge fill:#f38ba8,color:#11111b
-  style MCP fill:#fab387,color:#11111b
+  style Bridge stroke:#f38ba8,stroke-width:2px,color:#cdd6f4
+  style MCP stroke:#fab387,stroke-width:2px,color:#cdd6f4
     </pre></div>
     <p><strong>No media abstraction.</strong> Media processing (vision, TTS, image generation) is handled ad-hoc through individual bridge tool calls. There is no unified interface for media capabilities.</p>
   </div>
@@ -1163,45 +1037,22 @@ graph TB
     <div class="mermaid-wrap"><pre class="mermaid">
 graph TB
   subgraph ToolSystem["Tool Registry"]
-    Registry["Tool Registry<br/>register, discover, execute"]
-    Canvas["canvas"]
-    WebSearch["web_search"]
-    Memory["memory"]
-    Inerrata["inerrata"]
-    Browser["browser"]
-    Image["image"]
-    TTS["tts"]
-    Custom["custom..."]
+    TReg["Registry"]
+    ToolGroup["canvas, memory, web_search, browser, inerrata, ..."]
   end
 
   subgraph MediaSystem["Media Processors"]
-    MRegistry["Media Registry"]
-    Vision["Vision Processor<br/>image analysis"]
-    AudioProc["Audio Processor<br/>speech-to-text"]
-    ImageGen["Image Generator<br/>text-to-image"]
-    TTSProc["TTS Processor<br/>text-to-speech"]
-    VideoGen["Video Generator"]
-    MusicGen["Music Generator"]
+    MReg["Registry"]
+    MediaGroup["vision, tts, image_gen, audio, ..."]
   end
 
-  subgraph Agent["Agent (via Provider)"]
-    ToolCall["tool_call event"]
-  end
+  Agent["Agent"] -->|tool_call| TReg
+  TReg --> ToolGroup
+  TReg --> MReg
+  MReg --> MediaGroup
 
-  ToolCall -->|runtime.executeTool| Registry
-  Registry --> Canvas
-  Registry --> WebSearch
-  Registry --> Memory
-  Registry --> Inerrata
-  Registry --> Browser
-
-  MRegistry --> Vision
-  MRegistry --> AudioProc
-  MRegistry --> ImageGen
-  MRegistry --> TTSProc
-
-  style ToolSystem fill:#89b4fa,color:#11111b,stroke:#89b4fa
-  style MediaSystem fill:#f9e2af,color:#11111b,stroke:#f9e2af
+  style ToolSystem stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+  style MediaSystem stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
     </pre></div>
     <p><strong>Tool registration:</strong></p>
     <pre><code>// Tools register with the Runtime
@@ -1370,49 +1221,40 @@ const tool = runtime.getTool('canvas'); // → specific tool</code></pre>
     <p>The current dependency graph is a tangled web. The <code>paths.ts</code> chokepoint couples nearly every module to OC's directory structure. <code>harness.ts</code> is the other hub with wide fan-out.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
 graph TD
-  index["index.ts"] --> harness
-  harness["harness.ts"] --> session["session.ts"]
-  harness --> mcptools["mcp-tools.ts"]
-  harness --> config["config.ts"]
-  harness --> prompt["prompt.ts"]
-  harness --> stream["stream.ts"]
-  harness --> protocol["protocol.ts"]
-  harness --> worker["worker.ts"]
-  harness --> query["query.ts"]
-  harness --> events["events.ts"]
-  harness --> types["types.ts"]
+  subgraph Hubs["Hub Modules"]
+    harness["harness.ts"]
+    mcptools["mcp-tools.ts"]
+  end
 
-  mcptools --> bridge["bridge/gateway-tools.ts"]
-  mcptools --> memory["memory.ts"]
-  mcptools --> canvas["canvas.ts"]
-  mcptools --> cron["cron.ts"]
-  mcptools --> nodes["nodes.ts"]
-  mcptools --> vision["vision.ts"]
-  mcptools --> tts["tts.ts"]
-  mcptools --> imagegen["image-gen.ts"]
-  mcptools --> inerrata["inerrata.ts"]
-  mcptools --> subagents["subagents.ts"]
-  mcptools --> acp["acp.ts"]
+  subgraph Coupled["OC-Coupled"]
+    config["config.ts"]
+    session["session.ts"]
+    bridge["gateway-tools.ts"]
+    paths["paths.ts"]
+  end
 
-  bridge --> btypes["bridge/types.ts"]
+  subgraph Portable["Portable Modules"]
+    tools["11 tool modules"]
+  end
+
+  harness --> mcptools
+  harness --> config
+  harness --> session
+  mcptools --> bridge
+  mcptools --> tools
   bridge --> paths
-
-  config --> paths["paths.ts"]
+  config --> paths
   session --> paths
-  nodes --> paths
-  discord["discord.ts"] --> paths
-  security["security.ts"] --> paths
+  paths -.->|couples to| OC["OpenClaw FS"]
 
-  paths -.->|"COUPLES TO OC"| OC["OpenClaw FS"]
-
-  classDef danger fill:#f38ba8,color:#11111b,stroke:#f38ba8
-  classDef warn fill:#fab387,color:#11111b,stroke:#fab387
-  classDef safe fill:#a6e3a1,color:#11111b,stroke:#a6e3a1
-  classDef hub fill:#89b4fa,color:#11111b,stroke:#89b4fa
+  classDef danger stroke:#f38ba8,stroke-width:2px,color:#cdd6f4
+  classDef warn stroke:#fab387,stroke-width:2px,color:#cdd6f4
+  classDef safe stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
+  classDef hub stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
 
   class paths danger
-  class bridge,btypes,ocshim warn
-  class memory,canvas,cron,vision,tts,imagegen,inerrata,subagents,compaction,events,prompt safe
+  class bridge,config,session warn
+  class tools safe
   class harness,mcptools hub
     </pre></div>
     <div class="note note-warn"><strong>Red:</strong> OC coupling chokepoint. <strong>Orange:</strong> Bridge modules (deleted in migration). <strong>Green:</strong> Portable modules (no OC imports). <strong>Blue:</strong> Hub modules with high fan-out.</div>
@@ -1422,83 +1264,41 @@ graph TD
     <p>Strict unidirectional dependency flow. No reverse imports. Lateral services are injected via the Runtime registry, not imported directly.</p>
     <div class="mermaid-wrap"><pre class="mermaid">
 graph TD
-  subgraph Channels["Channels Layer"]
-    discord["discord/"]
-    webchat["webchat/"]
-    acp_ch["acp/"]
+  subgraph Channels["Channels"]
+    channels["discord, webchat, acp"]
   end
 
-  subgraph Gateway["Gateway Layer"]
-    server["server.ts"]
-    auth["auth.ts"]
-    tailscale["tailscale.ts"]
-    rpc["rpc.ts"]
+  subgraph Gateway["Gateway"]
+    gateway["server + auth + rpc"]
   end
 
-  subgraph Core["Core Layer (Runtime)"]
-    runtime["runtime.ts"]
-    events["events.ts"]
-    config["config.ts"]
-    hooks["hooks.ts"]
-    context["context.ts"]
+  subgraph Core["Core"]
+    runtime["Runtime"]
+    sessions["Sessions"]
   end
 
-  subgraph Sessions["Sessions"]
-    store["store.ts"]
-    router["router.ts"]
-    lock["lock.ts"]
-    maint["maintenance.ts"]
+  subgraph Providers["Providers"]
+    providers["claude-code, etc."]
   end
 
-  subgraph Providers["Providers Layer"]
-    iface["interface.ts"]
-    cc["claude-code/"]
-  end
+  channels --> gateway
+  gateway --> runtime
+  runtime --> sessions
+  runtime --> providers
+  tools["Tools"] -.->|register| runtime
+  media["Media"] -.->|register| runtime
 
-  subgraph Lateral["Lateral Services (injected)"]
-    tools["tools/"]
-    media["media/"]
-    integrations["integrations/"]
-  end
+  classDef channelStyle stroke:#f38ba8,stroke-width:2px,color:#cdd6f4
+  classDef gatewayStyle stroke:#94e2d5,stroke-width:2px,color:#cdd6f4
+  classDef coreStyle stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+  classDef providerStyle stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
+  classDef lateralStyle stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
 
-  discord --> server
-  webchat --> server
-  acp_ch --> server
-
-  server --> auth
-  server --> rpc
-  auth --> tailscale
-
-  server --> runtime
-  rpc --> runtime
-
-  runtime --> events
-  runtime --> config
-  runtime --> hooks
-  runtime --> context
-  runtime --> store
-  runtime --> router
-  store --> lock
-  store --> maint
-
-  runtime --> iface
-  iface --> cc
-
-  tools -.->|register with| runtime
-  media -.->|register with| runtime
-  integrations -.->|register with| runtime
-
-  classDef channelStyle fill:#f38ba8,color:#11111b,stroke:#f38ba8
-  classDef gatewayStyle fill:#94e2d5,color:#11111b,stroke:#94e2d5
-  classDef coreStyle fill:#89b4fa,color:#11111b,stroke:#89b4fa
-  classDef providerStyle fill:#f9e2af,color:#11111b,stroke:#f9e2af
-  classDef lateralStyle fill:#a6e3a1,color:#11111b,stroke:#a6e3a1
-
-  class discord,webchat,acp_ch channelStyle
-  class server,auth,tailscale,rpc gatewayStyle
-  class runtime,events,config,hooks,context,store,router,lock,maint coreStyle
-  class iface,cc providerStyle
-  class tools,media,integrations lateralStyle
+  class channels channelStyle
+  class gateway gatewayStyle
+  class runtime,sessions coreStyle
+  class providers providerStyle
+  class tools,media lateralStyle
     </pre></div>
     <div class="note"><strong>Dependency rule:</strong> Channels &rarr; Gateway &rarr; Core &rarr; Providers. Never reverse. Lateral services register with Core via dependency injection &mdash; they are never directly imported by the layers above.</div>
   </div>
@@ -1650,11 +1450,30 @@ pie title Current LOC Distribution
     securityLevel: 'loose',
     theme: 'dark',
     themeVariables: {
-      primaryColor: '#89b4fa',
-      secondaryColor: '#f9e2af',
-      tertiaryColor: '#94e2d5',
+      primaryColor: '#1e1e2e',
       primaryTextColor: '#cdd6f4',
-      lineColor: '#cba6f7'
+      primaryBorderColor: '#89b4fa',
+      lineColor: '#cba6f7',
+      secondaryColor: '#181825',
+      tertiaryColor: '#11111b',
+      noteBkgColor: '#181825',
+      noteTextColor: '#cdd6f4',
+      noteBorderColor: '#45475a',
+      fontSize: '14px',
+      fontFamily: 'Inter, sans-serif'
+    },
+    flowchart: {
+      nodeSpacing: 30,
+      rankSpacing: 50,
+      padding: 15,
+      useMaxWidth: true
+    },
+    sequence: {
+      actorMargin: 80,
+      width: 180,
+      messageMargin: 50,
+      useMaxWidth: true,
+      wrap: true
     }
   });
 
