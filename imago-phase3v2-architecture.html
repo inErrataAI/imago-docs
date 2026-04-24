@@ -1692,7 +1692,10 @@ pie title Current LOC Distribution
   // ── Mermaid rendering for hidden tabs ──
   // Mermaid diagrams inside hidden panels won't render on page load.
   // This function finds unprocessed mermaid blocks in a container and renders them.
+  // IMPORTANT: mermaid.run() calls MUST be serialized — concurrent calls corrupt
+  // Mermaid's internal state, causing SVGs to render in the wrong containers.
   var renderedPanels = new Set();
+  var renderQueue = Promise.resolve();
 
   function renderMermaidIn(container) {
     if (renderedPanels.has(container.id)) return;
@@ -1701,26 +1704,27 @@ pie title Current LOC Distribution
       renderedPanels.add(container.id);
       return;
     }
-    // mermaid.run targets the specific nodes
-    mermaid.run({ nodes: unprocessed }).then(function() {
-      renderedPanels.add(container.id);
-    }).catch(function(err) {
-      console.warn('Mermaid render error in', container.id, err);
-      renderedPanels.add(container.id);
+    // Chain onto the queue — each mermaid.run() waits for the previous to finish
+    renderQueue = renderQueue.then(function() {
+      return mermaid.run({ nodes: unprocessed }).then(function() {
+        renderedPanels.add(container.id);
+      }).catch(function(err) {
+        console.warn('Mermaid render error in', container.id, err);
+        renderedPanels.add(container.id);
+      });
     });
   }
 
   // ── Initial render ──
-  // Render mermaid in all currently visible panels on load
+  // Render mermaid in all currently visible panels on load (serialized via queue)
   document.addEventListener('DOMContentLoaded', function() {
-    // Render visible panels first
     document.querySelectorAll('.tab-panel.active').forEach(function(panel) {
       renderMermaidIn(panel);
     });
-    // Then apply hash state (which may switch tabs and trigger more renders)
-    setTimeout(function() {
+    // Wait for all initial renders to complete, then apply hash state
+    renderQueue.then(function() {
       applyHash();
-    }, 100);
+    });
   });
 
   // Handle browser back/forward
