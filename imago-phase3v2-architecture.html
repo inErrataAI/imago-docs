@@ -579,10 +579,10 @@ graph TB
   Paths -.->|couples to| OpenClaw
   Harness --> CC["Claude Code"]
 
-  style Paths stroke:#f38ba8,stroke-width:2px,color:#cdd6f4
-  style Bridge stroke:#fab387,stroke-width:2px,color:#cdd6f4
-  style Harness stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
-  style Portable stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
+  style Paths stroke:#f38ba8,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Bridge stroke:#fab387,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Harness stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Portable stroke:#a6e3a1,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
     </pre></div>
     <div class="note note-warn"><code>paths.ts</code> is the primary coupling chokepoint &mdash; it hardcodes paths into OC's directory structure. Nearly every module imports it.</div>
     <p><strong>Module categories:</strong></p>
@@ -626,10 +626,10 @@ graph TB
   Tools["Tools"] -.->|register| Runtime
   Media["Media"] -.->|register| Runtime
 
-  style Runtime stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
-  style Gateway stroke:#94e2d5,stroke-width:2px,color:#cdd6f4
-  style Providers stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
-  style Channels stroke:#f38ba8,stroke-width:2px,color:#cdd6f4
+  style Runtime stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Gateway stroke:#94e2d5,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Providers stroke:#f9e2af,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Channels stroke:#f38ba8,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
     </pre></div>
 
     <h3>Five Core Interfaces</h3>
@@ -710,8 +710,8 @@ graph LR
   GW -->|WS| Bridge
   Bridge -->|result| MCP
 
-  style Bridge stroke:#fab387,stroke-width:2px,color:#cdd6f4
-  style GW stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+  style Bridge stroke:#fab387,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style GW stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
     </pre></div>
     <p><strong>Pain points:</strong></p>
     <ul>
@@ -749,9 +749,9 @@ graph TB
   RPC --> Tools
   RPC --> Sessions
 
-  style Gateway stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
-  style Network stroke:#94e2d5,stroke-width:2px,color:#cdd6f4
-  style Services stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
+  style Gateway stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Network stroke:#94e2d5,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Services stroke:#a6e3a1,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
     </pre></div>
     <p><strong>Key changes:</strong></p>
     <ul>
@@ -786,8 +786,8 @@ graph LR
   OC["OC Session Mgr"] -->|provides ID| Binding["Binding File"]
   Binding -->|resolves to| CC["Claude Code"]
 
-  style OC stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
-  style Binding stroke:#fab387,stroke-width:2px,color:#cdd6f4
+  style OC stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Binding stroke:#fab387,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
     </pre></div>
     <p><strong>Limitations:</strong></p>
     <ul>
@@ -826,8 +826,8 @@ graph TB
   Router --> Store
   Store --> Lifecycle
 
-  style SessionMgr stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
-  style Lifecycle stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+  style SessionMgr stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Lifecycle stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
     </pre></div>
 
     <p><strong>Session Store:</strong> CRUD operations, metadata tracking (last active, turn count, token usage), JSONL persistence for turn history, session bindings to provider session IDs.</p>
@@ -864,8 +864,8 @@ graph LR
   Imago -->|SDK call| CC["Claude Code"]
   CC --> Claude["Claude API"]
 
-  style Imago stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
-  style CC stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
+  style Imago stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style CC stroke:#f9e2af,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
     </pre></div>
     <p><strong>Characteristics:</strong></p>
     <ul>
@@ -899,8 +899,8 @@ graph TB
   Router -.-> Goog
   Router -.-> OL
 
-  style Runtime stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
-  style CC stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
+  style Runtime stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style CC stroke:#f9e2af,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
     </pre></div>
 
     <p><strong>Provider discovery:</strong></p>
@@ -945,9 +945,9 @@ graph LR
   Webchat["Webchat"] -->|message| OC
   OC -->|dispatch| Imago["Imago Plugin"]
 
-  style Discord stroke:#5865F2,stroke-width:2px,color:#cdd6f4
-  style OC stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
-  style Imago stroke:#fab387,stroke-width:2px,color:#cdd6f4
+  style Discord stroke:#5865F2,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style OC stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Imago stroke:#fab387,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
     </pre></div>
     <p><strong>Limitations:</strong></p>
     <ul>
@@ -980,10 +980,10 @@ graph TB
 
   Interface --> Gateway
 
-  style Discord stroke:#5865F2,stroke-width:2px,color:#cdd6f4
-  style ACP stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
-  style Webchat stroke:#94e2d5,stroke-width:2px,color:#cdd6f4
-  style IRC stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
+  style Discord stroke:#5865F2,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style ACP stroke:#a6e3a1,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style Webchat stroke:#94e2d5,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style IRC stroke:#f9e2af,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
     </pre></div>
     <p><strong>Discord Channel:</strong> Full discord.js integration. Multi-guild support with per-guild configuration. Group channel routing (shared sessions). Reaction handling, thread support, attachment processing.</p>
     <p><strong>ACP Channel:</strong> Agent Communication Protocol for inter-agent messaging. Imago can communicate with other ACP-compliant agents as peers. ACP was previously a "lateral service" &mdash; now it is simply a Channel implementation.</p>
@@ -1026,8 +1026,8 @@ graph TB
   OC -->|result| Bridge
   Bridge --> Result
 
-  style Bridge stroke:#f38ba8,stroke-width:2px,color:#cdd6f4
-  style MCP stroke:#fab387,stroke-width:2px,color:#cdd6f4
+  style Bridge stroke:#f38ba8,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style MCP stroke:#fab387,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
     </pre></div>
     <p><strong>No media abstraction.</strong> Media processing (vision, TTS, image generation) is handled ad-hoc through individual bridge tool calls. There is no unified interface for media capabilities.</p>
   </div>
@@ -1051,8 +1051,8 @@ graph TB
   TReg --> MReg
   MReg --> MediaGroup
 
-  style ToolSystem stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
-  style MediaSystem stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
+  style ToolSystem stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  style MediaSystem stroke:#f9e2af,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
     </pre></div>
     <p><strong>Tool registration:</strong></p>
     <pre><code>// Tools register with the Runtime
@@ -1247,10 +1247,10 @@ graph TD
   session --> paths
   paths -.->|couples to| OC["OpenClaw FS"]
 
-  classDef danger stroke:#f38ba8,stroke-width:2px,color:#cdd6f4
-  classDef warn stroke:#fab387,stroke-width:2px,color:#cdd6f4
-  classDef safe stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
-  classDef hub stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+  classDef danger stroke:#f38ba8,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  classDef warn stroke:#fab387,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  classDef safe stroke:#a6e3a1,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  classDef hub stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
 
   class paths danger
   class bridge,config,session warn
@@ -1288,11 +1288,11 @@ graph TD
   tools["Tools"] -.->|register| runtime
   media["Media"] -.->|register| runtime
 
-  classDef channelStyle stroke:#f38ba8,stroke-width:2px,color:#cdd6f4
-  classDef gatewayStyle stroke:#94e2d5,stroke-width:2px,color:#cdd6f4
-  classDef coreStyle stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
-  classDef providerStyle stroke:#f9e2af,stroke-width:2px,color:#cdd6f4
-  classDef lateralStyle stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
+  classDef channelStyle stroke:#f38ba8,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  classDef gatewayStyle stroke:#94e2d5,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  classDef coreStyle stroke:#89b4fa,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  classDef providerStyle stroke:#f9e2af,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
+  classDef lateralStyle stroke:#a6e3a1,stroke-width:2px,fill:#1e1e2e,color:#cdd6f4
 
   class channels channelStyle
   class gateway gatewayStyle
